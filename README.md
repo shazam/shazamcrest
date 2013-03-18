@@ -8,12 +8,12 @@ Assertions on complete beans are made simpler by serialising the actual and expe
 
 
 Usage
-=====
+-----
 
 For an example on how to use it, see: [Example](http://git.io/mhvOdw)
 
 
 Known limitations
-=================
+-----------------
 
 Beans are serialised using their getter methods, meaning any fields not having a getter method will be ignored.
