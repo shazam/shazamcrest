@@ -9,6 +9,28 @@
     <description>Library that extends the functionality of hamcrest</description>
     <url>http://github.com/shazam/shazamcrest</url>
 
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers />
+
+    <scm>
+        <connection>scm:git:git://github.com/shazam/shazamcrest.git</connection>
+        <developerConnection>scm:git:git@github.com:shazam/shazamcrest.git</developerConnection>
+        <url>http://github.com/shazam/shazamcrest</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>uk.co.datumedge</groupId>
