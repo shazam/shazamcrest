@@ -16,4 +16,4 @@ For an example on how to use it, see: [Example](http://git.io/mhvOdw)
 Known limitations
 -----------------
 
-If the Beans to compare contain any object with circular dependencies, the Gson serializer will throw a stack overflow exception.
+Gson can't handle circular references in the serialized data.
