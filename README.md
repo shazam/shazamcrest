@@ -16,4 +16,4 @@ For an example on how to use it, see: [Example](http://git.io/mhvOdw)
 Known limitations
 -----------------
 
-Gson can't handle circular references in the serialized data.
+If a bean contains data with circular references, a StackOverflowError will be thrown during comparison.
