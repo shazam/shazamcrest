@@ -22,7 +22,7 @@ import com.google.gson.GsonBuilder;
  * Hamcrest matchers to be used within JMock expectations.
  */
 class JMockMatchers {
-	private final static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	private final static Gson gson = new GsonBuilder().enableComplexMapKeySerialization().setPrettyPrinting().create();
 	
 	/**
 	 * Converts the expected and the actual object into json and uses {@link JSONAssert} to match them. If the objects

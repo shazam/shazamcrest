@@ -9,9 +9,12 @@
  */
 package com.shazam.shazamcrest.integrationtest;
 
+import org.junit.Ignore;
+
 /**
  * Simple bean used by tests
  */
+@Ignore
 public class TestBean {
 	private String field1;
 	private int field2;

@@ -26,7 +26,7 @@ import com.shazam.shazamcrest.ShazamDescription;
  * Hamcrest matchers to be used with {@link com.shazam.shazamcrest.MatcherAssert#assertThat(Object, Matcher)}
  */
 class AssertionMatchers {
-	private final static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	private final static Gson gson = new GsonBuilder().enableComplexMapKeySerialization().setPrettyPrinting().create();
 
 	public static <T> Matcher<T> isNull() {
 		return new DiagnosingMatcher<T>() {
