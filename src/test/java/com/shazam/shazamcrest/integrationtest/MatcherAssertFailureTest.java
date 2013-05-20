@@ -9,6 +9,7 @@
  */
 package com.shazam.shazamcrest.integrationtest;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.integrationtest.ComparisonFailureMatchers.actual;
 import static com.shazam.shazamcrest.integrationtest.ComparisonFailureMatchers.expected;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -16,13 +17,13 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.fail;
 
 import org.hamcrest.Matcher;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
-
-import com.shazam.shazamcrest.MatcherAssert;
 
 /**
  * MatcherAssert tests checking the failure cases
@@ -30,16 +31,16 @@ import com.shazam.shazamcrest.MatcherAssert;
 public class MatcherAssertFailureTest {
 
 	@Test(expected = ComparisonFailure.class)
-	public void comparisonFailureWhenBeansNotMatching() {
+	public void throwsComparisonFailureWhenBeansNotMatching() {
 		TestBean expected = new TestBean("value1", 1);
 		TestBean actual = new TestBean("value2", 2);
 
-		MatcherAssert.assertThat(actual, sameBeanAs(expected));
+		assertThat(actual, sameBeanAs(expected));
 	}
 
 	@Test(expected = AssertionError.class)
-	public void assertionErrorWhenNormalMatchersUsed() {
-		MatcherAssert.assertThat("value1", equalTo("value2"));
+	public void throwsAssertionErrorWhenNormalMatchersUsed() {
+		assertThat("value1", equalTo("value2"));
 	}
 
 	@Test
@@ -48,7 +49,7 @@ public class MatcherAssertFailureTest {
 		TestBean actual = null;
 
 		try {
-			MatcherAssert.assertThat(actual, sameBeanAs(expected));
+			assertThat(actual, sameBeanAs(expected));
 			fail("Exception expected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, expected(is(notANullValue())), actual(is(equalTo("null"))));
@@ -61,13 +62,40 @@ public class MatcherAssertFailureTest {
 		TestBean actual = new TestBean("value2", 2);
 
 		try {
-			MatcherAssert.assertThat(actual, sameBeanAs(expected));
+			assertThat(actual, sameBeanAs(expected));
 			fail("Exception expected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, expected(is(equalTo("null"))), actual(is(notANullValue())));
 		}
 	}
-
+	
+	@Test
+	public void doesNotIncludeIgnoredFieldsInDiagnostics() {
+		TestBean expected = new TestBean("value1", 1);
+		TestBean actual = new TestBean("value2", 2);
+		
+		try {
+			assertThat(actual, sameBeanAs(expected).ignoring("field1"));
+			fail("Exceptionexpected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, expected(not(containsString("field1"))), actual(not(containsString("field1"))));
+		}
+	}
+	
+	@Test
+	public void prettyPrintsTheJson() {
+		TestBean expected = new TestBean("value1", 1);
+		TestBean actual = new TestBean("value2", 2);
+		
+		try {
+			assertThat(actual, sameBeanAs(expected));
+			fail("Exceptionexpected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, 
+					expected(containsString("{\n  \"field1\": \"value1\",\n  \"field2\": 1\n}")), 
+					actual(containsString("{\n  \"field1\": \"value2\",\n  \"field2\": 2\n}")));
+		}
+	}
 
 	private Matcher<String> notANullValue() {
 		return notNullValue(String.class);

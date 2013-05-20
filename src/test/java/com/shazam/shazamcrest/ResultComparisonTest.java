@@ -24,7 +24,7 @@ public class ResultComparisonTest {
 
 	@Test
 	public void throwsComparisonFailureWhenShazamDescriptionIsPassedIn() {
-		ShazamDescription shazamDescription = new ShazamDescription();
+		ComparisonDescription shazamDescription = new ComparisonDescription();
 		shazamDescription.setComparisonFailure(true);
 		shazamDescription.setActual("actual");
 		shazamDescription.setExpected("expected");

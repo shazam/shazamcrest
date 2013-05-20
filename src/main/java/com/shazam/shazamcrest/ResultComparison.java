@@ -17,15 +17,15 @@ import org.junit.ComparisonFailure;
  */
 class ResultComparison {
 	/**
-	 * Throws a {@link ComparisonFailure} if the description passed in is of type {@link ShazamDescription},
+	 * Throws a {@link ComparisonFailure} if the description passed in is of type {@link ComparisonDescription},
 	 * and the mismatch has been defined as a comparison failure.
 	 * 
 	 * @param description the {@link Description} which potentially holds the comparison failure information
 	 * @throws ComparisonFailure
 	 */
 	static void containsComparableJson(Description description) throws ComparisonFailure {
-		if (description instanceof ShazamDescription) {
-			ShazamDescription shazamDescription = (ShazamDescription) description;
+		if (description instanceof ComparisonDescription) {
+			ComparisonDescription shazamDescription = (ComparisonDescription) description;
 			if (shazamDescription.isComparisonFailure()) {
 				throw new ComparisonFailure(
 						shazamDescription.getDifferencesMessage(),

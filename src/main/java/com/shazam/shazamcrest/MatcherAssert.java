@@ -38,7 +38,7 @@ public class MatcherAssert {
      */
     public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
         if (!matcher.matches(actual)) {
-            Description description = new ShazamDescription();
+            Description description = new ComparisonDescription();
             description.appendText(reason)
                        .appendText("\nExpected: ")
                        .appendDescriptionOf(matcher)

@@ -9,16 +9,27 @@
  */
 package com.shazam.shazamcrest.integrationtest;
 
+import java.util.List;
+
+import com.google.gson.annotations.Until;
+
 /**
- * Simple bean used by tests
+ * Parent bean of {@link TestBean}
  */
 @SuppressWarnings("unused")
-public class TestBean {
-	private String field1;
-	private int field2;
-
-	public TestBean(String field1, int field2) {
-		this.field1 = field1;
-		this.field2 = field2;
+public class ParentTestBean {
+	private String parentField1;
+	private TestBean parentField2;
+	private List<TestBean> parentField3;
+	
+	public ParentTestBean(String parentField1, TestBean parentField2) {
+		this.parentField1 = parentField1;
+		this.parentField2 = parentField2;
+	}
+	
+	public ParentTestBean(String parentField1, TestBean parentField2, List<TestBean> parentField3) {
+		this.parentField1 = parentField1;
+		this.parentField2 = parentField2;
+		this.parentField3 = parentField3;
 	}
 }
