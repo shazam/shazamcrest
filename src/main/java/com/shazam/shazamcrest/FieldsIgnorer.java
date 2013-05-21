@@ -75,8 +75,8 @@ public class FieldsIgnorer {
 	}
 
 	private static void removeFieldFromElement(JsonElement jsonElement, String head) {
-		if (!jsonElement.isJsonNull() && ((JsonObject)jsonElement).remove(head) == null) {
-			throw new IllegalArgumentException();
+		if (!jsonElement.isJsonNull()) {
+			((JsonObject)jsonElement).remove(head);
 		}
 	}
 

@@ -56,20 +56,20 @@ public class MatcherAssertIgnoringFieldTest {
 		assertThat(bean, sameBeanAs(expected).ignoring("parentField2.nonExistingField"));
 	}
 	
+	@Test
+	public void allowsToIgnoreNullObjects() {
+		ParentTestBean bean = new ParentTestBean("apple", null);
+		ParentTestBean expected = new ParentTestBean("apple", null);
+		
+		assertThat(bean, sameBeanAs(expected).ignoring("parentField2"));
+	}
+	
 	@Test(expected = IllegalArgumentException.class)
 	public void throwsIllegalArgumentExceptionWhenSubpathIsSpecifiedOnPrimitiveField() {
 		ParentTestBean bean = new ParentTestBean("apple", new TestBean("orange", 1));
 		ParentTestBean expected = new ParentTestBean("apple", new TestBean("banana", 1));
 		
 		assertThat(bean, sameBeanAs(expected).ignoring("parentField2.field1.subpath"));
-	}
-	
-	@Test(expected = IllegalArgumentException.class)
-	public void throwsIllegalArgumentExceptionWhenPathDoesNotExist() {
-		ParentTestBean bean = new ParentTestBean("apple", new TestBean("orange", 1));
-		ParentTestBean expected = new ParentTestBean("apple", new TestBean("banana", 1));
-		
-		assertThat(bean, sameBeanAs(expected).ignoring("parentField2.field4"));
 	}
 	
 	@Test
