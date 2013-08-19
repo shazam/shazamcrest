@@ -1,0 +1,51 @@
+/*
+ * Copyright 2013 Shazam Entertainment Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ */
+package com.shazam.shazamcrest.model;
+
+/**
+ * Child bean of {@link ParentBean}, used for tests
+ */
+@SuppressWarnings("unused")
+public class ChildBean {
+	private String childField1;
+	private int childField2;
+
+	private ChildBean(Builder builder) {
+		childField1 = builder.childField1;
+		childField2 = builder.childField2;
+	}
+
+	public String getChildField1() {
+		return childField1;
+	}
+	
+	public static class Builder {
+		private String childField1;
+		private int childField2;
+
+		public static Builder child() {
+			return new Builder();
+		}
+		
+		public Builder childField1(String childField1) {
+			this.childField1 = childField1;
+			return this;
+		}
+		
+		public Builder childField2(int childField2) {
+			this.childField2 = childField2;
+			return this;
+		}
+		
+		public ChildBean build() {
+			return new ChildBean(this);
+		}
+	}
+}

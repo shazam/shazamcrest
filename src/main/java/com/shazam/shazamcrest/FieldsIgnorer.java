@@ -9,6 +9,7 @@
  */
 package com.shazam.shazamcrest;
 
+import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 
 import java.util.Collection;
@@ -18,28 +19,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 /**
- * Responsible for removing from the Json representation of the bean to compare the ignored fields specified on the matcher.
+ * Responsible for traversing the Json tree and ignore the specified set of field paths.
  */
 public class FieldsIgnorer {
-
-	public static JsonElement ignorePaths(JsonElement jsonElement, Set<String> pathsToIgnore) {
-		if (pathsToIgnore.isEmpty()) {
+	public static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
+		if (pathsToFind.isEmpty()) {
 			return jsonElement;
 		}
 		
-		String pathToIgnore = headOf(pathsToIgnore);
-		List<String> paths = asList(pathToIgnore.split(Pattern.quote(".")));
+		String pathToFind = headOf(pathsToFind);
+		List<String> pathSegments = asList(pathToFind.split(Pattern.quote(".")));
 		try {
-			ignorePath(jsonElement, paths);
+			findPath(jsonElement, pathToFind, pathSegments);
 		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException(pathToIgnore + " can't be ignored because does not exist");
+			throw new IllegalArgumentException(pathToFind + " does not exist");
 		}
-		return ignorePaths(jsonElement, removePathFromSet(pathsToIgnore, pathToIgnore));
+		return findPaths(jsonElement, removePathFromSet(pathsToFind, pathToFind));
 	}
 
 	private static Set<String> removePathFromSet(Set<String> setToRemoveFrom, String stringToRemove) {
@@ -48,36 +46,45 @@ public class FieldsIgnorer {
 		return set;
 	}
 
-	private static void ignorePath(JsonElement jsonElement, final List<String> paths) {
-		String field = headOf(paths);
-		if (paths.size() == 1) {
+	private static void findPath(JsonElement jsonElement, String pathToFind, final List<String> pathSegments) {
+		String field = headOf(pathSegments);
+		if (pathSegments.size() == 1) {
 			if (jsonElement.isJsonPrimitive()) {
 				throw new IllegalArgumentException();
 			}
-			removeFieldFromElement(jsonElement, field);
+			ignorePath(jsonElement, pathToFind);
 		} else {
-			JsonElement child = ((JsonObject)jsonElement).get(field);
-			List<String> tail = paths.subList(1, paths.size());
+			JsonElement child = jsonElement.getAsJsonObject().get(field);
+			List<String> tail = pathSegments.subList(1, pathSegments.size());
 			
 			if (child == null) {
 				return;
 			}
 			
 			if (child.isJsonArray()) {
-				Iterator<JsonElement> iterator = ((JsonArray)child).iterator();
+				Iterator<JsonElement> iterator = child.getAsJsonArray().iterator();
 				while (iterator.hasNext()) {
-					ignorePath((JsonElement) iterator.next(), tail);
+					findPath((JsonElement) iterator.next(), pathToFind, tail);
 				}
 			} else {
-				ignorePath(child, tail);
+				findPath(child, pathToFind, tail);
 			}
 		}
 	}
 
-	private static void removeFieldFromElement(JsonElement jsonElement, String head) {
+	private static void ignorePath(JsonElement jsonElement, String pathToIgnore) {
 		if (!jsonElement.isJsonNull()) {
-			((JsonObject)jsonElement).remove(head);
+			jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore));
 		}
+	}
+	
+	private static String getLastSegmentOf(String fieldPath) {
+		String[] paths = fieldPath.split(Pattern.quote("."));
+		if (paths.length == 0) {
+			return fieldPath;
+		}
+		
+		return paths[max(0, paths.length-1)];
 	}
 
 	private static String headOf(final Collection<String> paths) {

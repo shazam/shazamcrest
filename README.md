@@ -16,4 +16,5 @@ For an example on how to use it, see: [Example](http://git.io/mhvOdw)
 Known limitations
 -----------------
 
-If a bean contains data with circular references, a StackOverflowError will be thrown during comparison.
+* If a bean contains data with circular references, a StackOverflowError will be thrown during comparison.
+* Sets and Maps with same data are serialised in non deterministic order, generating random comparison failures.

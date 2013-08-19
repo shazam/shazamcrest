@@ -9,16 +9,21 @@
  */
 package com.shazam.shazamcrest.matcher;
 
-import static com.shazam.shazamcrest.FieldsIgnorer.ignorePaths;
+import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
+import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
 import static com.shazam.shazamcrest.GsonProvider.gson;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
+import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -36,6 +41,7 @@ class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements Ignor
 
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
 	private final Set<String> pathsToIgnore = new HashSet<String>();
+	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
 	private final T expected;
 
 	public IgnoringDiagnosingMatcher(T expected) {
@@ -44,15 +50,28 @@ class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements Ignor
 
 	@Override
 	public void describeTo(Description description) {
-		description.appendText(filterJson(expected));
+		Gson gson = gson(typesToIgnore);
+		description.appendText(filterJson(gson, gson.toJson(expected)));
+		for (String fieldPath : customMatchers.keySet()) {
+			description.appendText("\nand ")
+				.appendText(fieldPath).appendText(" ")
+				.appendDescriptionOf(customMatchers.get(fieldPath));
+		}
 	}
 
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
-		String expectedJson = filterJson(expected);
-		String actualJson = filterJson(actual);
+		Gson gson = gson(typesToIgnore);
+		String expectedJson = filterJson(gson, gson.toJson(expected));
+		String actualJson = filterJson(gson, gson.toJson(actual));
+		
+		Map<Object, Matcher<?>> customMatching = new HashMap<Object, Matcher<?>>();
+		for (Entry<String, Matcher<?>> entry : customMatchers.entrySet()) {
+			Object object = findBeanAt(entry.getKey(), actual);
+			customMatching.put(object, customMatchers.get(entry.getKey()));
+		}
 
-		return assertEquals(expectedJson, actualJson, mismatchDescription);
+		return assertEquals(expectedJson, actualJson, customMatching, mismatchDescription, gson);
 	}
 
 	@Override
@@ -64,6 +83,12 @@ class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements Ignor
 	@Override
 	public IgnoringMatcher<T> ignoring(Class<?> clazz) {
 		typesToIgnore.add(clazz);
+		return this;
+	}
+	
+	@Override
+	public <V> IgnoringMatcher<T> with(String fieldPath, Matcher<V> matcher) {
+		customMatchers.put(fieldPath, matcher);
 		return this;
 	}
 
@@ -79,8 +104,18 @@ class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements Ignor
 		return false;
 	}
 
-	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription) {
+	private boolean assertEquals(final String expectedJson, String actualJson, Map<Object, Matcher<?>> customMatching, Description mismatchDescription, Gson gson) {
 		try {
+			for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
+				Matcher<?> matcher = entry.getValue();
+				Object actual = entry.getKey();
+				if (!matcher.matches(actual)) {
+					appendFieldPath(matcher, mismatchDescription);
+					matcher.describeMismatch(actual, mismatchDescription);
+					appendFieldJsonSnippet(actual, mismatchDescription, gson);
+					return false;
+				}
+			}
 			JSONAssert.assertEquals(expectedJson, actualJson, true);
 		} catch (AssertionError e) {
 			return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());
@@ -91,10 +126,26 @@ class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements Ignor
 		return true;
 	}
 
-	private String filterJson(Object bean) {
-		Gson gson = gson(typesToIgnore);
-		String unfilteredJson = gson.toJson(bean);
-		JsonElement filteredJson = ignorePaths(jsonParser.parse(unfilteredJson), pathsToIgnore);
+	private void appendFieldJsonSnippet(Object actual, Description mismatchDescription, Gson gson) {
+		JsonElement jsonTree = gson.toJsonTree(actual);
+		if (!jsonTree.isJsonPrimitive() && !jsonTree.isJsonNull()) {
+			mismatchDescription.appendText("\n" + gson.toJson(actual));
+		}
+	}
+	
+	private void appendFieldPath(Matcher<?> matcher, Description mismatchDescription) {
+		for (Entry<String, Matcher<?>> entry : customMatchers.entrySet()) {
+			if (entry.getValue().equals(matcher)) {
+				mismatchDescription.appendText(entry.getKey()).appendText(" ");
+			}
+		}
+	}
+
+	private String filterJson(Gson gson, String unfilteredJson) {
+		Set<String> set = new HashSet<String>();
+		set.addAll(pathsToIgnore);
+		set.addAll(customMatchers.keySet());
+		JsonElement filteredJson = findPaths(jsonParser.parse(unfilteredJson), set);
 
 		return gson.toJson(filteredJson);
 	}

@@ -34,4 +34,15 @@ public interface IgnoringMatcher<T> extends Matcher<T> {
 	 * @return the instance of the matcher
 	 */
 	IgnoringMatcher<T> ignoring(Class<?> clazz);
+
+	/**
+	 * Specify the path of the field to be matched with a specific matcher.
+	 * Example:
+	 * <pre>sameBeanAs(expected).with("beanField.subBeanField", contains("element"))</pre>
+	 * 
+	 * @param fieldPath the path of the field to be matched with the provided matcher.
+	 * @param matcher the Hamcrest matcher used to match the specified field.
+	 * @return the instance of the matcher
+	 */
+	<V> IgnoringMatcher<T> with(String fieldPath, Matcher<V> matcher);
 }

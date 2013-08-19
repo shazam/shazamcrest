@@ -9,8 +9,11 @@
 */
 package com.shazam.shazamcrest;
 
+import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.actual;
+import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.checkThat;
+import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.expected;
+import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.message;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import org.hamcrest.StringDescription;
@@ -22,6 +25,7 @@ import org.junit.Test;
  */
 public class ResultComparisonTest {
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void throwsComparisonFailureWhenShazamDescriptionIsPassedIn() {
 		ComparisonDescription shazamDescription = new ComparisonDescription();
@@ -33,9 +37,11 @@ public class ResultComparisonTest {
 			ResultComparison.containsComparableJson(shazamDescription);
 			fail();
 		} catch (ComparisonFailure e) {
-			assertThat(e.getActual(), equalTo("actual"));
-			assertThat(e.getExpected(), equalTo("expected"));
-			assertThat(e.getMessage(), equalTo("message expected:<[expected]> but was:<[actual]>"));
+			checkThat(e, 
+					actual(equalTo("actual")), 
+					expected(equalTo("expected")),
+					message(equalTo("message expected:<[expected]> but was:<[actual]>"))
+			);
 		}
 	}
 	
