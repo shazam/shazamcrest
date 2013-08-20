@@ -40,14 +40,12 @@ Error Messages
 
 If the person address streetName does not match the expectations, the following diagnostic message is displayed:
 
-<pre><code>
-    org.junit.ComparisonFailure: address.streetName
+<pre>org.junit.ComparisonFailure: address.streetName
         Expected: Via Roma
     got: Via Veneto
         expected:<... "streetName": "Via [Roma]",
     "streetNumber...> but was:<... "streetName": "Via [Veneto]",
-    "streetNumber...>
-</code></pre>
+    "streetNumber...></pre>
 
 When the comparison result is a no match, the exception thrown is a ComparisonFailure, which can be used by IDEs like Eclipse and 
  IntelliJ to display a visual representation of the differences.
