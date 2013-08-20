@@ -12,33 +12,27 @@ Usage
 
 Having a Person bean with the following structure:
 
-<pre><code>
-    Person person
+<pre>Person person
     |-- String name
     |-- String surname
     |-- Address address
         |-- String streetName
-        |-- int streetNumber
-</code></pre>
+        |-- int streetNumber</pre>
 
 to compare two Person beans with Shazamcrest we would write:
 
-<pre><code>
-    assertThat(actualPerson, sameBeanAs(expectedPerson));
-</code></pre>
+<code>assertThat(actualPerson, sameBeanAs(expectedPerson));</code>
 
 instead of explicitly match every field of the bean and sub-beans:
 
-<pre><code>
-    assertThat(actualPerson, allOf(
+<code>assertThat(actualPerson, allOf(
         hasProperty("name", equalTo(expectedPerson.name)),
         hasProperty("surname", equalTo(expectedPerson.surname)),
         hasProperty("address", allOf(
             hasProperty("streetName", equalTo(expectedPerson.address.streetName)),
             hasProperty("streetNumber", equalTo(expectedPerson.address.streetNumber)))
         )
-    ));
-</code></pre>
+    ));</code>
 
 
 Error Messages
