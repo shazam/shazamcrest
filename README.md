@@ -43,9 +43,9 @@ If the person address streetName does not match the expectations, the following 
 <pre>org.junit.ComparisonFailure: address.streetName
         Expected: Via Roma
     got: Via Veneto
-        expected:<... "streetName": "Via [Roma]",
-    "streetNumber...> but was:<... "streetName": "Via [Veneto]",
-    "streetNumber...></pre>
+        expected:&lt;... "streetName": "Via [Roma]",
+    "streetNumber...&gt; but was:&lt;... "streetName": "Via [Veneto]",
+    "streetNumber...&gt;</pre>
 
 When the comparison result is a no match, the exception thrown is a ComparisonFailure, which can be used by IDEs like Eclipse and 
  IntelliJ to display a visual representation of the differences.
