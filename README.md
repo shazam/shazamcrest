@@ -58,13 +58,11 @@ QuickStart
 
 To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.zip) or add the following to your project's pom.xml:
  
-<pre><code>
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
         <version>0.3</version>
     </dependency>
-</code></pre>
 
 Known limitations
 -----------------
