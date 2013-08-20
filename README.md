@@ -25,14 +25,14 @@ to compare two Person beans with Shazamcrest we would write:
 
 instead of explicitly match every field of the bean and sub-beans:
 
-<code>assertThat(actualPerson, allOf(
+<pre><code>assertThat(actualPerson, allOf(
         hasProperty("name", equalTo(expectedPerson.name)),
         hasProperty("surname", equalTo(expectedPerson.surname)),
         hasProperty("address", allOf(
             hasProperty("streetName", equalTo(expectedPerson.address.streetName)),
             hasProperty("streetNumber", equalTo(expectedPerson.address.streetNumber)))
         )
-    ));</code>
+    ));</code></pre>
 
 
 Error Messages
