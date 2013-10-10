@@ -10,7 +10,7 @@
 package com.shazam.shazamcrest.util;
 
 import com.shazam.shazamcrest.MatcherAssert;
-import com.shazam.shazamcrest.matcher.IgnoringMatcher;
+import com.shazam.shazamcrest.matcher.CustomisableMatcher;
 import com.shazam.shazamcrest.matcher.Matchers;
 import com.shazam.shazamcrest.model.Bean;
 import com.shazam.shazamcrest.model.ChildBean;
@@ -20,27 +20,27 @@ import com.shazam.shazamcrest.model.ParentBean;
  * Provides helper methods to reduce the noise in the test classes
  */
 public class AssertionHelper {
-	public static IgnoringMatcher<ChildBean> sameBeanAs(ChildBean.Builder expected) {
+	public static CustomisableMatcher<ChildBean> sameBeanAs(ChildBean.Builder expected) {
 		return Matchers.sameBeanAs(expected.build());
 	}
 	
-	public static void assertThat(ChildBean.Builder actual, IgnoringMatcher<ChildBean> matcher) {
+	public static void assertThat(ChildBean.Builder actual, CustomisableMatcher<ChildBean> matcher) {
 		MatcherAssert.assertThat(actual.build(), matcher);
 	}
 	
-	public static IgnoringMatcher<ParentBean> sameBeanAs(ParentBean.Builder expected) {
+	public static CustomisableMatcher<ParentBean> sameBeanAs(ParentBean.Builder expected) {
 		return Matchers.sameBeanAs(expected.build());
 	}
 	
-	public static void assertThat(ParentBean.Builder actual, IgnoringMatcher<ParentBean> matcher) {
+	public static void assertThat(ParentBean.Builder actual, CustomisableMatcher<ParentBean> matcher) {
 		MatcherAssert.assertThat(actual.build(), matcher);
 	}
 	
-	public static IgnoringMatcher<Bean> sameBeanAs(Bean.Builder expected) {
+	public static CustomisableMatcher<Bean> sameBeanAs(Bean.Builder expected) {
 		return Matchers.sameBeanAs(expected.build());
 	}
 	
-	public static void assertThat(Bean.Builder actual, IgnoringMatcher<Bean> matcher) {
+	public static void assertThat(Bean.Builder actual, CustomisableMatcher<Bean> matcher) {
 		MatcherAssert.assertThat(actual.build(), matcher);
 	}
 }

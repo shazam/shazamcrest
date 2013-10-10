@@ -9,30 +9,34 @@
  */
 package com.shazam.shazamcrest.matcher;
 
-import static com.shazam.shazamcrest.GsonProvider.gson;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.equalTo;
 
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.core.IsEqual;
 
 /**
- * {@link DiagnosingCustomisableMatcher} implementation which verifies a bean is null.
+ * {@link DiagnosingCustomisableMatcher} which applies the {@link IsEqual} matcher when the object to compare is a String
+ * or a primitive type.
  */
-class NullMatcher<T> extends DiagnosingCustomisableMatcher<T> {
-	public NullMatcher(T expected) {
+class IsEqualMatcher<T> extends DiagnosingCustomisableMatcher<T> {
+
+	public IsEqualMatcher(T expected) {
 		super(expected);
+	}
+	
+	@Override
+	public void describeTo(Description description) {
+		equalTo(expected).describeTo(description);
 	}
 
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
-		if (actual != null) {
-			String actualJson = gson(typesToIgnore).toJson(actual);
-			return appendMismatchDescription(mismatchDescription, "null", actualJson, "actual is not null");
+		Matcher<T> equalTo = equalTo(expected);
+		boolean matches = equalTo.matches(actual);
+		if (!matches) {
+			equalTo.describeMismatch(actual, mismatchDescription);
 		}
-		return true;
-	}
-
-	@Override
-	public void describeTo(Description description) {
-		nullValue().describeTo(description);
+		return matches;
 	}
 }

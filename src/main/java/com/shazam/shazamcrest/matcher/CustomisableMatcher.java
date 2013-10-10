@@ -12,9 +12,10 @@ package com.shazam.shazamcrest.matcher;
 import org.hamcrest.Matcher;
 
 /**
- * {@link Matcher} implementation where fields and object types can be skipped from the comparison.
+ * {@link Matcher} implementation where fields and object types can be skipped from the comparison, or matched with
+ * custom matchers.
  */
-public interface IgnoringMatcher<T> extends Matcher<T> {
+public interface CustomisableMatcher<T> extends Matcher<T> {
 	/**
 	 * Specify the path of the field to be skipped from the matcher comparison.
 	 * Example:
@@ -23,7 +24,7 @@ public interface IgnoringMatcher<T> extends Matcher<T> {
 	 * @param fieldPath the path of the field to be skipped from the comparison.
 	 * @return the instance of the matcher
 	 */
-	IgnoringMatcher<T> ignoring(String fieldPath);
+	CustomisableMatcher<T> ignoring(String fieldPath);
 
 	/**
 	 * Specify the object type of the fields to be skipped from the matcher comparison.
@@ -33,7 +34,7 @@ public interface IgnoringMatcher<T> extends Matcher<T> {
 	 * @param clazz the object type to be skipped from the comparison.
 	 * @return the instance of the matcher
 	 */
-	IgnoringMatcher<T> ignoring(Class<?> clazz);
+	CustomisableMatcher<T> ignoring(Class<?> clazz);
 
 	/**
 	 * Specify the path of the field to be matched with a specific matcher.
@@ -44,5 +45,5 @@ public interface IgnoringMatcher<T> extends Matcher<T> {
 	 * @param matcher the Hamcrest matcher used to match the specified field.
 	 * @return the instance of the matcher
 	 */
-	<V> IgnoringMatcher<T> with(String fieldPath, Matcher<V> matcher);
+	<V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher);
 }

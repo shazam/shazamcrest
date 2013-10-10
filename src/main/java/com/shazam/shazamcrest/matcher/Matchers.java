@@ -9,23 +9,30 @@
  */
 package com.shazam.shazamcrest.matcher;
 
+import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
+
 /**
  * Entry point for the matchers available in Shazamcrest.
  */
 public class Matchers {
 
 	/**
-	 * Returns a {@link NullMatcher} in case the expectation is null, or a
-	 * {@link IgnoringDiagnosingMatcher} otherwise.
+	 * Returns a {@link NullMatcher} in case the expectation is null, a
+	 * {@link IsEqualMatcher} if it's a String or a primitive or a
+	 * {@link DiagnosingCustomisableMatcher} otherwise.
 	 * 
 	 * @param expected the expected bean to match against
-	 * @return an {@link IgnoringMatcher} instance
+	 * @return an {@link CustomisableMatcher} instance
 	 */
-	public static <T> IgnoringMatcher<T> sameBeanAs(final T expected) {
+	public static <T> CustomisableMatcher<T> sameBeanAs(final T expected) {
 		if (expected == null) {
 			return new NullMatcher<T>(expected);
 		}
-
-		return new IgnoringDiagnosingMatcher<T>(expected);
+		
+		if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class) {
+			return new IsEqualMatcher<T>(expected);
+		}
+		
+		return new DiagnosingCustomisableMatcher<T>(expected);
 	}
 }

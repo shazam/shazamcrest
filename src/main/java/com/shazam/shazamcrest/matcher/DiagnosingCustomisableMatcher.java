@@ -34,17 +34,17 @@ import com.shazam.shazamcrest.ComparisonDescription;
 
 /**
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
- * ignore in the comparison.
+ * ignore in the comparison, or fields to be matched with a custom matcher
  */
-class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements IgnoringMatcher<T> {
+class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements CustomisableMatcher<T> {
 	private static final JsonParser jsonParser = new JsonParser();
 
-	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
 	private final Set<String> pathsToIgnore = new HashSet<String>();
 	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
-	private final T expected;
+	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
+	protected final T expected;
 
-	public IgnoringDiagnosingMatcher(T expected) {
+	public DiagnosingCustomisableMatcher(T expected) {
 		this.expected = expected;
 	}
 
@@ -75,19 +75,19 @@ class IgnoringDiagnosingMatcher<T> extends DiagnosingMatcher<T> implements Ignor
 	}
 
 	@Override
-	public IgnoringMatcher<T> ignoring(String string) {
+	public CustomisableMatcher<T> ignoring(String string) {
 		pathsToIgnore.add(string);
 		return this;
 	}
 
 	@Override
-	public IgnoringMatcher<T> ignoring(Class<?> clazz) {
+	public CustomisableMatcher<T> ignoring(Class<?> clazz) {
 		typesToIgnore.add(clazz);
 		return this;
 	}
 	
 	@Override
-	public <V> IgnoringMatcher<T> with(String fieldPath, Matcher<V> matcher) {
+	public <V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
 		customMatchers.put(fieldPath, matcher);
 		return this;
 	}
