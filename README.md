@@ -51,6 +51,9 @@ The exception thrown is a ComparisonFailure which can be used by IDEs like Eclip
 
 ![Comparison failure diagnostic](http://tech.shazam.com/wp-content/uploads/2013/08/Screenshot.png)
 
+Note: in order to get the ComparisonFailure on mismatch the "assertThat" to use is com.shazam.shazamcrest.MatcherAssert.assertThat 
+rather than org.hamcrest.MatcherAssert.assertThat
+
 
 Ignoring fields
 -----
