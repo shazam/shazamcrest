@@ -52,6 +52,24 @@ The exception thrown is a ComparisonFailure which can be used by IDEs like Eclip
 ![Comparison failure diagnostic](http://tech.shazam.com/wp-content/uploads/2013/08/Screenshot.png)
 
 
+Ignoring fields
+-----
+
+If we are not interested in matching the street name, we can ignore it:
+
+<code>assertThat(actualPerson, sameBeanAs(expectedPerson).ignoring("address.streetName"));</code>
+
+
+Custom matching
+-----
+
+If we want to make sure that the street name starts with "Via" at least:
+
+<code>assertThat(actualPerson, sameBeanAs(expectedPerson).with("address.streetName"), startsWith("Via"));</code>
+
+where startsWith is an Hamcrest matcher.
+
+
 QuickStart
 -----
 
