@@ -45,7 +45,7 @@ public class MatcherAssert {
                        .appendText("\n     but: ");
             matcher.describeMismatch(actual, description);
             
-            containsComparableJson(description);
+            containsComparableJson(reason, description);
             
             throw new AssertionError(description.toString());
         }

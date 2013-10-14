@@ -14,10 +14,12 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.actual;
 import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.checkThat;
 import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.expected;
+import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.message;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.fail;
 
@@ -71,6 +73,19 @@ public class MatcherAssertFailureDiagnosticTest {
 			checkThat(e, 
 					expected(containsString("{\n  \"field1\": \"value1\",\n  \"field2\": 1\n}")), 
 					actual(containsString("{\n  \"field1\": \"value2\",\n  \"field2\": 2\n}")));
+		}
+	}
+	
+	@Test
+	public void includesAssertDescriptionInDiagnostic() {
+		Bean expected = bean().field1("value1").field2(1).build();
+		Bean actual = bean().field1("value2").field2(2).build();
+		
+		try {
+			assertThat("assertion description", actual, sameBeanAs(expected));
+			fail("Exceptionexpected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, message(startsWith("assertion description\n")));
 		}
 	}
 	
