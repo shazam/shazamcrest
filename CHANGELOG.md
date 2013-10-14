@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.5 - 2013/10/14
+-----
+
+Description given to assertThat is now preserved in ComparisonFailure.
+
 Version 0.4 - 2013/10/10
 -----
 
