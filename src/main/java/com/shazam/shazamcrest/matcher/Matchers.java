@@ -18,8 +18,8 @@ public class Matchers {
 
 	/**
 	 * Returns a {@link NullMatcher} in case the expectation is null, a
-	 * {@link IsEqualMatcher} if it's a String or a primitive or a
-	 * {@link DiagnosingCustomisableMatcher} otherwise.
+	 * {@link IsEqualMatcher} if it's a primitive, String or Enum
+	 * or a {@link DiagnosingCustomisableMatcher} otherwise.
 	 * 
 	 * @param expected the expected bean to match against
 	 * @return an {@link CustomisableMatcher} instance
@@ -29,7 +29,7 @@ public class Matchers {
 			return new NullMatcher<T>(expected);
 		}
 		
-		if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class) {
+		if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class || expected.getClass().isEnum()) {
 			return new IsEqualMatcher<T>(expected);
 		}
 		

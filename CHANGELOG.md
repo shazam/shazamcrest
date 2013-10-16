@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.6 - 2013/10/16
+-----
+
+The matcher is now using IsEqual Hamcrest matcher when Enums are compared.
+
 Version 0.5 - 2013/10/14
 -----
 

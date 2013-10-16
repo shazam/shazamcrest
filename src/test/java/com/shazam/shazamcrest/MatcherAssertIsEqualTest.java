@@ -21,7 +21,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Tests that the matcher works as expected with primitives and Strings
+ * Tests that the matcher works as expected with primitives, Strings and Enums
  */
 @RunWith(value = Parameterized.class)
 public class MatcherAssertIsEqualTest {
@@ -45,7 +45,8 @@ public class MatcherAssertIsEqualTest {
 				{ 10, 10 },
 				{ 20l, 20l },
 				{ 30.0f, 30.0f },
-				{ 40.0d, 40.0d }
+				{ 40.0d, 40.0d },
+				{ EnumTest.ENUM, EnumTest.ENUM }
 		};
 		return asList(data);
 	}
@@ -53,6 +54,10 @@ public class MatcherAssertIsEqualTest {
 	@Test
 	public void matchesExpectation() {
 		assertThat(actual, sameBeanAs(expected));
+	}
+	
+	private enum EnumTest {
+		ENUM
 	}
 
 }
