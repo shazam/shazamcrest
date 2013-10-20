@@ -7,7 +7,7 @@ Assertions on complete beans are made simpler by serialising the actual and expe
   the two. The diagnostics are leveraging the comparison functionality of IDEs like Eclipse or IntelliJ.
 
 
-Usage
+Usage 
 -----
 
 Having a Person bean with the following structure:
