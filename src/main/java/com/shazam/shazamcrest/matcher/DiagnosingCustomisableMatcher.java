@@ -67,7 +67,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		
 		Map<Object, Matcher<?>> customMatching = new HashMap<Object, Matcher<?>>();
 		for (Entry<String, Matcher<?>> entry : customMatchers.entrySet()) {
-			Object object = findBeanAt(entry.getKey(), actual);
+			Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
 			customMatching.put(object, customMatchers.get(entry.getKey()));
 		}
 

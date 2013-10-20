@@ -34,7 +34,7 @@ public class MatcherAssert {
      * 
      * @param reason describes the assertion
      * @param actual the object that will be matched against the matcher
-     * @param matcher defines the condition the object have to fulfil in order to match
+     * @param matcher defines the condition the object have to fulfill in order to match
      */
     public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
         if (!matcher.matches(actual)) {

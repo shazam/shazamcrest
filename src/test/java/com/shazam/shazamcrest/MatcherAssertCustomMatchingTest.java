@@ -10,10 +10,12 @@
 package com.shazam.shazamcrest;
 
 import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childField1EqualTo;
+import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
 import static com.shazam.shazamcrest.util.AssertionHelper.assertThat;
 import static com.shazam.shazamcrest.util.AssertionHelper.sameBeanAs;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -97,5 +99,10 @@ public class MatcherAssertCustomMatchingTest {
 		Builder actual = parent().parentField4("key", child().childField1("banana"));
 		
 		assertThat(actual, sameBeanAs(expected).with("parentField4", hasEntry(equalTo("key"), childField1EqualTo("kiwi"))));
+	}
+	
+	@Test(expected = AssertionError.class)
+	public void failsWhenActualIsNull() {
+		MatcherAssert.assertThat(null, sameBeanAs(bean()).with("field1", startsWith("field")));
 	}
 }
