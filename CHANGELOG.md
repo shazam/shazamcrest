@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.7 - 2013/10/20
+-----
+
+Fixed NullPointerException thrown when custom matching is applied to a null object.
+
 Version 0.6 - 2013/10/16
 -----
 
