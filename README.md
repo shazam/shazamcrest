@@ -81,7 +81,7 @@ To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
-        <version>0.6</version>
+        <version>0.7</version>
     </dependency>
 
 Known limitations
