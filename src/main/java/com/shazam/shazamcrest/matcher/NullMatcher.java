@@ -25,7 +25,7 @@ class NullMatcher<T> extends DiagnosingCustomisableMatcher<T> {
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
 		if (actual != null) {
-			String actualJson = gson(typesToIgnore).toJson(actual);
+			String actualJson = gson(typesToIgnore, circularReferenceTypes).toJson(actual);
 			return appendMismatchDescription(mismatchDescription, "null", actualJson, "actual is not null");
 		}
 		return true;
