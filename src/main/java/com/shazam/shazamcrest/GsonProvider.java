@@ -28,12 +28,11 @@ public class GsonProvider {
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation/deserialisation.
      *
-     * @param typesToIgnore          the object types to exclude from serialisation/deserialisation.
+     * @param typesToIgnore the object types to exclude from serialisation/deserialisation.
      * @param circularReferenceTypes cater for circular referenced objects
      * @return an instance of {@link Gson}
      */
     public static Gson gson(final List<Class<?>> typesToIgnore, List<Class<?>> circularReferenceTypes) {
-
         if (!circularReferenceTypes.isEmpty()) {
             final GraphAdapterBuilder graphAdapterBuilder = new GraphAdapterBuilder();
             for (final Class<?> circularReferenceType : circularReferenceTypes) {

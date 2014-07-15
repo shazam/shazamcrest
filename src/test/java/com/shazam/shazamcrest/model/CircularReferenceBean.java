@@ -9,148 +9,131 @@
  */
 package com.shazam.shazamcrest.model;
 
+import static com.shazam.shazamcrest.model.CircularReferenceBean.Child.Builder.child;
+import static com.shazam.shazamcrest.model.CircularReferenceBean.Parent.Builder.parent;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * CircularReferenceBean
+ * Bean containing a circular reference
  */
 @SuppressWarnings("unused")
 public class CircularReferenceBean {
+	private Parent parent;
 
-    private InnerParent parent;
+	private CircularReferenceBean(Builder builder) {
+		parent = builder.parent;
+	}
 
-    public CircularReferenceBean(InnerParent parent) {
-        this.parent = parent;
-    }
+	public static final class Builder {
+		private Parent parent;
 
-    private CircularReferenceBean(Builder builder) {
-        parent = builder.parent;
-    }
+		private Builder() {}
+		
+		public static Builder circularReferenceBean() {
+			return new Builder();
+		}
+		
+		public static Builder circularReferenceBean(final String parentAttribute, final String... childAttributes) {
+	    	Parent parent = parent()
+	    			.parentAttribute(parentAttribute)
+	    			.build();
+	    	for (String childAttribute : childAttributes) {
+	    		Child child = child()
+	    				.withChildAttribute(childAttribute)
+	    				.withParent(parent)
+	    				.build();
+	    		parent.addChild(child);
+			}
 
-    public static Builder cyclicBean() {
-        return new Builder();
-    }
+	        return circularReferenceBean().withParent(parent);
+	    }
 
-    public InnerParent getParent() {
-        return parent;
-    }
+		public Builder withParent(Parent parent) {
+			this.parent = parent;
+			return this;
+		}
 
-    public static class InnerChild{
-        private InnerParent parent;
-        private String attribute1;
+		public CircularReferenceBean build() {
+			return new CircularReferenceBean(this);
+		}
+	}
 
-        public InnerChild(InnerParent parent, String attribute1) {
-            this.parent = parent;
-            this.attribute1 = attribute1;
-        }
+	public static class Child {
+		private Parent parent;
+		private String childAttribute;
 
-        private InnerChild(Builder builder) {
-            parent = builder.parent;
-            attribute1 = builder.attribute1;
-        }
+		private Child(Builder builder) {
+			parent = builder.parent;
+			childAttribute = builder.childAttribute;
+		}
 
-        public static Builder innerChild() {
-            return new Builder();
-        }
+		public String getAttribute1() {
+			return childAttribute;
+		}
 
-        public String getAttribute1() {
-            return attribute1;
-        }
+		public Parent getParent() {
+			return parent;
+		}
 
-        public InnerParent getParent() {
-            return parent;
-        }
+		public static final class Builder {
+			private Parent parent;
+			private String childAttribute;
 
-        public static final class Builder {
-            private InnerParent parent;
-            private String attribute1;
+			private Builder() {}
 
-            private Builder() {
-            }
+			public static Builder child() {
+				return new Builder();
+			}
 
-            public Builder parent(InnerParent parent) {
-                this.parent = parent;
-                return this;
-            }
+			public Builder withParent(Parent parent) {
+				this.parent = parent;
+				return this;
+			}
 
-            public Builder attribute1(String attribute1) {
-                this.attribute1 = attribute1;
-                return this;
-            }
+			public Builder withChildAttribute(String childAttribute) {
+				this.childAttribute = childAttribute;
+				return this;
+			}
 
-            public InnerChild build() {
-                return new InnerChild(this);
-            }
-        }
-    }
-    public static class InnerParent{
+			public Child build() {
+				return new Child(this);
+			}
+		}
+	}
 
-        private List<InnerChild> innerChildren = new ArrayList<InnerChild>();
-        private String parentAttribute;
+	public static class Parent {
+		private List<Child> children = new ArrayList<Child>();
+		private String parentAttribute;
 
-        private InnerParent(Builder builder) {
-            setInnerChildren(builder.innerChildren);
-            setParentAttribute(builder.parentAttribute);
-        }
+		private Parent(Builder builder) {
+			this.children = builder.children;
+			this.parentAttribute = builder.parentAttribute;
+		}
 
-        public static Builder innerParent() {
-            return new Builder();
-        }
+		public void addChild(Child child) {
+			children.add(child);
+		}
 
+		public static final class Builder {
+			private List<Child> children = new ArrayList<Child>();
+			private String parentAttribute;
 
-        public List<InnerChild> getInnerChildren() {
-            return innerChildren;
-        }
+			private Builder() {}
+			
+			public static Builder parent() {
+				return new Builder();
+			}
 
-        public void setInnerChildren(List<InnerChild> innerChildren) {
-            this.innerChildren = innerChildren;
-        }
+			public Builder parentAttribute(String parentAttribute) {
+				this.parentAttribute = parentAttribute;
+				return this;
+			}
 
-        public String getParentAttribute() {
-            return parentAttribute;
-        }
-
-        public void setParentAttribute(String parentAttribute) {
-            this.parentAttribute = parentAttribute;
-        }
-
-        public static final class Builder {
-            private List<InnerChild> innerChildren;
-            private String parentAttribute;
-
-            private Builder() {
-            }
-
-            public Builder innerChildren(List<InnerChild> innerChildren) {
-                this.innerChildren = innerChildren;
-                return this;
-            }
-
-            public Builder parentAttribute(String parentAttribute) {
-                this.parentAttribute = parentAttribute;
-                return this;
-            }
-
-            public InnerParent build() {
-                return new InnerParent(this);
-            }
-        }
-    }
-
-    public static final class Builder {
-        private InnerParent parent;
-
-        private Builder() {
-        }
-
-        public Builder parent(InnerParent parent) {
-            this.parent = parent;
-            return this;
-        }
-
-        public CircularReferenceBean build() {
-            return new CircularReferenceBean(this);
-        }
-    }
+			public Parent build() {
+				return new Parent(this);
+			}
+		}
+	}
 }
