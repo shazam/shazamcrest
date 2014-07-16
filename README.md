@@ -73,6 +73,51 @@ If we want to make sure that the street name starts with "Via" at least:
 where startsWith is an Hamcrest matcher.
 
 
+Circular references
+-----
+
+Having a Shop bean with the following structure:
+
+<pre>Shop shop
+	|-- String name
+    |-- Store store
+        |-- Boss boss
+            |-- Clerk clerk
+                |-- Store store
+                |-- Boss boss</pre>
+        
+Comparing two Shop objects throws a StackOverflowError, because of the cycles Clerk -> Store -> Boss -> Clerk and Clerk -> Boss -> Clerk.
+
+Specifying the class type responsible for the circular reference, instructs the serialiser to serialise the instance once and replace all the other occurrences with a pointer:
+
+<code>assertThat(actualShop, sameBeanAs(expectedShop).circularReference(Store.class).circularReference(Boss.class);</code>
+
+produces the following representation:
+
+<pre>{
+  "store": {
+    "0x1": {
+      "0x1": {
+        "0x1": {
+          "boss": "0x2"
+        }
+      }
+    },
+    "0x2": {
+      "0x1": {
+        "0x1": {
+          "clerk": {
+            "boss": "0x2",
+            "store": "0x1"
+          }
+        }
+      }
+    }
+  },
+  "name": "shop"
+}</pre>
+
+
 QuickStart
 -----
 
@@ -81,12 +126,10 @@ To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
-        <version>0.7</version>
+        <version>0.8</version>
     </dependency>
 
 Known limitations
 -----------------
 
-* If a bean contains data with circular references, a StackOverflowError will be thrown during comparison.
 * Sets and Maps with same data are serialised in non deterministic order, generating random comparison failures.
-
