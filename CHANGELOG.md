@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.8 - 2014/07/16
+-----
+
+Handled circular references.
+
 Version 0.7 - 2013/10/20
 -----
 
