@@ -9,7 +9,7 @@
  */
 package com.shazam.shazamcrest.matcher;
 
-import static com.shazam.shazamcrest.GsonProvider.gson;
+import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 import static org.hamcrest.CoreMatchers.nullValue;
 
 import org.hamcrest.Description;

@@ -9,7 +9,7 @@
 */
 package com.shazam.shazamcrest;
 
-import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childField1EqualTo;
+import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
 import static com.shazam.shazamcrest.util.AssertionHelper.assertThat;
@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
-import com.shazam.shazamcrest.model.ParentBean.Builder;
+import com.shazam.shazamcrest.model.ParentBean;
 
 /**
  * Tests which verify the diagnostic displayed when a custom matcher fails.
@@ -30,53 +30,53 @@ public class MatcherAssertCustomMatchingDiagnosticTest {
 
 	@Test
 	public void includesDescriptionAndMismatchDescriptionForFailingMatcherOnPrimiteField() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana"));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
 		
 		try {
-			assertThat(actual, sameBeanAs(expected).with("parentField2.childField1", equalTo("kiwi")));
+			assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("kiwi")));
 			fail("Expected assertion error");
 		} catch (AssertionError e) {
-			MatcherAssert.assertThat(e.getMessage(), endsWith("and parentField2.childField1 \"kiwi\"\n     but: parentField2.childField1 was \"banana\""));
+			MatcherAssert.assertThat(e.getMessage(), endsWith("and childBean.childString \"kiwi\"\n     but: childBean.childString was \"banana\""));
 		}
 	}
 	
 	@Test
 	public void includesJsonSnippetOfNonPrimitiveFieldOnMatchFailure() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana").childField2(1));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana").childInteger(1));
 		
 		try {
-			assertThat(actual, sameBeanAs(expected).with("parentField2", childField1EqualTo("kiwi")));
+			assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("kiwi")));
 			fail("Expected assertion error");
 		} catch (AssertionError e) {
-			MatcherAssert.assertThat(e.getMessage(), endsWith("and parentField2 having string field \"kiwi\"\n     but: parentField2 string field was \"banana\"\n{\n  \"childField1\": \"banana\",\n  \"childField2\": 1\n}"));
+			MatcherAssert.assertThat(e.getMessage(), endsWith("and childBean having string field \"kiwi\"\n     but: childBean string field was \"banana\"\n{\n  \"childString\": \"banana\",\n  \"childInteger\": 1\n}"));
 		}
 	}
 	
 	@Test
 	public void doesNotIncludeJsonSnippetOnNullField() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent();
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent();
 		
 		try {
-			assertThat(actual, sameBeanAs(expected).with("parentField2", childField1EqualTo("kiwi")));
+			assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("kiwi")));
 			fail("Expected assertion error");
 		} catch (AssertionError e) {
-			MatcherAssert.assertThat(e.getMessage(), endsWith("and parentField2 having string field \"kiwi\"\n     but: parentField2 was null"));
+			MatcherAssert.assertThat(e.getMessage(), endsWith("and childBean having string field \"kiwi\"\n     but: childBean was null"));
 		}
 	}
 	
 	@Test
 	public void throwsIllegalArgumentExceptionWhenFieldPathDoesNotExist() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana"));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
 		
 		try {
-			assertThat(actual, sameBeanAs(expected).with("parentField2.nonExistingField", equalTo("kiwi")));
+			assertThat(actual, sameBeanAs(expected).with("childBean.nonExistingField", equalTo("kiwi")));
 			fail("Expected assertion error");
 		} catch (IllegalArgumentException e) {
-			MatcherAssert.assertThat(e.getMessage(), endsWith("parentField2.nonExistingField does not exist"));
+			MatcherAssert.assertThat(e.getMessage(), endsWith("childBean.nonExistingField does not exist"));
 		}
 	}
 }

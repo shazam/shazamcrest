@@ -21,11 +21,11 @@ import com.shazam.shazamcrest.model.ChildBean;
  */
 public class ChildBeanMatchers {
 
-	public static Matcher<ChildBean> childField1EqualTo(String string) {
+	public static Matcher<ChildBean> childStringEqualTo(String string) {
 		return new FeatureMatcher<ChildBean, String>(equalTo(string), "having string field", "string field") {
 			@Override
 			protected String featureValueOf(ChildBean actual) {
-				return actual.getChildField1();
+				return actual.getChildString();
 			}
 		};
 	}

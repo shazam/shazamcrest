@@ -9,7 +9,7 @@
 */
 package com.shazam.shazamcrest;
 
-import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childField1EqualTo;
+import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
@@ -22,7 +22,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
 import org.junit.Test;
 
-import com.shazam.shazamcrest.model.ParentBean.Builder;
+import com.shazam.shazamcrest.model.ParentBean;
 
 /**
  * Tests which verify the possibility to match beans applying hamcrest matchers on specific fields.
@@ -31,78 +31,78 @@ public class MatcherAssertCustomMatchingTest {
 
 	@Test
 	public void matchesPrimitiveWithCustomMatcher() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana"));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField2.childField1", equalTo("banana")));
+		assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("banana")));
 	}
 	
 	@Test(expected = AssertionError.class)
 	public void failsWhenCustomMatcherDoesNotMatchOnPrimitive() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana"));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField2.childField1", equalTo("kiwi")));
+		assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("kiwi")));
 	}
 	
 	@Test
 	public void matchesFieldWithCustomMatcher() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana").childField2(2));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana").childInteger(2));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField2", childField1EqualTo("banana")));
+		assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("banana")));
 	}
 	
 	@Test
 	public void matchesFieldWithChainOfCustomMatchers() {
-		Builder expected = parent().parentField2(child().childField1("apple")).parentField1("kiwi");
-		Builder actual = parent().parentField2(child().childField1("banana").childField2(2)).parentField1("strawberry");
+		ParentBean.Builder expected = parent().childBean(child().childString("apple")).parentString("kiwi");
+		ParentBean.Builder actual = parent().childBean(child().childString("banana").childInteger(2)).parentString("strawberry");
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField2", childField1EqualTo("banana")).with("parentField1", equalTo("strawberry")));
+		assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("banana")).with("parentString", equalTo("strawberry")));
 	}
 	
 	@Test(expected = AssertionError.class)
 	public void failsWhenCustomMatcherDoesNotMatchOnField() {
-		Builder expected = parent().parentField2(child().childField1("apple"));
-		Builder actual = parent().parentField2(child().childField1("banana"));
+		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField2", childField1EqualTo("kiwi")));
+		assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("kiwi")));
 	}
 	
 	@Test
 	public void matchesItemInCollectionWithCustomMatcher() {
-		Builder expected = parent().addParentField3(child().childField1("kiwi"));
-		Builder actual = parent().addParentField3(child().childField1("apple")).addParentField3(child().childField1("banana"));
+		ParentBean.Builder expected = parent().addToChildBeanList(child().childString("kiwi"));
+		ParentBean.Builder actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField3", hasItem(childField1EqualTo("banana"))));
+		assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("banana"))));
 	}
 	
 	@Test(expected = AssertionError.class)
 	public void failsWhenCustomMatcherDoesNotMatchACollection() {
-		Builder expected = parent().addParentField3(child().childField1("kiwi"));
-		Builder actual = parent().addParentField3(child().childField1("apple")).addParentField3(child().childField1("banana"));
+		ParentBean.Builder expected = parent().addToChildBeanList(child().childString("kiwi"));
+		ParentBean.Builder actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField3", hasItem(childField1EqualTo("kiwi"))));
+		assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("kiwi"))));
 	}
 	
 	@Test
 	public void matchesItemInMap() {
-		Builder expected = parent().parentField4("key", child().childField1("apple"));
-		Builder actual = parent().parentField4("key", child().childField1("banana"));
+		ParentBean.Builder expected = parent().putToChildBeanMap("key", child().childString("apple"));
+		ParentBean.Builder actual = parent().putToChildBeanMap("key", child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField4", hasEntry(equalTo("key"), childField1EqualTo("banana"))));
+		assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("banana"))));
 	}
 	
 	@Test(expected = AssertionError.class)
 	public void failsWhenCustomMatcherDoesNotMatchAMap() {
-		Builder expected = parent().parentField4("key", child().childField1("apple"));
-		Builder actual = parent().parentField4("key", child().childField1("banana"));
+		ParentBean.Builder expected = parent().putToChildBeanMap("key", child().childString("apple"));
+		ParentBean.Builder actual = parent().putToChildBeanMap("key", child().childString("banana"));
 		
-		assertThat(actual, sameBeanAs(expected).with("parentField4", hasEntry(equalTo("key"), childField1EqualTo("kiwi"))));
+		assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi"))));
 	}
 	
 	@Test(expected = AssertionError.class)
 	public void failsWhenActualIsNull() {
-		MatcherAssert.assertThat(null, sameBeanAs(bean()).with("field1", startsWith("field")));
+		MatcherAssert.assertThat(null, sameBeanAs(bean()).with("string", startsWith("field")));
 	}
 }

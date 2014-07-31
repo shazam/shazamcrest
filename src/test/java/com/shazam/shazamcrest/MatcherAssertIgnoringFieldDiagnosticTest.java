@@ -33,14 +33,14 @@ public class MatcherAssertIgnoringFieldDiagnosticTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void doesNotIncludeIgnoredFieldsInDiagnostics() {
-		Bean expected = bean().field1("value1").field2(1).build();
-		Bean actual = bean().field1("value2").field2(2).build();
+		Bean expected = bean().string("value1").integer(1).build();
+		Bean actual = bean().string("value2").integer(2).build();
 		
 		try {
-			assertThat(actual, sameBeanAs(expected).ignoring("field1"));
+			assertThat(actual, sameBeanAs(expected).ignoring("string"));
 			fail("Exceptionexpected");
 		} catch (ComparisonFailure e) {
-			checkThat(e, expected(not(containsString("field1"))), actual(not(containsString("field1"))));
+			checkThat(e, expected(not(containsString("string"))), actual(not(containsString("string"))));
 		}
 	}
 }

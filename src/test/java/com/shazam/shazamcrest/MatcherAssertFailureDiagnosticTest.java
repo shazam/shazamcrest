@@ -37,7 +37,7 @@ public class MatcherAssertFailureDiagnosticTest {
 
 	@Test
 	public void containsDiagnosticsWhenActualIsNull() {
-		Bean expected = bean().field1("value1").field2(1).build();
+		Bean expected = bean().string("value1").integer(1).build();
 		Bean actual = null;
 
 		try {
@@ -51,7 +51,7 @@ public class MatcherAssertFailureDiagnosticTest {
 	@Test
 	public void containsDiagnosticsWhenExpectedIsNull() {
 		Bean expected = null;
-		Bean actual = bean().field1("value1").field2(1).build();
+		Bean actual = bean().string("value1").integer(1).build();
 
 		try {
 			assertThat(actual, sameBeanAs(expected));
@@ -63,23 +63,23 @@ public class MatcherAssertFailureDiagnosticTest {
 	
 	@Test
 	public void prettyPrintsTheJson() {
-		Bean expected = bean().field1("value1").field2(1).build();
-		Bean actual = bean().field1("value2").field2(2).build();
+		Bean expected = bean().string("value1").integer(1).build();
+		Bean actual = bean().string("value2").integer(2).build();
 		
 		try {
 			assertThat(actual, sameBeanAs(expected));
 			fail("Exceptionexpected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, 
-					expected(containsString("{\n  \"field1\": \"value1\",\n  \"field2\": 1\n}")), 
-					actual(containsString("{\n  \"field1\": \"value2\",\n  \"field2\": 2\n}")));
+					expected(containsString("{\n  \"string\": \"value1\",\n  \"integer\": 1\n}")), 
+					actual(containsString("{\n  \"string\": \"value2\",\n  \"integer\": 2\n}")));
 		}
 	}
 	
 	@Test
 	public void includesAssertDescriptionInDiagnostic() {
-		Bean expected = bean().field1("value1").field2(1).build();
-		Bean actual = bean().field1("value2").field2(2).build();
+		Bean expected = bean().string("value1").integer(1).build();
+		Bean actual = bean().string("value2").integer(2).build();
 		
 		try {
 			assertThat("assertion description", actual, sameBeanAs(expected));

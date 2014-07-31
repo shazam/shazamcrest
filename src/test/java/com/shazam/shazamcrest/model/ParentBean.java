@@ -21,60 +21,60 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class ParentBean {
-	private String parentField1;
-	private ChildBean parentField2;
-	private List<ChildBean> parentField3;
-	private Map<String, ChildBean> parentField4;
+	private String parentString;
+	private ChildBean childBean;
+	private List<ChildBean> childBeanList;
+	private Map<String, ChildBean> childBeanMap;
 	
 	private ParentBean(Builder builder) {
-		parentField1 = builder.parentField1;
-		parentField2 = builder.parentField2;
-		parentField3 = builder.parentField3;
-		parentField4 = builder.parentField4;
+		parentString = builder.parentString;
+		childBean = builder.childBean;
+		childBeanList = builder.childBeanList;
+		childBeanMap = builder.childBeanMap;
 	}
 	
 	public static class Builder {
-		private String parentField1;
-		private ChildBean parentField2;
-		private List<ChildBean> parentField3 = new ArrayList<ChildBean>();
-		private Map<String, ChildBean> parentField4 = new HashMap<String, ChildBean>();
+		private String parentString;
+		private ChildBean childBean;
+		private List<ChildBean> childBeanList = new ArrayList<ChildBean>();
+		private Map<String, ChildBean> childBeanMap = new HashMap<String, ChildBean>();
 
 		public static Builder parent() {
 			return new Builder();
 		}
 		
-		public Builder parentField1(String parentField1) {
-			this.parentField1 = parentField1;
+		public Builder parentString(String parentString) {
+			this.parentString = parentString;
 			return this;
 		}
 		
-		public Builder parentField2(ChildBean.Builder parentField2) {
-			this.parentField2 = parentField2.build();
+		public Builder childBean(ChildBean.Builder childBean) {
+			this.childBean = childBean.build();
 			return this;
 		}
 		
-		public Builder parentField2(String childField1, int childField2) {
-			parentField2(child().childField1(childField1).childField2(childField2));
+		public Builder childBean(String childString, int childInteger) {
+			childBean(child().childString(childString).childInteger(childInteger));
 			return this;
 		}
 		
-		public Builder addParentField3(ChildBean.Builder testBean) {
-			parentField3.add(testBean.build());
+		public Builder addToChildBeanList(ChildBean.Builder childBean) {
+			childBeanList.add(childBean.build());
 			return this;
 		}
 		
-		public Builder addParentField3(String field1, int field2) {
-			addParentField3(child().childField1(field1).childField2(field2));
+		public Builder addToChildBeanList(String childString, int childInteger) {
+			addToChildBeanList(child().childString(childString).childInteger(childInteger));
 			return this;
 		}
 		
-		public Builder addParentField3(ChildBean testBean) {
-			parentField3.add(testBean);
+		public Builder addToChildBeanList(ChildBean childBean) {
+			childBeanList.add(childBean);
 			return this;
 		}
 		
-		public Builder parentField4(String key, ChildBean.Builder testBean) {
-			parentField4.put(key, testBean.build());
+		public Builder putToChildBeanMap(String key, ChildBean.Builder childBean) {
+			childBeanMap.put(key, childBean.build());
 			return this;
 		}
 		

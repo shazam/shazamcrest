@@ -26,8 +26,8 @@ public class MatcherAssertFailureTest {
 
 	@Test(expected = ComparisonFailure.class)
 	public void throwsComparisonFailureWhenBeansNotMatching() {
-		Bean expected = bean().field1("value1").field2(1).build();
-		Bean actual = bean().field1("value2").field2(2).build();
+		Bean expected = bean().string("value1").integer(1).build();
+		Bean actual = bean().string("value2").integer(2).build();
 
 		assertThat(actual, sameBeanAs(expected));
 	}

@@ -14,33 +14,33 @@ package com.shazam.shazamcrest.model;
  */
 @SuppressWarnings("unused")
 public class ChildBean {
-	private String childField1;
-	private int childField2;
+	private String childString;
+	private int childInteger;
 
 	private ChildBean(Builder builder) {
-		childField1 = builder.childField1;
-		childField2 = builder.childField2;
+		childString = builder.childString;
+		childInteger = builder.childInteger;
 	}
 
-	public String getChildField1() {
-		return childField1;
+	public String getChildString() {
+		return childString;
 	}
 	
 	public static class Builder {
-		private String childField1;
-		private int childField2;
+		private String childString;
+		private int childInteger;
 
 		public static Builder child() {
 			return new Builder();
 		}
 		
-		public Builder childField1(String childField1) {
-			this.childField1 = childField1;
+		public Builder childString(String childString) {
+			this.childString = childString;
 			return this;
 		}
 		
-		public Builder childField2(int childField2) {
-			this.childField2 = childField2;
+		public Builder childInteger(int childInteger) {
+			this.childInteger = childInteger;
 			return this;
 		}
 		

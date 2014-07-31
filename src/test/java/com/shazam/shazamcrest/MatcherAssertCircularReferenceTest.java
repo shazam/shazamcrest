@@ -41,8 +41,8 @@ public class MatcherAssertCircularReferenceTest {
     
     @Test(expected = ComparisonFailure.class)
     public void throwsComparisonFailureWhenCircularReferenceBeansDiffer() {
-        CircularReferenceBean expected = circularReferenceBean("ExpectedParent", "ExpectedChild1", "ExpectedChild2").build();
-        CircularReferenceBean actual = circularReferenceBean("ActualParent", "ActualChild1", "ActualChild2").build();
+        CircularReferenceBean expected = circularReferenceBean("expectedParent", "expectedChild1", "expectedChild2").build();
+        CircularReferenceBean actual = circularReferenceBean("actualParent", "actualChild1", "actualChild2").build();
         
         assertThat(actual, sameBeanAs(expected).circularReference(CircularReferenceBean.Parent.class));
     }

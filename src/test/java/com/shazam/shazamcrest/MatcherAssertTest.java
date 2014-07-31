@@ -25,8 +25,8 @@ public class MatcherAssertTest {
 	
 	@Test
 	public void doesNothingWhenBeansMatch() {
-		Bean expected = bean().field1("value1").field2(1).build();
-		Bean actual = bean().field1("value1").field2(1).build();
+		Bean expected = bean().string("string").integer(1).build();
+		Bean actual = bean().string("string").integer(1).build();
 
 		assertThat(actual, sameBeanAs(expected));
 	}

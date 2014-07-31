@@ -9,38 +9,77 @@
  */
 package com.shazam.shazamcrest.model;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import com.shazam.shazamcrest.model.Bean.Builder;
+
 /**
  * Simple bean used for tests
  */
 @SuppressWarnings("unused")
 public class Bean {
-	private String field1;
-	private int field2;
-
+	private String string;
+	private int integer;
+	private Set<Bean> set;
+	private Map<Bean, Bean> map;
+	private HashSet<Bean> hashSet;
+	private HashMap<Bean, Bean> hashMap;
+	
 	private Bean(Builder builder) {
-		field1 = builder.field1;
-		field2 = builder.field2;
-	}
-
-	public String getField1() {
-		return field1;
+		string = builder.string;
+		integer = builder.integer;
+		set = builder.set;
+		map = builder.map;
+		hashSet = builder.hashSet;
+		hashMap = builder.hashMap;
 	}
 	
+	public String getField1() {
+		return string;
+	}
+
 	public static class Builder {
-		private String field1;
-		private int field2;
+		private String string;
+		private int integer;
+		private Set<Bean> set;
+		private Map<Bean, Bean> map;
+		private HashSet<Bean> hashSet;
+		private HashMap<Bean, Bean> hashMap;
 
 		public static Builder bean() {
 			return new Builder();
 		}
 		
-		public Builder field1(String field1) {
-			this.field1 = field1;
+		public Builder string(String string) {
+			this.string = string;
 			return this;
 		}
 		
-		public Builder field2(int field2) {
-			this.field2 = field2;
+		public Builder integer(int integer) {
+			this.integer = integer;
+			return this;
+		}
+		
+		public Builder set(Set<Bean> set) {
+			this.set = set;
+			return this;
+		}
+		
+		public Builder map(Map<Bean, Bean> map) {
+			this.map = map;
+			return this;
+		}
+		
+		public Builder hashSet(HashSet<Bean> hashSet) {
+			this.hashSet = hashSet;
+			return this;
+		}
+		
+		public Builder hashMap(HashMap<Bean, Bean> hashMap) {
+			this.hashMap = hashMap;
 			return this;
 		}
 		

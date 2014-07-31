@@ -11,7 +11,7 @@ package com.shazam.shazamcrest.matcher;
 
 import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
 import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
-import static com.shazam.shazamcrest.GsonProvider.gson;
+import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;

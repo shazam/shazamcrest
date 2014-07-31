@@ -29,16 +29,16 @@ public class MatcherAssertIgnoringTypeTest {
 
 	@Test
 	public void ignoresType() {
-		ParentBean expected = parent().parentField2(child().childField1("value2")).build();
-		ParentBean actual = parent().parentField2(child().childField1("value1")).build();
+		ParentBean expected = parent().childBean(child().childString("value2")).build();
+		ParentBean actual = parent().childBean(child().childString("value1")).build();
 
 		assertThat(actual, sameBeanAs(expected).ignoring(ChildBean.class));
 	}
 	
 	@Test(expected = ComparisonFailure.class)
 	public void failsWhenBeanDoesNotMatchAfterIgnoringType() {
-		Bean expected = bean().field1("field1").build();
-		Bean actual = bean().field2(1).build();
+		Bean expected = bean().string("string").build();
+		Bean actual = bean().integer(1).build();
 
 		assertThat(actual, sameBeanAs(expected).ignoring(Boolean.class));
 	}

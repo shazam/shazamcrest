@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import com.shazam.shazamcrest.model.Bean;
 import com.shazam.shazamcrest.model.ChildBean;
-import com.shazam.shazamcrest.model.ParentBean.Builder;
+import com.shazam.shazamcrest.model.ParentBean;
 
 /**
  * Tests for {@link MatcherAssert} which verify that fields can be ignored from the comparison.
@@ -29,103 +29,103 @@ public class MatcherAssertIgnoringFieldTest {
 
 	@Test
 	public void ignoresField() {
-		Bean.Builder expected = bean().field1("banana");
-		Bean.Builder actual = bean().field1("apple");
+		Bean.Builder expected = bean().string("banana");
+		Bean.Builder actual = bean().string("apple");
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("field1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("string"));
 	}
 	
 	@Test(expected = ComparisonFailure.class)
 	public void failsWhenBeanDoesNotMatchedEvenAfterIgnoringField() {
-		Bean.Builder expected = bean().field1("banana").field2(2);
-		Bean.Builder actual = bean().field1("apple");
+		Bean.Builder expected = bean().string("banana").integer(2);
+		Bean.Builder actual = bean().string("apple");
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("field1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("string"));
 	}
 	
 	@Test
 	public void ignoresFields() {
-		ChildBean.Builder expected = child().childField1("banana").childField2(1);
-		ChildBean.Builder actual = child().childField1("apple").childField2(2);
+		ChildBean.Builder expected = child().childString("banana").childInteger(1);
+		ChildBean.Builder actual = child().childString("apple").childInteger(2);
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("childField1").ignoring("childField2"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childString").ignoring("childInteger"));
 	}
 	
 	@Test
 	public void ignoresFieldInNestedBean() {
-		Builder expected = parent().parentField2(child().childField1("banana"));
-		Builder actual = parent().parentField2(child().childField1("orange"));
+		ParentBean.Builder expected = parent().childBean(child().childString("banana"));
+		ParentBean.Builder actual = parent().childBean(child().childString("orange"));
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField2.childField1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString"));
 	}
 	
 	@Test(expected = ComparisonFailure.class)
 	public void failsWhenBeanDoesNotMatchEvenAfterIgnoringFieldInNestedBean() {
-		Builder expected = parent().parentField1("expected").parentField2(child().childField1("banana"));
-		Builder actual = parent().parentField2(child().childField1("orange"));
+		ParentBean.Builder expected = parent().parentString("expected").childBean(child().childString("banana"));
+		ParentBean.Builder actual = parent().childBean(child().childString("orange"));
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField2.childField1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString"));
 	}
 	
 	@Test
 	public void allowsToSpecifySubpathOnNullObjects() {
-		Builder expected = parent().parentField1("banana");
-		Builder actual = parent().parentField1("banana");
+		ParentBean.Builder expected = parent().parentString("banana");
+		ParentBean.Builder actual = parent().parentString("banana");
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField2.nonExistingField"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBean.nonExistingField"));
 	}
 	
 	@Test
 	public void allowsToIgnoreNullObjects() {
-		Builder expected = parent().parentField1("banana");
-		Builder actual = parent().parentField1("banana");
+		ParentBean.Builder expected = parent().parentString("banana");
+		ParentBean.Builder actual = parent().parentString("banana");
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField2"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBean"));
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void throwsIllegalArgumentExceptionWhenSubpathIsSpecifiedOnPrimitiveField() {
-		Builder expected = parent().parentField2(child().childField1("banana"));
-		Builder actual = parent().parentField2(child().childField1("orange"));
+		ParentBean.Builder expected = parent().childBean(child().childString("banana"));
+		ParentBean.Builder actual = parent().childBean(child().childString("orange"));
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField2.childField1.subpath"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString.subpath"));
 	}
 	
 	@Test
 	public void ignoresFieldsInBeansWhitinList() {
-		Builder expected = parent()
-				.addParentField3(child().childField1("kiwi"))
-				.addParentField3(child().childField1("plum"));
-		Builder actual = parent()
-				.addParentField3(child().childField1("banana"))
-				.addParentField3(child().childField1("grape"));
+		ParentBean.Builder expected = parent()
+				.addToChildBeanList(child().childString("kiwi"))
+				.addToChildBeanList(child().childString("plum"));
+		ParentBean.Builder actual = parent()
+				.addToChildBeanList(child().childString("banana"))
+				.addToChildBeanList(child().childString("grape"));
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField3.childField1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString"));
 	}
 	
 	@Test(expected = ComparisonFailure.class)
 	public void failsWhenBeanDoesNotMatchAfterIgnoringFieldsInBeansWhitinList() {
-		Builder expected = parent()
-				.addParentField3(child().childField1("kiwi").childField2(2))
-				.addParentField3(child().childField1("plum"));
-		Builder actual = parent()
-				.addParentField3(child().childField1("banana"))
-				.addParentField3(child().childField1("grape"));
+		ParentBean.Builder expected = parent()
+				.addToChildBeanList(child().childString("kiwi").childInteger(2))
+				.addToChildBeanList(child().childString("plum"));
+		ParentBean.Builder actual = parent()
+				.addToChildBeanList(child().childString("banana"))
+				.addToChildBeanList(child().childString("grape"));
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField3.childField1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString"));
 	}
 	
 	@Test
 	public void ignoresFieldsInBeansWhitinListThatContainsNullBeans() {
-		Builder expected = parent()
-				.addParentField3(child().childField1("kiwi"))
-				.addParentField3((ChildBean)null)
-				.addParentField3(child().childField1("plum"));
-		Builder actual = parent()
-				.addParentField3(child().childField1("banana"))
-				.addParentField3((ChildBean)null)
-				.addParentField3(child().childField1("grape"));
+		ParentBean.Builder expected = parent()
+				.addToChildBeanList(child().childString("kiwi"))
+				.addToChildBeanList((ChildBean)null)
+				.addToChildBeanList(child().childString("plum"));
+		ParentBean.Builder actual = parent()
+				.addToChildBeanList(child().childString("banana"))
+				.addToChildBeanList((ChildBean)null)
+				.addToChildBeanList(child().childString("grape"));
 		
-		assertThat(actual, sameBeanAs(expected).ignoring("parentField3.childField1"));
+		assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString"));
 	}
 }
