@@ -9,11 +9,16 @@
 */
 package com.shazam.shazamcrest;
 
+import static com.google.common.collect.Maps.newHashMap;
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
 import static com.shazam.shazamcrest.util.AssertionHelper.assertThat;
 import static com.shazam.shazamcrest.util.AssertionHelper.sameBeanAs;
+
+import java.util.Map;
 
 import org.junit.ComparisonFailure;
 import org.junit.Test;
@@ -127,5 +132,83 @@ public class MatcherAssertIgnoringFieldTest {
 				.addToChildBeanList(child().childString("grape"));
 		
 		assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString"));
+	}
+	
+	@Test
+	public void ignoresFieldsInMapWhereKeyIsString() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put("key", bean().integer(1).string("value").build());
+		MapContainer expected = new MapContainer(expectedMap);
+
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put("key", bean().integer(1).string("unexpected value").build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.key.string"));
+	}
+	
+	@Test
+	public void ignoresFieldsInMapWhereKeyIsPrimitive() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put(1, bean().integer(1).string("value").build());
+		MapContainer expected = new MapContainer(expectedMap);
+		
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put(1, bean().integer(1).string("unexpected value").build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.1.string"));
+	}
+	
+	@Test
+	public void ignoresFieldsInMapWhereKeyIsEnum() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put(TestEnum.ONE, bean().integer(1).string("value").build());
+		MapContainer expected = new MapContainer(expectedMap);
+		
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put(TestEnum.ONE, bean().integer(1).string("unexpected value").build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.ONE.string"));
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void throwsIllegalArgumentExceptionWhenLastPathSegmentDoesNotExistInMap() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put(bean().string("key").build(), bean().string("value").build());
+		MapContainer expected = new MapContainer(expectedMap);
+
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put(bean().string("key").build(), bean().string("unexpected value").build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.key"));
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void throwsIllegalArgumentExceptionWhenPathDoesNotExistInMap() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put(bean().string("key").build(), bean().string("value").build());
+		MapContainer expected = new MapContainer(expectedMap);
+		
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put(bean().string("key").build(), bean().string("unexpected value").build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.key.subpath"));
+	}
+	
+	private enum TestEnum {
+		ONE
+	}
+	
+	private static class MapContainer {
+		@SuppressWarnings("unused")
+		private Map<Object, Object> map;
+		
+		public MapContainer(Map<Object, Object> map) {
+			this.map = map;
+		}
 	}
 }

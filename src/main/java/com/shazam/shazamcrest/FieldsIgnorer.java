@@ -49,11 +49,11 @@ public class FieldsIgnorer {
 	private static void findPath(JsonElement jsonElement, String pathToFind, final List<String> pathSegments) {
 		String field = headOf(pathSegments);
 		if (pathSegments.size() == 1) {
-			if (jsonElement.isJsonPrimitive()) {
-				throw new IllegalArgumentException();
-			}
 			ignorePath(jsonElement, pathToFind);
 		} else {
+			if (!jsonElement.isJsonObject()) {
+				throw new IllegalArgumentException();
+			}
 			JsonElement child = jsonElement.getAsJsonObject().get(field);
 			List<String> tail = pathSegments.subList(1, pathSegments.size());
 			
@@ -74,6 +74,9 @@ public class FieldsIgnorer {
 
 	private static void ignorePath(JsonElement jsonElement, String pathToIgnore) {
 		if (!jsonElement.isJsonNull()) {
+			if (!jsonElement.isJsonObject()) {
+				throw new IllegalArgumentException();
+			}
 			jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore));
 		}
 	}

@@ -10,6 +10,7 @@
 package com.shazam.shazamcrest.matcher;
 
 import static com.google.common.collect.Sets.newTreeSet;
+import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 import java.lang.reflect.Type;
 import java.util.Comparator;
@@ -19,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -26,6 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.graph.GraphAdapterBuilder;
@@ -82,7 +85,7 @@ class GsonProvider {
 				Gson gson = gsonBuilder.create();
 				
         		ArrayListMultimap<Integer, Object> objects = mapObjectsByTheirJsonRepresentationHashCodes(map, gson);
-        		return arrayOfArrayOfObjectsOrderedByTheirJsonRepresentationHashCode(gson, objects, map);
+        		return arrayOfObjectsOrderedByTheirJsonRepresentationHashCode(gson, objects, map);
 			}
 		});
 	}
@@ -136,21 +139,46 @@ class GsonProvider {
 		return array;
 	}
 	
-	private static JsonArray arrayOfArrayOfObjectsOrderedByTheirJsonRepresentationHashCode(Gson gson, ArrayListMultimap<Integer, Object> objects, Map map) {
+	private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentationHashCode(Gson gson, ArrayListMultimap<Integer, Object> objects, Map map) {
+		ImmutableList<Integer> sortedMapKeySet = Ordering.natural().immutableSortedCopy(objects.keySet());
 		JsonArray array = new JsonArray();
-		for (Integer hashCode : Ordering.natural().immutableSortedCopy(objects.keySet())) {
-			JsonArray keyValueArray = new JsonArray();
-			List<Object> objectsInTheSet = objects.get(hashCode);
-			for (Object objectInTheSet : objectsInTheSet) {
-				keyValueArray.add(gson.toJsonTree(objectInTheSet));
-				keyValueArray.add(gson.toJsonTree(map.get(objectInTheSet)));
-				array.add(keyValueArray);
+		if (allKeysArePrimitive(sortedMapKeySet, objects)) {
+			for (Integer hashCode : sortedMapKeySet) {
+				List<Object> objectsInTheSet = objects.get(hashCode);
+				for (Object objectInTheSet : objectsInTheSet) {
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.add(String.valueOf(objectInTheSet), gson.toJsonTree(map.get(objectInTheSet)));
+					array.add(jsonObject);
+				}
+			}
+		} else {
+			for (Integer hashCode : sortedMapKeySet) {
+				JsonArray keyValueArray = new JsonArray();
+				List<Object> objectsInTheSet = objects.get(hashCode);
+				for (Object objectInTheSet : objectsInTheSet) {
+					keyValueArray.add(gson.toJsonTree(objectInTheSet));
+					keyValueArray.add(gson.toJsonTree(map.get(objectInTheSet)));
+					array.add(keyValueArray);
+				}
 			}
 		}
+		
 		return array;
 	}
 	  
-    private static GsonBuilder initGson() {
+    private static boolean allKeysArePrimitive(ImmutableList<Integer> sortedMapKeySet, ArrayListMultimap<Integer, Object> objects) {
+    	for (Integer integer : sortedMapKeySet) {
+			List<Object> mapKeys = objects.get(integer);
+			for (Object object : mapKeys) {
+				if (!(isPrimitiveOrWrapper(object.getClass()) || object.getClass() == String.class || object.getClass().isEnum())) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static GsonBuilder initGson() {
 		return new GsonBuilder().setPrettyPrinting();
 	}
 }
