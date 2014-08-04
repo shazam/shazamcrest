@@ -11,12 +11,12 @@ package com.shazam.shazamcrest;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static com.shazam.shazamcrest.model.CircularReferenceBean.Builder.circularReferenceBean;
+import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
 
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
-import com.shazam.shazamcrest.model.CircularReferenceBean;
+import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
 
 /**
  * Unit tests which verify circular references are handled without throwing a {@link StackOverflowError}

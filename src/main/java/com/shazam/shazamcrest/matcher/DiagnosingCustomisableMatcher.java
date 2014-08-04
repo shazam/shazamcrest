@@ -10,6 +10,7 @@
 package com.shazam.shazamcrest.matcher;
 
 import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
+import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
 import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 
@@ -47,6 +48,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 	public DiagnosingCustomisableMatcher(T expected) {
 		this.expected = expected;
+        getClassesWithCircularReferences(expected);
 	}
 
 	@Override
