@@ -91,7 +91,7 @@ public class CyclicReferenceDetector {
     private void detectCircularReferencesFromTheSuperClass(Object object, Class<?> clazz) {
         Class<?> superclass = object.getClass().getSuperclass();
 
-        if (superclass != null && superclass != clazz && validateAnObject(object)) {
+        if (superclass != Object.class && superclass != clazz && validateAnObject(object)) {
             detectCircularReferenceOnObject(object, superclass);
         }
     }
