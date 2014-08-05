@@ -63,16 +63,35 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
 		Gson gson = gson(typesToIgnore, circularReferenceTypes);
+		
+		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
+			return false;
+		}
+		
 		String expectedJson = filterJson(gson, gson.toJson(expected));
 		String actualJson = filterJson(gson, gson.toJson(actual));
-		
+
+		return assertEquals(expectedJson, actualJson, mismatchDescription, gson);
+	}
+
+	private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson) {
 		Map<Object, Matcher<?>> customMatching = new HashMap<Object, Matcher<?>>();
 		for (Entry<String, Matcher<?>> entry : customMatchers.entrySet()) {
 			Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
 			customMatching.put(object, customMatchers.get(entry.getKey()));
 		}
-
-		return assertEquals(expectedJson, actualJson, customMatching, mismatchDescription, gson);
+		
+		for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
+			Matcher<?> matcher = entry.getValue();
+			Object object = entry.getKey();
+			if (!matcher.matches(object)) {
+				appendFieldPath(matcher, mismatchDescription);
+				matcher.describeMismatch(object, mismatchDescription);
+				appendFieldJsonSnippet(object, mismatchDescription, gson);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -111,18 +130,8 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		return false;
 	}
 
-	private boolean assertEquals(final String expectedJson, String actualJson, Map<Object, Matcher<?>> customMatching, Description mismatchDescription, Gson gson) {
+	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription, Gson gson) {
 		try {
-			for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
-				Matcher<?> matcher = entry.getValue();
-				Object actual = entry.getKey();
-				if (!matcher.matches(actual)) {
-					appendFieldPath(matcher, mismatchDescription);
-					matcher.describeMismatch(actual, mismatchDescription);
-					appendFieldJsonSnippet(actual, mismatchDescription, gson);
-					return false;
-				}
-			}
 			JSONAssert.assertEquals(expectedJson, actualJson, true);
 		} catch (AssertionError e) {
 			return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());

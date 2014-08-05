@@ -84,8 +84,8 @@ class GsonProvider {
 			public JsonElement serialize(Map map, Type type, JsonSerializationContext context) {
 				Gson gson = gsonBuilder.create();
 				
-        		ArrayListMultimap<Integer, Object> objects = mapObjectsByTheirJsonRepresentationHashCodes(map, gson);
-        		return arrayOfObjectsOrderedByTheirJsonRepresentationHashCode(gson, objects, map);
+        		ArrayListMultimap<String, Object> objects = mapObjectsByTheirJsonRepresentation(map, gson);
+        		return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, objects, map);
 			}
 		});
 	}
@@ -123,10 +123,10 @@ class GsonProvider {
 	}
     
     @SuppressWarnings("unchecked")
-	private static ArrayListMultimap<Integer, Object> mapObjectsByTheirJsonRepresentationHashCodes(Map map, Gson gson) {
-    	ArrayListMultimap<Integer, Object> objects = ArrayListMultimap.create();
+	private static ArrayListMultimap<String, Object> mapObjectsByTheirJsonRepresentation(Map map, Gson gson) {
+    	ArrayListMultimap<String, Object> objects = ArrayListMultimap.create();
     	for (Entry<Object, Object> mapEntry : (Set<Map.Entry<Object, Object>>)map.entrySet()) {
-    		objects.put(gson.toJson(mapEntry.getKey()).concat(gson.toJson(mapEntry.getValue())).hashCode(), mapEntry.getKey());
+    		objects.put(gson.toJson(mapEntry.getKey()).concat(gson.toJson(mapEntry.getValue())), mapEntry.getKey());
     	}
     	return objects;
     }
@@ -139,12 +139,12 @@ class GsonProvider {
 		return array;
 	}
 	
-	private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentationHashCode(Gson gson, ArrayListMultimap<Integer, Object> objects, Map map) {
-		ImmutableList<Integer> sortedMapKeySet = Ordering.natural().immutableSortedCopy(objects.keySet());
+	private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, ArrayListMultimap<String, Object> objects, Map map) {
+		ImmutableList<String> sortedMapKeySet = Ordering.natural().immutableSortedCopy(objects.keySet());
 		JsonArray array = new JsonArray();
 		if (allKeysArePrimitive(sortedMapKeySet, objects)) {
-			for (Integer hashCode : sortedMapKeySet) {
-				List<Object> objectsInTheSet = objects.get(hashCode);
+			for (String jsonRepresentation : sortedMapKeySet) {
+				List<Object> objectsInTheSet = objects.get(jsonRepresentation);
 				for (Object objectInTheSet : objectsInTheSet) {
 					JsonObject jsonObject = new JsonObject();
 					jsonObject.add(String.valueOf(objectInTheSet), gson.toJsonTree(map.get(objectInTheSet)));
@@ -152,9 +152,9 @@ class GsonProvider {
 				}
 			}
 		} else {
-			for (Integer hashCode : sortedMapKeySet) {
+			for (String jsonRepresentation : sortedMapKeySet) {
 				JsonArray keyValueArray = new JsonArray();
-				List<Object> objectsInTheSet = objects.get(hashCode);
+				List<Object> objectsInTheSet = objects.get(jsonRepresentation);
 				for (Object objectInTheSet : objectsInTheSet) {
 					keyValueArray.add(gson.toJsonTree(objectInTheSet));
 					keyValueArray.add(gson.toJsonTree(map.get(objectInTheSet)));
@@ -166,9 +166,9 @@ class GsonProvider {
 		return array;
 	}
 	  
-    private static boolean allKeysArePrimitive(ImmutableList<Integer> sortedMapKeySet, ArrayListMultimap<Integer, Object> objects) {
-    	for (Integer integer : sortedMapKeySet) {
-			List<Object> mapKeys = objects.get(integer);
+    private static boolean allKeysArePrimitive(ImmutableList<String> sortedMapKeySet, ArrayListMultimap<String, Object> objects) {
+    	for (String jsonRepresentation : sortedMapKeySet) {
+			List<Object> mapKeys = objects.get(jsonRepresentation);
 			for (Object object : mapKeys) {
 				if (!(isPrimitiveOrWrapper(object.getClass()) || object.getClass() == String.class || object.getClass().isEnum())) {
 					return false;

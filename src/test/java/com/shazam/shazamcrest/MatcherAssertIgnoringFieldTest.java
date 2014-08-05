@@ -135,11 +135,26 @@ public class MatcherAssertIgnoringFieldTest {
 	}
 	
 	@Test
+	public void ignoresFieldsInMap() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put("key", bean().integer(1).string("value").build());
+		expectedMap.put("key2", bean().integer(1).string("value").build());
+		MapContainer expected = new MapContainer(expectedMap);
+
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put("key", bean().integer(1).string("unexpected value").build());
+		actualMap.put("key2", bean().integer(1).string("unexpected value").build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.key.string").ignoring("map.key2.string"));
+	}
+	
+	@Test
 	public void ignoresFieldsInMapWhereKeyIsString() {
 		Map<Object, Object> expectedMap = newHashMap();
 		expectedMap.put("key", bean().integer(1).string("value").build());
 		MapContainer expected = new MapContainer(expectedMap);
-
+		
 		Map<Object, Object> actualMap = newHashMap();
 		actualMap.put("key", bean().integer(1).string("unexpected value").build());
 		MapContainer actual = new MapContainer(actualMap);
