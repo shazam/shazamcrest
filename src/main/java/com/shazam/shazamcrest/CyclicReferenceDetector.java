@@ -75,7 +75,6 @@ public class CyclicReferenceDetector {
             detectCircularReferencesFromObjectsInAMap((Map) fieldValue);
         } else if (nodesInPaths.contains(fieldValue)) {
             circularReferenceTypes.add(fieldValue.getClass());
-            nodesInPaths.remove(fieldValue);
         }
 
         if (validateAnObject(fieldValue)) {
