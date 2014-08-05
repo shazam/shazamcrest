@@ -48,7 +48,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 	public DiagnosingCustomisableMatcher(T expected) {
 		this.expected = expected;
-        getClassesWithCircularReferences(expected);
+        circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
 	}
 
 	@Override
