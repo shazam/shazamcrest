@@ -48,7 +48,6 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 	public DiagnosingCustomisableMatcher(T expected) {
 		this.expected = expected;
-        circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
 	}
 
 	@Override
@@ -94,8 +93,14 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
         circularReferenceTypes.add(clazz);
         return this;
     }
-	
-	@Override
+
+    @Override
+    public CustomisableMatcher<T> autoDetectCircularReference() {
+        circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
+        return this;
+    }
+
+    @Override
 	public <V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
 		customMatchers.put(fieldPath, matcher);
 		return this;
