@@ -45,6 +45,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
     protected final List<Class<?>> circularReferenceTypes = new ArrayList<Class<?>>();
 	protected final T expected;
+    protected boolean checkForCircularReference = false;
 
 	public DiagnosingCustomisableMatcher(T expected) {
 		this.expected = expected;
@@ -97,6 +98,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
     @Override
     public CustomisableMatcher<T> autoDetectCircularReference() {
         circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
+        checkForCircularReference = true;
         return this;
     }
 

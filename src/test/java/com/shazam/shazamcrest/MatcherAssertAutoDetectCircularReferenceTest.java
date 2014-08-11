@@ -1,6 +1,8 @@
 package com.shazam.shazamcrest;
 
 import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
+import com.shazam.shazamcrest.model.cyclic.Four;
+import com.shazam.shazamcrest.model.cyclic.One;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
@@ -28,5 +30,31 @@ public class MatcherAssertAutoDetectCircularReferenceTest {
 
         assertThat(actual, sameBeanAs(expected));
     }
-}
 
+    @Test(expected = ComparisonFailure.class)
+    public void shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull() {
+        CircularReferenceBean expected = null;
+        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
+
+        assertThat(actual, sameBeanAs(expected).autoDetectCircularReference());
+    }
+
+    @Test(expected = Test.None.class)
+    public void shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph() {
+        Four root = new Four();
+        Four child1 = new Four();
+        Four child2 = new Four();
+        root.setGenericObject(child1);
+        child1.setGenericObject(root); // circular
+        root.setSubClassField(child2);
+
+        One subRoot = new One();
+        One subRootChild = new One();
+        subRoot.setGenericObject(subRootChild);
+        subRootChild.setGenericObject(subRoot); // circular
+
+        child2.setGenericObject(subRoot);
+
+        assertThat(root, sameBeanAs(root).autoDetectCircularReference());
+    }
+}

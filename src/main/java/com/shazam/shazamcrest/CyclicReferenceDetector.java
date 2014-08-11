@@ -40,7 +40,7 @@ public class CyclicReferenceDetector {
      *              fields of a given class, but not its super class).
      */
     private void detectCircularReferenceOnObject(Object object, Class<?> clazz) {
-        if (object == null || circularReferenceTypes.contains(clazz)) {
+        if (object == null) {
             return;
         }
 
@@ -75,6 +75,7 @@ public class CyclicReferenceDetector {
             detectCircularReferencesFromObjectsInAMap((Map) fieldValue);
         } else if (nodesInPaths.contains(fieldValue)) {
             circularReferenceTypes.add(fieldValue.getClass());
+            return;
         }
 
         if (validateAnObject(fieldValue)) {

@@ -9,6 +9,7 @@
  */
 package com.shazam.shazamcrest.matcher;
 
+import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 import static org.hamcrest.CoreMatchers.nullValue;
 
@@ -22,13 +23,18 @@ class NullMatcher<T> extends DiagnosingCustomisableMatcher<T> {
 		super(expected);
 	}
 
-	@Override
-	protected boolean matches(Object actual, Description mismatchDescription) {
-		if (actual != null) {
-			String actualJson = gson(typesToIgnore, circularReferenceTypes).toJson(actual);
-			return appendMismatchDescription(mismatchDescription, "null", actualJson, "actual is not null");
-		}
-		return true;
+    @Override
+    protected boolean matches(Object actual, Description mismatchDescription) {
+        if (actual != null) {
+
+            if (checkForCircularReference) {
+                circularReferenceTypes.addAll(getClassesWithCircularReferences(actual));
+            }
+
+            String actualJson = gson(typesToIgnore, circularReferenceTypes).toJson(actual);
+            return appendMismatchDescription(mismatchDescription, "null", actualJson, "actual is not null");
+        }
+        return true;
 	}
 
 	@Override
