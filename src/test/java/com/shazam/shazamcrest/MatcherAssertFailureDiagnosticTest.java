@@ -9,6 +9,8 @@
  */
 package com.shazam.shazamcrest;
 
+import static com.google.common.collect.Sets.newHashSet;
+import static com.shazam.shazamcrest.FieldsIgnorer.SET_MARKER;
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.actual;
@@ -20,6 +22,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.fail;
 
@@ -86,6 +89,19 @@ public class MatcherAssertFailureDiagnosticTest {
 			fail("Exceptionexpected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, message(startsWith("assertion description\n")));
+		}
+	}
+	
+	@Test
+	public void doesNotIncludeSetMarkerInDiagnostics() {
+		Bean expected = bean().set(newHashSet(bean().integer(1).build())).build();
+		Bean actual = bean().set(newHashSet(bean().integer(2).build())).build();
+		
+		try {
+			assertThat(actual, sameBeanAs(expected));
+			fail("Exceptionexpected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, expected(not(containsString(SET_MARKER))), actual(not(containsString(SET_MARKER))));
 		}
 	}
 	

@@ -10,8 +10,10 @@
 package com.shazam.shazamcrest.matcher;
 
 import static com.google.common.collect.Sets.newTreeSet;
+import static com.shazam.shazamcrest.FieldsIgnorer.SET_MARKER;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.List;
@@ -24,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
+import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -39,7 +42,7 @@ import com.google.gson.graph.GraphAdapterBuilder;
  */
 @SuppressWarnings("rawtypes")
 class GsonProvider {
-    /**
+	/**
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
      *
@@ -58,12 +61,26 @@ class GsonProvider {
         
         registerMapSerialisation(gsonBuilder);
         
+        markSetFields(gsonBuilder);
+        
         if (!typesToIgnore.isEmpty()) {
         	return registerTypesToIgnore(typesToIgnore, gsonBuilder).create();
         }
         
         return gsonBuilder.create();
     }
+
+	private static void markSetFields(final GsonBuilder gsonBuilder) {
+		gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
+			@Override
+			public String translateName(Field f) {
+				if (Set.class.isAssignableFrom(f.getType())) {
+					return SET_MARKER + f.getName();
+				}
+				return f.getName();
+			}
+		});
+	}
 
 	private static GsonBuilder registerTypesToIgnore(final List<Class<?>> typesToIgnore, final GsonBuilder gsonBuilder) {
 		return gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
@@ -142,7 +159,7 @@ class GsonProvider {
 	private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, ArrayListMultimap<String, Object> objects, Map map) {
 		ImmutableList<String> sortedMapKeySet = Ordering.natural().immutableSortedCopy(objects.keySet());
 		JsonArray array = new JsonArray();
-		if (allKeysArePrimitive(sortedMapKeySet, objects)) {
+		if (allKeysArePrimitiveOrStringOrEnum(sortedMapKeySet, objects)) {
 			for (String jsonRepresentation : sortedMapKeySet) {
 				List<Object> objectsInTheSet = objects.get(jsonRepresentation);
 				for (Object objectInTheSet : objectsInTheSet) {
@@ -166,7 +183,7 @@ class GsonProvider {
 		return array;
 	}
 	  
-    private static boolean allKeysArePrimitive(ImmutableList<String> sortedMapKeySet, ArrayListMultimap<String, Object> objects) {
+    private static boolean allKeysArePrimitiveOrStringOrEnum(ImmutableList<String> sortedMapKeySet, ArrayListMultimap<String, Object> objects) {
     	for (String jsonRepresentation : sortedMapKeySet) {
 			List<Object> mapKeys = objects.get(jsonRepresentation);
 			for (Object object : mapKeys) {

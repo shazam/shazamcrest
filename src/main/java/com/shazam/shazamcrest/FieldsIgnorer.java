@@ -9,23 +9,43 @@
  */
 package com.shazam.shazamcrest;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newTreeSet;
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 /**
  * Responsible for traversing the Json tree and ignore the specified set of field paths.
  */
 public class FieldsIgnorer {
-	public static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
+	public static final String SET_MARKER = "THIS_FIELD_IS_A_SET____";
+	
+	public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind) {
+		JsonParser jsonParser = new JsonParser();
+		JsonElement jsonElement = jsonParser.parse(gson.toJson(object));
+		
+		JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
+		if (object != null && Set.class.isAssignableFrom(object.getClass())) {
+			return sortSet(filteredJson);
+		}
+		return filteredJson;
+	}
+
+	private static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
 		if (pathsToFind.isEmpty()) {
 			return jsonElement;
 		}
@@ -48,28 +68,49 @@ public class FieldsIgnorer {
 
 	private static void findPath(JsonElement jsonElement, String pathToFind, final List<String> pathSegments) {
 		String field = headOf(pathSegments);
-		if (pathSegments.size() == 1) {
-			ignorePath(jsonElement, pathToFind);
-		} else {
-			if (!jsonElement.isJsonObject()) {
-				throw new IllegalArgumentException();
-			}
-			JsonElement child = jsonElement.getAsJsonObject().get(field);
-			List<String> tail = pathSegments.subList(1, pathSegments.size());
-			
-			if (child == null) {
-				return;
-			}
-			
-			if (child.isJsonArray()) {
-				Iterator<JsonElement> iterator = child.getAsJsonArray().iterator();
-				while (iterator.hasNext()) {
-					findPath((JsonElement) iterator.next(), pathToFind, tail);
+		
+		if (jsonElement.isJsonArray()) {
+			Iterator<JsonElement> iterator = jsonElement.getAsJsonArray().iterator();
+			while (iterator.hasNext()) {
+				JsonElement arrayElement = (JsonElement) iterator.next();
+				if (arrayElement.isJsonNull()) {
+					continue;
 				}
+				findPath(arrayElement, pathToFind, pathSegments);
+			}
+		} else {
+			if (pathSegments.size() == 1) {
+				ignorePath(jsonElement, pathToFind);
 			} else {
+				JsonElement child = jsonElement.getAsJsonObject().get(field);
+				if (child == null) {
+					child = jsonElement.getAsJsonObject().get(SET_MARKER + field);
+					if (child == null) {
+						return;
+					}
+					child = sortSet(child);
+					jsonElement.getAsJsonObject().add(SET_MARKER + field, child);
+				}
+				
+				List<String> tail = pathSegments.subList(1, pathSegments.size());
 				findPath(child, pathToFind, tail);
 			}
 		}
+	}
+
+	private static JsonElement sortSet(JsonElement jsonElement) {
+		TreeSet<JsonElement> orderedSet = newTreeSet(new Comparator<JsonElement>() {
+			@Override
+			public int compare(JsonElement o1, JsonElement o2) {
+				return o1.toString().compareTo(o2.toString());
+			}
+		});
+		orderedSet.addAll(newArrayList(jsonElement.getAsJsonArray().iterator()));
+		JsonArray jsonArray = new JsonArray();
+		for (JsonElement element : orderedSet) {
+			jsonArray.add(element);
+		}
+		return jsonArray;
 	}
 
 	private static void ignorePath(JsonElement jsonElement, String pathToIgnore) {
@@ -78,6 +119,7 @@ public class FieldsIgnorer {
 				throw new IllegalArgumentException();
 			}
 			jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore));
+			jsonElement.getAsJsonObject().remove(SET_MARKER + getLastSegmentOf(pathToIgnore));
 		}
 	}
 	

@@ -27,6 +27,7 @@ public class Bean {
 	private Map<Bean, Bean> map;
 	private HashSet<Bean> hashSet;
 	private HashMap<Bean, Bean> hashMap;
+	private Bean[] array;
 	
 	private Bean(Builder builder) {
 		string = builder.string;
@@ -35,6 +36,7 @@ public class Bean {
 		map = builder.map;
 		hashSet = builder.hashSet;
 		hashMap = builder.hashMap;
+		array = builder.array;
 	}
 	
 	public String getField1() {
@@ -48,6 +50,7 @@ public class Bean {
 		private Map<Bean, Bean> map;
 		private HashSet<Bean> hashSet;
 		private HashMap<Bean, Bean> hashMap;
+		private Bean[] array;
 
 		public static Builder bean() {
 			return new Builder();
@@ -80,6 +83,11 @@ public class Bean {
 		
 		public Builder hashMap(HashMap<Bean, Bean> hashMap) {
 			this.hashMap = hashMap;
+			return this;
+		}
+		
+		public Builder array(Bean... array) {
+			this.array = array;
 			return this;
 		}
 		
