@@ -10,6 +10,7 @@
 package com.shazam.shazamcrest;
 
 import com.shazam.shazamcrest.model.cyclic.*;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -123,7 +124,8 @@ public class CyclicReferenceDetectorTests {
         assertThat(returnedClasses, hasItem(One.class));
     }
 
-    @Test
+    @SuppressWarnings("unchecked")
+	@Test
     public void shouldReturnClassesWithCircularReferenceWhenAnObjectHasAListFieldWithMoreThanOneObjectsThatHasCircularReference() {
         One one = new One();
         Two two = new Two();

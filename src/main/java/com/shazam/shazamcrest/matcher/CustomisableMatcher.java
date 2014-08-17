@@ -37,16 +37,6 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
 	CustomisableMatcher<T> ignoring(Class<?> clazz);
 
     /**
-     * Specify the object type of the fields to be handled for circular references.
-     * Example:
-     * <pre>sameBeanAs(expected).circularReference(Bean.class)</pre>
-     *
-     * @param clazz the object type to be handled by GraphAdapterBuilder.
-     * @return the instance of the matcher
-     */
-    CustomisableMatcher<T> circularReference(Class<?> clazz);
-
-    /**
 	 * Specify the path of the field to be matched with a specific matcher.
 	 * Example:
 	 * <pre>sameBeanAs(expected).with("beanField.subBeanField", contains("element"))</pre>

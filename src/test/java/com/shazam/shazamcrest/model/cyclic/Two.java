@@ -9,6 +9,7 @@
  */
 package com.shazam.shazamcrest.model.cyclic;
 
+@SuppressWarnings("unused")
 public class Two {
     private Object twoObject;
 

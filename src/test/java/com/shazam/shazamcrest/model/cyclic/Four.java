@@ -9,8 +9,9 @@
  */
 package com.shazam.shazamcrest.model.cyclic;
 
+@SuppressWarnings("unused")
 public class Four extends Three {
-    private Object subClassField;
+	private Object subClassField;
 
     public void setSubClassField(Object subClassField) {
         this.subClassField = subClassField;

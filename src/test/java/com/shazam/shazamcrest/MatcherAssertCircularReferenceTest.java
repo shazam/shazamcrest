@@ -15,35 +15,65 @@ import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.
 
 import org.junit.ComparisonFailure;
 import org.junit.Test;
+import org.junit.Test.None;
 
 import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
+import com.shazam.shazamcrest.model.cyclic.Four;
+import com.shazam.shazamcrest.model.cyclic.One;
+import com.shazam.shazamcrest.model.cyclic.Two;
 
 /**
- * Unit tests which verify circular references are handled without throwing a {@link StackOverflowError}
+ * Unit tests which verify circular references are handled automatically.
  */
 public class MatcherAssertCircularReferenceTest {
 
-    @Test
-    public void doesNothingWhenBeansMatch() {
+    @Test(expected = None.class)
+    public void doesNothingWhenAutoDetectCircularReferenceIsCalled() {
         CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
-        assertThat(actual, sameBeanAs(expected).circularReference(CircularReferenceBean.Parent.class));
+        assertThat(actual, sameBeanAs(expected));
     }
 
-    @Test
-    public void doesNothingWhenBothBeansAreNull() {
+    @Test(expected = ComparisonFailure.class)
+    public void shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull() {
         CircularReferenceBean expected = null;
-        CircularReferenceBean actual = null;
+        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
         assertThat(actual, sameBeanAs(expected));
     }
-    
+
+    @Test(expected = None.class)
+    public void shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph() {
+        Four root = new Four();
+        Four child1 = new Four();
+        Four child2 = new Four();
+        root.setGenericObject(child1);
+        child1.setGenericObject(root); // circular
+        root.setSubClassField(child2);
+
+        One subRoot = new One();
+        One subRootChild = new One();
+        subRoot.setGenericObject(subRootChild);
+        subRootChild.setGenericObject(subRoot); // circular
+
+        child2.setGenericObject(subRoot);
+
+        assertThat(root, sameBeanAs(root));
+    }
+
     @Test(expected = ComparisonFailure.class)
-    public void throwsComparisonFailureWhenCircularReferenceBeansDiffer() {
-        CircularReferenceBean expected = circularReferenceBean("expectedParent", "expectedChild1", "expectedChild2").build();
-        CircularReferenceBean actual = circularReferenceBean("actualParent", "actualChild1", "actualChild2").build();
-        
-        assertThat(actual, sameBeanAs(expected).circularReference(CircularReferenceBean.Parent.class));
+    public void doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences() {
+        Object expected = new One();
+        One expectedChild = new One();
+        ((One)expected).setGenericObject(expectedChild);
+        expectedChild.setGenericObject(expected);
+
+        Object actual = new Two();
+        Two actualChild = new Two();
+        ((Two)actual).setGenericObject(actualChild);
+        actualChild.setGenericObject(actual);
+
+        assertThat(actual, sameBeanAs(expected));
     }
 }
