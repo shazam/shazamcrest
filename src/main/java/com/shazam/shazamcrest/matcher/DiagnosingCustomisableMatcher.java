@@ -41,7 +41,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	private final Set<String> pathsToIgnore = new HashSet<String>();
 	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
-    protected final List<Class<?>> circularReferenceTypes = new ArrayList<Class<?>>();
+    protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
 	protected final T expected;
 
     public DiagnosingCustomisableMatcher(T expected) {
@@ -62,6 +62,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
+        this.circularReferenceTypes.addAll(getClassesWithCircularReferences(actual));
 		Gson gson = gson(typesToIgnore, circularReferenceTypes);
 		
 		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {

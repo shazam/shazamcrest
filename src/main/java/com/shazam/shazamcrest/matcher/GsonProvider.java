@@ -50,7 +50,7 @@ class GsonProvider {
      * @param circularReferenceTypes cater for circular referenced objects
      * @return an instance of {@link Gson}
      */
-    public static Gson gson(final List<Class<?>> typesToIgnore, List<Class<?>> circularReferenceTypes) {
+    public static Gson gson(final List<Class<?>> typesToIgnore, Set<Class<?>> circularReferenceTypes) {
     	final GsonBuilder gsonBuilder = initGson();
     	
         if (!circularReferenceTypes.isEmpty()) {
@@ -119,7 +119,7 @@ class GsonProvider {
         });
 	}
 
-	private static void registerCircularReferenceTypes(List<Class<?>> circularReferenceTypes, GsonBuilder gsonBuilder) {
+	private static void registerCircularReferenceTypes(Set<Class<?>> circularReferenceTypes, GsonBuilder gsonBuilder) {
 		GraphAdapterBuilder graphAdapterBuilder = new GraphAdapterBuilder();
 		for (Class<?> circularReferenceType : circularReferenceTypes) {
 		    graphAdapterBuilder.addType(circularReferenceType);

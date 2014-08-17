@@ -59,4 +59,16 @@ public class MatcherAssertCircularReferenceDetectionTest {
 
         assertThat(root, sameBeanAs(root));
     }
+
+    @Test(expected = ComparisonFailure.class)
+    public void doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences() {
+        Object expected = new Four();
+        Four child1 = new Four();
+        ((Four)expected).setGenericObject(child1);
+        child1.setGenericObject(expected);
+
+        Object actual = circularReferenceBean("parent", "child1", "child2").build();
+
+        assertThat(actual, sameBeanAs(expected));
+    }
 }
