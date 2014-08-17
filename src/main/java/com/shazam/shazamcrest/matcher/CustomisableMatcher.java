@@ -47,14 +47,6 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
     CustomisableMatcher<T> circularReference(Class<?> clazz);
 
     /**
-     * Auto detect types with fields that causes circular references
-     * Example:
-     * <pre>sameBeanAs(expected).autoDetectCircularReference()</pre>
-     * @return the instance of the matcher
-     */
-    CustomisableMatcher<T> autoDetectCircularReference();
-
-    /**
 	 * Specify the path of the field to be matched with a specific matcher.
 	 * Example:
 	 * <pre>sameBeanAs(expected).with("beanField.subBeanField", contains("element"))</pre>

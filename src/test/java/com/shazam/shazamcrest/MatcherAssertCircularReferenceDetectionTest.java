@@ -18,22 +18,15 @@ import org.junit.Test;
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
+import static org.junit.Test.None;
 
 /**
  * Unit tests which verify circular references are handled automatically if autoDetectCircularReference is called.}
  */
-public class MatcherAssertAutoDetectCircularReferenceTest {
+public class MatcherAssertCircularReferenceDetectionTest {
 
-    @Test
+    @Test(expected = None.class)
     public void doesNothingWhenAutoDetectCircularReferenceIsCalled() {
-        CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
-        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
-
-        assertThat(actual, sameBeanAs(expected).autoDetectCircularReference());
-    }
-
-    @Test(expected = StackOverflowError.class)
-    public void throwsStackOverFlowExceptionWhenAutoDetectCircularReferenceIsNotCalledOnBeanWithCircularReference() {
         CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
@@ -45,10 +38,10 @@ public class MatcherAssertAutoDetectCircularReferenceTest {
         CircularReferenceBean expected = null;
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
-        assertThat(actual, sameBeanAs(expected).autoDetectCircularReference());
+        assertThat(actual, sameBeanAs(expected));
     }
 
-    @Test(expected = Test.None.class)
+    @Test(expected = None.class)
     public void shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph() {
         Four root = new Four();
         Four child1 = new Four();
@@ -64,6 +57,6 @@ public class MatcherAssertAutoDetectCircularReferenceTest {
 
         child2.setGenericObject(subRoot);
 
-        assertThat(root, sameBeanAs(root).autoDetectCircularReference());
+        assertThat(root, sameBeanAs(root));
     }
 }

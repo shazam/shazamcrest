@@ -27,19 +27,19 @@ public class CyclicReferenceDetector {
         CyclicReferenceDetector cyclicReferenceDetector = new CyclicReferenceDetector();
 
         if (object != null) {
-            cyclicReferenceDetector.detectCircularReferenceOnObject(object, object.getClass());
+            cyclicReferenceDetector.detectCircularReferenceOnObject(object);
         }
 
         return cyclicReferenceDetector.circularReferenceTypes;
     }
 
     /**
-     * Returns a set of classes that have circular reference
-     * @param object the object to check if it has circular reference
+     * @param object the object to check if it has circular reference fields
      * @param clazz the class being used (necessary if we also checking super class as getDeclaredFields only returns
      *              fields of a given class, but not its super class).
+     * Returns a set of classes that have circular reference
      */
-    private void detectCircularReferenceOnObject(Object object, Class<?> clazz) {
+    private void detectCircularReferenceOnFields(Object object, Class<?> clazz) {
         if (object == null) {
             return;
         }
@@ -52,7 +52,7 @@ public class CyclicReferenceDetector {
             try {
                 Object fieldValue = field.get(object);
                 if (fieldValue != null) {
-                    detectCircularReferenceOnField(fieldValue);
+                    detectCircularReferenceOnObject(fieldValue);
                 }
             } catch (IllegalAccessException e) {
                throw new RuntimeException(e);
@@ -66,20 +66,20 @@ public class CyclicReferenceDetector {
      * Detects circular reference on a given field.
      * If a field is a {@link Iterable} or a {@link Map}, loops through the values and
      * detects cycles.
-     * @param fieldValue the field/object to detect circular reference on.
+     * @param object the object to detect circular reference on.
      */
-    private void detectCircularReferenceOnField(Object fieldValue) {
-        if (fieldValue instanceof Iterable) {
-            detectCircularReferenceFromObjectsContainedInAnIterable((Iterable) fieldValue);
-        } else if (fieldValue instanceof Map) {
-            detectCircularReferencesFromObjectsInAMap((Map) fieldValue);
-        } else if (nodesInPaths.contains(fieldValue)) {
-            circularReferenceTypes.add(fieldValue.getClass());
+    private void detectCircularReferenceOnObject(Object object) {
+        if (object instanceof Iterable) {
+            detectCircularReferenceFromObjectsContainedInAnIterable((Iterable) object);
+        } else if (object instanceof Map) {
+            detectCircularReferencesFromObjectsInAMap((Map) object);
+        } else if (nodesInPaths.contains(object)) {
+            circularReferenceTypes.add(object.getClass());
             return;
         }
 
-        if (validateAnObject(fieldValue)) {
-            detectCircularReferenceOnObject(fieldValue, fieldValue.getClass());
+        if (validateAnObject(object)) {
+            detectCircularReferenceOnFields(object, object.getClass());
         }
     }
 
@@ -92,7 +92,7 @@ public class CyclicReferenceDetector {
         Class<?> superclass = object.getClass().getSuperclass();
 
         if (superclass != Object.class && superclass != clazz && validateAnObject(object)) {
-            detectCircularReferenceOnObject(object, superclass);
+            detectCircularReferenceOnFields(object, superclass);
         }
     }
 
@@ -114,7 +114,7 @@ public class CyclicReferenceDetector {
         nodesInPaths.remove(iterable);
         for (Object elementInCollection : iterable) {
             if (elementInCollection != null) {
-                detectCircularReferenceOnObject(elementInCollection, elementInCollection.getClass());
+                detectCircularReferenceOnObject(elementInCollection);
             }
         }
     }
