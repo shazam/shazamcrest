@@ -50,12 +50,6 @@ public class CyclicReferenceDetector {
      *              fields of a given class, but not its super class)
      */
     private void detectCircularReferenceOnFields(Object object, Class<?> clazz) {
-        if (object == null) {
-            return;
-        }
-
-        nodesInPaths.add(object);
-
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
 
@@ -69,7 +63,6 @@ public class CyclicReferenceDetector {
             }
         }
         detectCircularReferencesFromTheSuperClass(object, clazz);
-        nodesInPaths.remove(object);
     }
 
     /**
@@ -81,16 +74,27 @@ public class CyclicReferenceDetector {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
 	private void detectCircularReferenceOnObject(Object object) {
-        if (object instanceof Iterable) {
-            detectCircularReferenceFromObjectsContainedInAnIterable((Iterable) object);
-        } else if (object instanceof Map) {
-            detectCircularReferencesFromObjectsInAMap((Map) object);
-        } else if (nodesInPaths.contains(object)) {
+        boolean isValid = validateAnObject(object);
+        boolean isInPath = nodesInPaths.contains(object);
+
+        if (!isValid && isInPath) {
+            return;
+        }
+
+        if (isInPath) {
             circularReferenceTypes.add(object.getClass());
             return;
         }
 
-        if (validateAnObject(object)) {
+        nodesInPaths.add(object);
+
+        if (object instanceof Iterable) {
+            detectCircularReferenceFromObjectsContainedInAnIterable((Iterable) object);
+        } else if (object instanceof Map) {
+            detectCircularReferencesFromObjectsInAMap((Map) object);
+        }
+
+        if (isValid) {
             detectCircularReferenceOnFields(object, object.getClass());
         }
     }
@@ -115,7 +119,6 @@ public class CyclicReferenceDetector {
      * @param map the {@link Map} with objects to checks for cyclic references on
      */
     private void detectCircularReferencesFromObjectsInAMap(Map<Object, Object> map) {
-        nodesInPaths.remove(map);
         detectCircularReferenceFromObjectsContainedInAnIterable(map.values());
         detectCircularReferenceFromObjectsContainedInAnIterable(map.keySet());
     }
@@ -126,7 +129,6 @@ public class CyclicReferenceDetector {
      * @param iterable the object to iterate through.
      */
     private void detectCircularReferenceFromObjectsContainedInAnIterable(Iterable<Object> iterable) {
-        nodesInPaths.remove(iterable);
         for (Object elementInCollection : iterable) {
             if (elementInCollection != null) {
                 detectCircularReferenceOnObject(elementInCollection);

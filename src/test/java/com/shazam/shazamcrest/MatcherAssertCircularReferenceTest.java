@@ -13,14 +13,14 @@ import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-import org.junit.Test.None;
-
 import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
+import com.shazam.shazamcrest.model.cyclic.Element;
 import com.shazam.shazamcrest.model.cyclic.Four;
 import com.shazam.shazamcrest.model.cyclic.One;
 import com.shazam.shazamcrest.model.cyclic.Two;
+import org.junit.ComparisonFailure;
+import org.junit.Test;
+import org.junit.Test.None;
 
 /**
  * Unit tests which verify circular references are handled automatically.
@@ -76,4 +76,10 @@ public class MatcherAssertCircularReferenceTest {
 
         assertThat(actual, sameBeanAs(expected));
     }
+
+    @Test(expected = ComparisonFailure.class, timeout = 300)
+    public void shouldNotTakeAges() {
+        assertThat(Element.ONE, sameBeanAs(Element.TWO));
+    }
+
 }
