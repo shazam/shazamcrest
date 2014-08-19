@@ -9,10 +9,6 @@
  */
 package com.shazam.shazamcrest;
 
-import static com.shazam.shazamcrest.MatcherAssert.assertThat;
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
-
 import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
 import com.shazam.shazamcrest.model.cyclic.Element;
 import com.shazam.shazamcrest.model.cyclic.Four;
@@ -21,6 +17,10 @@ import com.shazam.shazamcrest.model.cyclic.Two;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.Test.None;
+
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
 
 /**
  * Unit tests which verify circular references are handled automatically.
@@ -82,4 +82,8 @@ public class MatcherAssertCircularReferenceTest {
         assertThat(Element.ONE, sameBeanAs(Element.TWO));
     }
 
+    @Test
+    public void doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass() {
+        assertThat(new RuntimeException(), sameBeanAs(new RuntimeException()));
+    }
 }

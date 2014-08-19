@@ -9,15 +9,11 @@
  */
 package com.shazam.shazamcrest;
 
-import static java.util.Collections.newSetFromMap;
-import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
+import java.lang.reflect.*;
+import java.util.*;
 
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Set;
+import static java.util.Collections.*;
+import static org.apache.commons.lang3.ClassUtils.*;
 
 /**
  * Detects classes with fields that have circular reference and returns a set of those classes.
@@ -106,7 +102,7 @@ public class CyclicReferenceDetector {
      * @param clazz Used to prevent stackOverFlow exception
      */
     private void detectCircularReferencesFromTheSuperClass(Object object, Class<?> clazz) {
-        Class<?> superclass = object.getClass().getSuperclass();
+        Class<?> superclass = clazz.getSuperclass();
 
         if (superclass != Object.class && superclass != clazz && validateAnObject(object)) {
             detectCircularReferenceOnFields(object, superclass);
@@ -137,7 +133,7 @@ public class CyclicReferenceDetector {
     }
 
     /**
-     * Checks to see if the given object is primitive or wrapper class, {@link String}, instance of {@link Iterable},
+     * Checks to see if the given object is primitive or wrapper class, {@link String}, {@link Class}, instance of {@link Iterable},
      * instance of {@link Map} or instance of {@link Enum}.
      *
      * @param object The object to validate
@@ -147,6 +143,7 @@ public class CyclicReferenceDetector {
     private boolean validateAnObject(Object object) {
         return !isPrimitiveOrWrapper(object.getClass())
                 && object.getClass() != String.class
+                && object.getClass() != Class.class
                 && !(object instanceof Iterable)
                 && !(object instanceof Map)
                 && !(object instanceof Enum);
