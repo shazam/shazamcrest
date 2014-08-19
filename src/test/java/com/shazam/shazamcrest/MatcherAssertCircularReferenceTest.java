@@ -86,4 +86,10 @@ public class MatcherAssertCircularReferenceTest {
     public void doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass() {
         assertThat(new RuntimeException(), sameBeanAs(new RuntimeException()));
     }
+
+    @Test
+    public void doesNotThrowStackOverflowExceptionWithAMoreNestedObject() {
+        final Throwable throwable = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
+        assertThat(throwable, sameBeanAs(throwable));
+    }
 }
