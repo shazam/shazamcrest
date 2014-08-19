@@ -9,11 +9,15 @@
  */
 package com.shazam.shazamcrest;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
 
-import static java.util.Collections.*;
-import static org.apache.commons.lang3.ClassUtils.*;
+import static java.util.Collections.newSetFromMap;
+import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 /**
  * Detects classes with fields that have circular reference and returns a set of those classes.
