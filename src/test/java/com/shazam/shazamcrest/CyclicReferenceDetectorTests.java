@@ -210,4 +210,27 @@ public class CyclicReferenceDetectorTests {
 
         assertThat(returnedClasses.isEmpty(), is(true));
     }
+
+    @Test
+    public void shouldReturnClassesWithCircularReferenceEvenWhenTheTwoClassAreInSeparatePath() {
+        Four four = new Four();
+        Four four1 = new Four();
+
+        Two two = new Two();
+        four.setGenericObject(two);
+        two.setGenericObject(four);
+
+        four.setSubClassField(four1);
+
+        Two two1 = new Two();
+        Three three = new Three();
+
+        four1.setSubClassField(two1);
+        two1.setGenericObject(three);
+        three.setGenericObject(two1);
+
+        Set<Class<?>> returnedClasses = getClassesWithCircularReferences(four);
+
+        assertThat(returnedClasses, hasItems(Four.class, Two.class));
+    }
 }

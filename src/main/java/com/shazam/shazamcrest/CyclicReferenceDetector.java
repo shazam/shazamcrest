@@ -27,6 +27,7 @@ public class CyclicReferenceDetector {
 
     private Set<Object> nodesInPaths = newSetFromMap(new IdentityHashMap<Object, Boolean>());
     private Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
+    private Set<Object> objectsWithCircularReferences = new HashSet<Object>();
     
     /**
      * Returns a set of classes that have circular reference.
@@ -51,7 +52,7 @@ public class CyclicReferenceDetector {
      *              fields of a given class, but not its super class)
      */
     private void detectCircularReferenceOnFields(Object object, Class<?> clazz) {
-        if (circularReferenceTypes.contains(clazz)) {
+        if (objectsWithCircularReferences.contains(object)) {
             return;
         }
 
@@ -88,6 +89,7 @@ public class CyclicReferenceDetector {
 
         if (isInPath) {
             circularReferenceTypes.add(object.getClass());
+            objectsWithCircularReferences.add(object);
             return;
         }
 
