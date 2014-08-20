@@ -195,4 +195,19 @@ public class CyclicReferenceDetectorTests {
 
         assertThat(returnedClasses, hasItem(One.class));
     }
+
+    @Test
+    public void shouldNotReturnAClassWhenAnObjectIsInSeparatePathAndCausesNoCircularReference() {
+        One one = new One();
+        Two two = new Two();
+
+        Four four = new Four();
+        four.setGenericObject(one);
+        four.setSubClassField(two);
+        one.setGenericObject(two);
+
+        Set<Class<?>> returnedClasses = getClassesWithCircularReferences(four);
+
+        assertThat(returnedClasses.isEmpty(), is(true));
+    }
 }

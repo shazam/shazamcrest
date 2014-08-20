@@ -16,6 +16,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.reflect.Proxy.isProxyClass;
 import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
@@ -50,6 +51,10 @@ public class CyclicReferenceDetector {
      *              fields of a given class, but not its super class)
      */
     private void detectCircularReferenceOnFields(Object object, Class<?> clazz) {
+        if (circularReferenceTypes.contains(clazz)) {
+            return;
+        }
+
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
 
@@ -86,16 +91,19 @@ public class CyclicReferenceDetector {
             return;
         }
 
-        nodesInPaths.add(object);
 
         if (object instanceof Iterable) {
+            nodesInPaths.add(object);
             detectCircularReferenceFromObjectsContainedInAnIterable((Iterable) object);
         } else if (object instanceof Map) {
+            nodesInPaths.add(object);
             detectCircularReferencesFromObjectsInAMap((Map) object);
         }
 
         if (isValid) {
+            nodesInPaths.add(object);
             detectCircularReferenceOnFields(object, object.getClass());
+            nodesInPaths.remove(object);
         }
     }
 
@@ -150,6 +158,7 @@ public class CyclicReferenceDetector {
                 && object.getClass() != Class.class
                 && !(object instanceof Iterable)
                 && !(object instanceof Map)
-                && !(object instanceof Enum);
+                && !(object instanceof Enum)
+                && !isProxyClass(object.getClass());
     }
 }
