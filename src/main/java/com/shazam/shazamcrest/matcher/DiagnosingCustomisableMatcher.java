@@ -66,14 +66,10 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 			return false;
 		}
 		
-		String expectedJson = removeSetMarker(filterJson(gson, expected));
-		String actualJson = removeSetMarker(filterJson(gson, actual));
+		String expectedJson = filterJson(gson, expected);
+		String actualJson = filterJson(gson, actual);
 
 		return assertEquals(expectedJson, actualJson, mismatchDescription, gson);
-	}
-
-	private String removeSetMarker(String json) {
-		return json.replaceAll(SET_MARKER, "");
 	}
 
 	private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson) {
@@ -165,6 +161,10 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		set.addAll(customMatchers.keySet());
 		JsonElement filteredJson = findPaths(gson, object, set);
 
-		return gson.toJson(filteredJson);
+		return removeSetMarker(gson.toJson(filteredJson));
+	}
+	
+	private String removeSetMarker(String json) {
+		return json.replaceAll(SET_MARKER, "");
 	}
 }
