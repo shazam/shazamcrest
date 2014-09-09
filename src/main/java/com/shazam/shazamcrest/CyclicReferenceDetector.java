@@ -16,7 +16,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static java.lang.reflect.Proxy.isProxyClass;
 import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
@@ -26,8 +25,7 @@ import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 public class CyclicReferenceDetector {
 
     private Set<Object> nodesInPaths = newSetFromMap(new IdentityHashMap<Object, Boolean>());
-    private Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
-    private Set<Object> objectsWithCircularReferences = new HashSet<Object>();
+    private Set<Object> objectsWithCircularReferences = newSetFromMap(new IdentityHashMap<Object, Boolean>());
     
     /**
      * Returns a set of classes that have circular reference.
@@ -41,9 +39,22 @@ public class CyclicReferenceDetector {
             cyclicReferenceDetector.detectCircularReferenceOnObject(object);
         }
 
-        return cyclicReferenceDetector.circularReferenceTypes;
+        return getClasses(cyclicReferenceDetector.objectsWithCircularReferences);
     }
-    
+
+    /**
+     * Returns a set of classes from a given set of objects.
+     * @param objects a set of objects get classes to return from
+     * @return a set of classes inside a given set.
+     */
+    private static Set<Class<?>> getClasses(Set<Object> objects) {
+        Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
+        for (Object objectInPath : objects) {
+            circularReferenceTypes.add(objectInPath.getClass());
+        }
+        return circularReferenceTypes;
+    }
+
     /**
      * Detects classes that have circular reference.
      * 
@@ -88,11 +99,9 @@ public class CyclicReferenceDetector {
         }
 
         if (isInPath) {
-            circularReferenceTypes.add(object.getClass());
             objectsWithCircularReferences.add(object);
             return;
         }
-
 
         if (object instanceof Iterable) {
             nodesInPaths.add(object);
@@ -160,7 +169,6 @@ public class CyclicReferenceDetector {
                 && object.getClass() != Class.class
                 && !(object instanceof Iterable)
                 && !(object instanceof Map)
-                && !(object instanceof Enum)
-                && !isProxyClass(object.getClass());
+                && !(object instanceof Enum);
     }
 }

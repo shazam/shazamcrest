@@ -77,7 +77,7 @@ public class MatcherAssertCircularReferenceTest {
         assertThat(actual, sameBeanAs(expected));
     }
 
-    @Test(expected = ComparisonFailure.class, timeout = 100)
+    @Test(expected = ComparisonFailure.class, timeout = 150)
     public void shouldNotTakeAges() {
         assertThat(Element.ONE, sameBeanAs(Element.TWO));
     }
