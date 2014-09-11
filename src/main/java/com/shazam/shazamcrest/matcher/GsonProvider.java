@@ -10,6 +10,7 @@
 package com.shazam.shazamcrest.matcher;
 
 import static com.google.common.collect.Sets.newTreeSet;
+import static com.shazam.shazamcrest.FieldsIgnorer.MAP_MARKER;
 import static com.shazam.shazamcrest.FieldsIgnorer.SET_MARKER;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
@@ -61,7 +62,7 @@ class GsonProvider {
         
         registerMapSerialisation(gsonBuilder);
         
-        markSetFields(gsonBuilder);
+        markSetAndMapFields(gsonBuilder);
         
         if (!typesToIgnore.isEmpty()) {
         	return registerTypesToIgnore(typesToIgnore, gsonBuilder).create();
@@ -70,12 +71,15 @@ class GsonProvider {
         return gsonBuilder.create();
     }
 
-	private static void markSetFields(final GsonBuilder gsonBuilder) {
+	private static void markSetAndMapFields(final GsonBuilder gsonBuilder) {
 		gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
 			@Override
 			public String translateName(Field f) {
 				if (Set.class.isAssignableFrom(f.getType())) {
 					return SET_MARKER + f.getName();
+				}
+				if (Map.class.isAssignableFrom(f.getType())) {
+					return MAP_MARKER + f.getName();
 				}
 				return f.getName();
 			}

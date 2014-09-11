@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -33,14 +34,15 @@ import com.google.gson.JsonParser;
  */
 public class FieldsIgnorer {
 	public static final String SET_MARKER = "THIS_FIELD_IS_A_SET____";
+	public static final String MAP_MARKER = "THIS_FIELD_IS_A_MAP____";
 	
 	public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind) {
 		JsonParser jsonParser = new JsonParser();
 		JsonElement jsonElement = jsonParser.parse(gson.toJson(object));
 		
 		JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
-		if (object != null && Set.class.isAssignableFrom(object.getClass())) {
-			return sortSet(filteredJson);
+		if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
+			return sortArray(filteredJson);
 		}
 		return filteredJson;
 	}
@@ -84,21 +86,29 @@ public class FieldsIgnorer {
 			} else {
 				JsonElement child = jsonElement.getAsJsonObject().get(field);
 				if (child == null) {
-					child = jsonElement.getAsJsonObject().get(SET_MARKER + field);
+					String marker = SET_MARKER;
+					child = jsonElement.getAsJsonObject().get(marker + field);
 					if (child == null) {
-						return;
-					}
-					child = sortSet(child);
-					jsonElement.getAsJsonObject().add(SET_MARKER + field, child);
+						marker = MAP_MARKER;
+						child = jsonElement.getAsJsonObject().get(marker + field);
+						if (child == null) {
+							return;
+						}
+					} 
+					List<String> tail = pathSegments.subList(1, pathSegments.size());
+					findPath(child, pathToFind, tail);
+					
+					child = sortArray(child);
+					jsonElement.getAsJsonObject().add(marker + field, child);
+				} else {
+					List<String> tail = pathSegments.subList(1, pathSegments.size());
+					findPath(child, pathToFind, tail);
 				}
-				
-				List<String> tail = pathSegments.subList(1, pathSegments.size());
-				findPath(child, pathToFind, tail);
 			}
 		}
 	}
-
-	private static JsonElement sortSet(JsonElement jsonElement) {
+	
+	private static JsonElement sortArray(JsonElement jsonElement) {
 		TreeSet<JsonElement> orderedSet = newTreeSet(new Comparator<JsonElement>() {
 			@Override
 			public int compare(JsonElement o1, JsonElement o2) {
@@ -120,6 +130,7 @@ public class FieldsIgnorer {
 			}
 			jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore));
 			jsonElement.getAsJsonObject().remove(SET_MARKER + getLastSegmentOf(pathToIgnore));
+			jsonElement.getAsJsonObject().remove(MAP_MARKER + getLastSegmentOf(pathToIgnore));
 		}
 	}
 	

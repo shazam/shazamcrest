@@ -165,6 +165,21 @@ public class MatcherAssertIgnoringFieldTest {
 	}
 	
 	@Test
+	public void ignoresMap() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put("key", newHashSet(bean().string("value").integer(1)));
+		expectedMap.put("key2", newHashSet(bean().string("value")));
+		MapContainer expected = new MapContainer(expectedMap);
+
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put("key", newHashSet(bean().string("value").integer(2)));
+		actualMap.put("key2", newHashSet(bean().string("value")));
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map"));
+	}
+	
+	@Test
 	public void ignoresFieldsInSetWhenSetIsAtTopLevel() {
 		Bean expected1 = bean().integer(1).string("value").build();
 		Bean expected2 = bean().string("value").hashSet(newHashSet(bean().build())).build();
@@ -283,6 +298,34 @@ public class MatcherAssertIgnoringFieldTest {
 		MapContainer actual = new MapContainer(actualMap);
 		
 		assertThat(actual, sameBeanAs(expected).ignoring("map.ONE.string"));
+	}
+	
+	@Test
+	public void ignoresFieldsInMapWhereKeyIsObject() {
+		Map<Object, Object> expectedMap = newHashMap();
+		expectedMap.put(bean().integer(1).string("1").build(), beanWithPrimitives().beanDouble(2.0).build());
+		expectedMap.put(bean().integer(2).string("2").build(), beanWithPrimitives().beanDouble(3.0).build());
+		MapContainer expected = new MapContainer(expectedMap);
+		
+		Map<Object, Object> actualMap = newHashMap();
+		actualMap.put(bean().integer(1).string("1").build(), beanWithPrimitives().beanDouble(2.0).build());
+		actualMap.put(bean().integer(2).build(), beanWithPrimitives().beanDouble(3.0).build());
+		MapContainer actual = new MapContainer(actualMap);
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("map.string"));
+	}
+	
+	@Test
+	public void ignoresFieldsInMapWhenMapIsAtTopLevel() {
+		Map<Object, Object> expected = newHashMap();
+		expected.put(bean().integer(1).string("1").build(), beanWithPrimitives().beanDouble(2.0).build());
+		expected.put(bean().integer(2).string("2").build(), beanWithPrimitives().beanDouble(3.0).build());
+		
+		Map<Object, Object> actual = newHashMap();
+		actual.put(bean().integer(1).string("1").build(), beanWithPrimitives().beanDouble(2.0).build());
+		actual.put(bean().integer(2).build(), beanWithPrimitives().beanDouble(3.0).build());
+		
+		assertThat(actual, sameBeanAs(expected).ignoring("string"));
 	}
 	
 	private enum TestEnum {

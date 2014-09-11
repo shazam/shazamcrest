@@ -9,7 +9,9 @@
  */
 package com.shazam.shazamcrest;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
+import static com.shazam.shazamcrest.FieldsIgnorer.MAP_MARKER;
 import static com.shazam.shazamcrest.FieldsIgnorer.SET_MARKER;
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -25,6 +27,8 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.fail;
+
+import java.util.Map;
 
 import org.hamcrest.Matcher;
 import org.junit.ComparisonFailure;
@@ -102,6 +106,23 @@ public class MatcherAssertFailureDiagnosticTest {
 			fail("Exceptionexpected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, expected(not(containsString(SET_MARKER))), actual(not(containsString(SET_MARKER))));
+		}
+	}
+	
+	@Test
+	public void doesNotIncludeMapMarkerInDiagnostics() {
+		Map<Bean, Bean> expectedMap = newHashMap();
+		expectedMap.put(bean().integer(1).build(), bean().integer(1).build());
+		Map<Bean, Bean> actualMap = newHashMap();
+		actualMap.put(bean().integer(2).build(), bean().integer(2).build());
+		Bean expected = bean().map(expectedMap).integer(1).build();
+		Bean actual = bean().map(actualMap).build();
+		
+		try {
+			assertThat(actual, sameBeanAs(expected));
+			fail("Exceptionexpected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, expected(not(containsString(MAP_MARKER))), actual(not(containsString(MAP_MARKER))));
 		}
 	}
 	
