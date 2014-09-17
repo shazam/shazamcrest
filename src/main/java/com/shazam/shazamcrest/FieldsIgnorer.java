@@ -33,7 +33,7 @@ import com.google.gson.JsonParser;
  * Responsible for traversing the Json tree and ignore the specified set of field paths.
  */
 public class FieldsIgnorer {
-	public static final String MARKER = "!_TO_BE_ORDERED_!";
+	public static final String MARKER = "!_TO_BE_SORTED_!";
 	
 	public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind) {
 		JsonParser jsonParser = new JsonParser();
