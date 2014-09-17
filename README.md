@@ -126,10 +126,5 @@ To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
-        <version>0.8</version>
+        <version>0.9</version>
     </dependency>
-
-Known limitations
------------------
-
-* Sets and Maps with same data are serialised in non deterministic order, generating random comparison failures.

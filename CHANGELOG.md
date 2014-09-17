@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.9 - 2014/09/17
+-----
+
+Fixed random comparison failures for sets and maps.
+
 Version 0.8 - 2014/07/16
 -----
 
