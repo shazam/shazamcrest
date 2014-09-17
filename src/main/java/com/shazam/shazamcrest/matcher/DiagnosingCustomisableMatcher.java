@@ -11,6 +11,7 @@ package com.shazam.shazamcrest.matcher;
 
 import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
 import static com.shazam.shazamcrest.FieldsIgnorer.MARKER;
+import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
 import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 
@@ -40,12 +41,13 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	private final Set<String> pathsToIgnore = new HashSet<String>();
 	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
-    protected final List<Class<?>> circularReferenceTypes = new ArrayList<Class<?>>();
+    protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
 	protected final T expected;
 
-	public DiagnosingCustomisableMatcher(T expected) {
-		this.expected = expected;
-	}
+    public DiagnosingCustomisableMatcher(T expected) {
+        this.expected = expected;
+        circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
+    }
 
 	@Override
 	public void describeTo(Description description) {
@@ -60,6 +62,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
+        circularReferenceTypes.addAll(getClassesWithCircularReferences(actual));
 		Gson gson = gson(typesToIgnore, circularReferenceTypes);
 		
 		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
@@ -105,12 +108,6 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	}
 
     @Override
-    public CustomisableMatcher<T> circularReference(Class<?> clazz) {
-        circularReferenceTypes.add(clazz);
-        return this;
-    }
-	
-	@Override
 	public <V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
 		customMatchers.put(fieldPath, matcher);
 		return this;
