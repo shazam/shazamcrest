@@ -33,8 +33,7 @@ import com.google.gson.JsonParser;
  * Responsible for traversing the Json tree and ignore the specified set of field paths.
  */
 public class FieldsIgnorer {
-	public static final String SET_MARKER = "THIS_FIELD_IS_A_SET____";
-	public static final String MAP_MARKER = "THIS_FIELD_IS_A_MAP____";
+	public static final String MARKER = "!_TO_BE_ORDERED_!";
 	
 	public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind) {
 		JsonParser jsonParser = new JsonParser();
@@ -86,20 +85,15 @@ public class FieldsIgnorer {
 			} else {
 				JsonElement child = jsonElement.getAsJsonObject().get(field);
 				if (child == null) {
-					String marker = SET_MARKER;
-					child = jsonElement.getAsJsonObject().get(marker + field);
+					child = jsonElement.getAsJsonObject().get(MARKER + field);
 					if (child == null) {
-						marker = MAP_MARKER;
-						child = jsonElement.getAsJsonObject().get(marker + field);
-						if (child == null) {
-							return;
-						}
-					} 
+						return;
+					}
 					List<String> tail = pathSegments.subList(1, pathSegments.size());
 					findPath(child, pathToFind, tail);
 					
 					child = sortArray(child);
-					jsonElement.getAsJsonObject().add(marker + field, child);
+					jsonElement.getAsJsonObject().add(MARKER + field, child);
 				} else {
 					List<String> tail = pathSegments.subList(1, pathSegments.size());
 					findPath(child, pathToFind, tail);
@@ -129,8 +123,7 @@ public class FieldsIgnorer {
 				throw new IllegalArgumentException();
 			}
 			jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore));
-			jsonElement.getAsJsonObject().remove(SET_MARKER + getLastSegmentOf(pathToIgnore));
-			jsonElement.getAsJsonObject().remove(MAP_MARKER + getLastSegmentOf(pathToIgnore));
+			jsonElement.getAsJsonObject().remove(MARKER + getLastSegmentOf(pathToIgnore));
 		}
 	}
 	

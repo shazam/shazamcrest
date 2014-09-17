@@ -10,8 +10,7 @@
 package com.shazam.shazamcrest.matcher;
 
 import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
-import static com.shazam.shazamcrest.FieldsIgnorer.MAP_MARKER;
-import static com.shazam.shazamcrest.FieldsIgnorer.SET_MARKER;
+import static com.shazam.shazamcrest.FieldsIgnorer.MARKER;
 import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
 import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 
@@ -166,6 +165,6 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	}
 	
 	private String removeSetMarker(String json) {
-		return json.replaceAll(SET_MARKER, "").replaceAll(MAP_MARKER, "");
+		return json.replaceAll(MARKER, "");
 	}
 }
