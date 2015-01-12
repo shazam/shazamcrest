@@ -9,19 +9,21 @@
  */
 package com.shazam.shazamcrest;
 
-import static com.shazam.shazamcrest.MatcherAssert.assertThat;
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
-
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-import org.junit.Test.None;
-
 import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
 import com.shazam.shazamcrest.model.cyclic.Element;
 import com.shazam.shazamcrest.model.cyclic.Four;
 import com.shazam.shazamcrest.model.cyclic.One;
 import com.shazam.shazamcrest.model.cyclic.Two;
+import org.junit.ComparisonFailure;
+import org.junit.Test;
+import org.junit.Test.None;
+
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.fail;
 
 /**
  * Unit tests which verify circular references are handled automatically.
@@ -93,5 +95,17 @@ public class MatcherAssertCircularReferenceTest {
         final Throwable throwable = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
         
         assertThat(throwable, sameBeanAs(throwable));
+    }
+
+    @Test
+    public void doesNotReturn0x1InDiagnosticWhenUnnecessary() {
+        try {
+            assertThat(Element.ONE, sameBeanAs(Element.TWO));
+
+            fail("expected ComparisonFailure");
+        } catch (ComparisonFailure e) {
+            assertThat(e.getExpected(), not(containsString("0x1")));
+            assertThat(e.getActual(), not(containsString("0x1")));
+        }
     }
 }

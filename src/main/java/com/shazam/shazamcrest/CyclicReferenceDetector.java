@@ -16,6 +16,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
@@ -70,13 +71,15 @@ public class CyclicReferenceDetector {
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
 
-            try {
-                Object fieldValue = field.get(object);
-                if (fieldValue != null) {
-                    detectCircularReferenceOnObject(fieldValue);
+            if (!isStatic(field.getModifiers())) {
+                try {
+                    Object fieldValue = field.get(object);
+                    if (fieldValue != null) {
+                        detectCircularReferenceOnObject(fieldValue);
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (IllegalAccessException e) {
-               throw new RuntimeException(e);
             }
         }
         detectCircularReferencesFromTheSuperClass(object, clazz);
@@ -86,7 +89,7 @@ public class CyclicReferenceDetector {
      * Detects circular reference on a given field.
      * If a field is a {@link Iterable} or a {@link Map}, loops through the values and
      * detects cycles.
-     * 
+     *
      * @param object the object to detect circular reference on
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })

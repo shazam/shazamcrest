@@ -20,6 +20,7 @@ import java.util.Set;
 
 import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -234,5 +235,12 @@ public class CyclicReferenceDetectorTests {
         Set<Class<?>> returnedClasses = getClassesWithCircularReferences(four);
 
         assertThat(returnedClasses, hasItems(Four.class, Two.class));
+    }
+
+    @Test
+    public void shouldNotAddStaticFieldsToTheSetOfCircularReferences() {
+        Set<Class<?>> returnedClasses = getClassesWithCircularReferences(Element.ONE);
+
+        assertThat(returnedClasses, is(empty()));
     }
 }

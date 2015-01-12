@@ -46,7 +46,6 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
     public DiagnosingCustomisableMatcher(T expected) {
         this.expected = expected;
-        circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
     }
 
 	@Override
@@ -63,6 +62,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	@Override
 	protected boolean matches(Object actual, Description mismatchDescription) {
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual));
+        circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
 		Gson gson = gson(typesToIgnore, circularReferenceTypes);
 		
 		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
