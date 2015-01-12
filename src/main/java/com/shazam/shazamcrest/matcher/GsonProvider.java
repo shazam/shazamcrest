@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -56,6 +57,8 @@ class GsonProvider {
         if (!circularReferenceTypes.isEmpty()) {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
         }
+        
+        gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
 
         registerSetSerialisation(gsonBuilder);
         
@@ -69,7 +72,7 @@ class GsonProvider {
         
         return gsonBuilder.create();
     }
-
+    
 	private static void markSetAndMapFields(final GsonBuilder gsonBuilder) {
 		gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
 			@Override
@@ -198,4 +201,14 @@ class GsonProvider {
 	private static GsonBuilder initGson() {
 		return new GsonBuilder().setPrettyPrinting();
 	}
+	
+    private static class OptionalSerializer<T> implements JsonSerializer<Optional<T>> {
+
+        @Override
+        public JsonElement serialize(Optional<T> src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonArray result = new JsonArray();
+            result.add(context.serialize(src.orNull()));
+            return result;
+        }
+    }
 }
