@@ -9,11 +9,14 @@
  */
 package com.shazam.shazamcrest.matcher;
 
-import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
-import static com.shazam.shazamcrest.FieldsIgnorer.MARKER;
-import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
-import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
-import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.shazam.shazamcrest.ComparisonDescription;
+import org.hamcrest.Description;
+import org.hamcrest.DiagnosingMatcher;
+import org.hamcrest.Matcher;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,15 +26,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.hamcrest.Description;
-import org.hamcrest.DiagnosingMatcher;
-import org.hamcrest.Matcher;
-import org.json.JSONException;
-import org.skyscreamer.jsonassert.JSONAssert;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.shazam.shazamcrest.ComparisonDescription;
+import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
+import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
+import static com.shazam.shazamcrest.FieldsIgnorer.MARKER;
+import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
+import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 
 /**
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
@@ -70,9 +69,14 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		}
 		
 		String expectedJson = filterJson(gson, expected);
+
+		if (actual == null) {
+			return appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
+		}
+
 		String actualJson = filterJson(gson, actual);
 
-		return assertEquals(expectedJson, actualJson, mismatchDescription, gson);
+		return assertEquals(expectedJson, actualJson, mismatchDescription);
 	}
 
 	private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson) {
@@ -125,7 +129,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		return false;
 	}
 
-	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription, Gson gson) {
+	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription) {
 		try {
 			JSONAssert.assertEquals(expectedJson, actualJson, true);
 		} catch (AssertionError e) {

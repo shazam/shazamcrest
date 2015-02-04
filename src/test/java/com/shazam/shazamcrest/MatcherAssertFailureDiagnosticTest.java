@@ -9,6 +9,13 @@
  */
 package com.shazam.shazamcrest;
 
+import com.shazam.shazamcrest.model.Bean;
+import org.hamcrest.Matcher;
+import org.junit.ComparisonFailure;
+import org.junit.Test;
+
+import java.util.Map;
+
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.shazam.shazamcrest.FieldsIgnorer.MARKER;
@@ -27,14 +34,6 @@ import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.fail;
 
-import java.util.Map;
-
-import org.hamcrest.Matcher;
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-
-import com.shazam.shazamcrest.model.Bean;
-
 /**
  * MatcherAssert tests checking the diagnostic of the failure cases
  */
@@ -51,6 +50,19 @@ public class MatcherAssertFailureDiagnosticTest {
 			fail("Exception expected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, expected(is(notANullValue())), actual(is(equalTo("null"))));
+		}
+	}
+
+	@Test
+	public void includesCorrectMessageWhenActualIsNull() {
+		Bean expected = bean().string("value1").integer(1).build();
+		Bean actual = null;
+
+		try {
+			assertThat(actual, sameBeanAs(expected));
+			fail("Exception expected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, message(is(equalTo("actual was null expected:<[{\n  \"string\": \"value1\",\n  \"integer\": 1\n}]> but was:<[null]>"))));
 		}
 	}
 
