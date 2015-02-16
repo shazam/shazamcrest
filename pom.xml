@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.shazam</groupId>
 	<artifactId>shazamcrest</artifactId>
-	<version>0.10</version>
+	<version>0.10-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Shazamcrest</name>
 	<description>Library that extends the functionality of hamcrest</description>
