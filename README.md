@@ -88,9 +88,9 @@ Having a Shop bean with the following structure:
         
 Comparing two Shop objects throws a StackOverflowError, because of the cycles Clerk -> Store -> Boss -> Clerk and Clerk -> Boss -> Clerk.
 
-Specifying the class type responsible for the circular reference, instructs the serialiser to serialise the instance once and replace all the other occurrences with a pointer:
+From version 0.10 the circular reference is detected automatically and the serialiser is instructed to serialise the instance once and replace all the other occurrences with a pointer:
 
-<code>assertThat(actualShop, sameBeanAs(expectedShop).circularReference(Store.class).circularReference(Boss.class);</code>
+<code>assertThat(actualShop, sameBeanAs(expectedShop));</code>
 
 produces the following representation:
 
@@ -126,5 +126,5 @@ To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
-        <version>0.9</version>
+        <version>0.10</version>
     </dependency>
