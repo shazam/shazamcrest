@@ -1,6 +1,12 @@
 Changelog
 ===========
 
+Version 0.10 - 2015/02/16
+-----
+
+Automatic detection of circular references.
+Fixed comparison of Guava Optional.
+
 Version 0.9 - 2014/09/17
 -----
 
