@@ -36,6 +36,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.graph.GraphAdapterBuilder;
+import org.hamcrest.Matcher;
 
 /**
  * Provides an instance of {@link Gson}. If any class type has been ignored on the matcher, the {@link Gson} provided
@@ -51,7 +52,7 @@ class GsonProvider {
      * @param circularReferenceTypes cater for circular referenced objects
      * @return an instance of {@link Gson}
      */
-    public static Gson gson(final List<Class<?>> typesToIgnore, Set<Class<?>> circularReferenceTypes) {
+    public static Gson gson(final List<Class<?>> typesToIgnore, final List<Matcher<String>> fieldsToIgnore, Set<Class<?>> circularReferenceTypes) {
     	final GsonBuilder gsonBuilder = initGson();
     	
         if (!circularReferenceTypes.isEmpty()) {
@@ -66,11 +67,21 @@ class GsonProvider {
         
         markSetAndMapFields(gsonBuilder);
         
-        if (!typesToIgnore.isEmpty()) {
-        	return registerTypesToIgnore(typesToIgnore, gsonBuilder).create();
-        }
-        
-        return gsonBuilder.create();
+        return gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes f) {
+                for(Matcher<String> p:fieldsToIgnore) {
+                    if (p.matches(f.getName())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return (typesToIgnore.contains(clazz));
+            }
+        }).create();
     }
     
 	private static void markSetAndMapFields(final GsonBuilder gsonBuilder) {
@@ -82,19 +93,6 @@ class GsonProvider {
 				}
 				return f.getName();
 			}
-		});
-	}
-
-	private static GsonBuilder registerTypesToIgnore(final List<Class<?>> typesToIgnore, final GsonBuilder gsonBuilder) {
-		return gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
-		    @Override
-		    public boolean shouldSkipField(FieldAttributes f) {
-		        return false;
-		    }
-		    @Override
-		    public boolean shouldSkipClass(Class<?> clazz) {
-		        return (typesToIgnore.contains(clazz));
-		    }
 		});
 	}
 
