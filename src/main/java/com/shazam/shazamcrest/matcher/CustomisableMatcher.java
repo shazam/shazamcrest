@@ -46,4 +46,16 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
 	 * @return the instance of the matcher
 	 */
 	<V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher);
+
+	/**
+	 * Specify a pattern of fieldattributes to ignore. Any bean property with a name that
+	 * matches the supplied pattern will be ignored.
+	 * 
+	 * Usuful all fields with a certain name. Example:
+	 * <pre>assertThat(myBean, sameBeanAs(
+                        myResultBean).ignoring(is("mutationdate")).ignoring(is("version")))</pre>
+	 * @param pattern
+	 * @return
+	 */
+    CustomisableMatcher<T> ignoring(Matcher<String> pattern);
 }
