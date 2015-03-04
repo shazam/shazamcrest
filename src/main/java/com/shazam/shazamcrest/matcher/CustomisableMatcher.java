@@ -48,14 +48,13 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
 	<V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher);
 
 	/**
-	 * Specify a pattern of fieldattributes to ignore. Any bean property with a name that
+	 * Specify the pattern of field names to ignore. Any bean property with a name that
 	 * matches the supplied pattern will be ignored.
+	 * Example:
+	 * <pre>assertThat(myBean, sameBeanAs(myResultBean).ignoring(is("mutationdate")).ignoring(containsString("version")))</pre>
 	 * 
-	 * Usuful all fields with a certain name. Example:
-	 * <pre>assertThat(myBean, sameBeanAs(
-                        myResultBean).ignoring(is("mutationdate")).ignoring(is("version")))</pre>
-	 * @param pattern
-	 * @return
+	 * @param pattern the Hamcrest matcher used to match field names.
+	 * @return the instance of the matcher
 	 */
-    CustomisableMatcher<T> ignoring(Matcher<String> pattern);
+    CustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern);
 }
