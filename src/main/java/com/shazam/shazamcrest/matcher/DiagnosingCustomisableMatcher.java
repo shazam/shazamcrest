@@ -70,9 +70,14 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		}
 		
 		String expectedJson = filterJson(gson, expected);
+
+		if (actual == null) {
+			return appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
+		}
+
 		String actualJson = filterJson(gson, actual);
 
-		return assertEquals(expectedJson, actualJson, mismatchDescription, gson);
+		return assertEquals(expectedJson, actualJson, mismatchDescription);
 	}
 
 	private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson) {
@@ -131,7 +136,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		return false;
 	}
 
-	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription, Gson gson) {
+	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription) {
 		try {
 			JSONAssert.assertEquals(expectedJson, actualJson, true);
 		} catch (AssertionError e) {

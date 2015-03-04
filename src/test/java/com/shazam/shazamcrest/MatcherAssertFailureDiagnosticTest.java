@@ -55,6 +55,19 @@ public class MatcherAssertFailureDiagnosticTest {
 	}
 
 	@Test
+	public void includesCorrectMessageWhenActualIsNull() {
+		Bean expected = bean().string("value1").integer(1).build();
+		Bean actual = null;
+
+		try {
+			assertThat(actual, sameBeanAs(expected));
+			fail("Exception expected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, message(is(equalTo("actual was null expected:<[{\n  \"string\": \"value1\",\n  \"integer\": 1\n}]> but was:<[null]>"))));
+		}
+	}
+
+	@Test
 	public void containsDiagnosticsWhenExpectedIsNull() {
 		Bean expected = null;
 		Bean actual = bean().string("value1").integer(1).build();
@@ -64,6 +77,19 @@ public class MatcherAssertFailureDiagnosticTest {
 			fail("Exception expected");
 		} catch (ComparisonFailure e) {
 			checkThat(e, expected(is(equalTo("null"))), actual(is(notANullValue())));
+		}
+	}
+
+	@Test
+	public void includesCorrectMessageWhenExpectedIsNull() {
+		Bean expected = null;
+		Bean actual = bean().string("value1").integer(1).build();
+
+		try {
+			assertThat(actual, sameBeanAs(expected));
+			fail("Exception expected");
+		} catch (ComparisonFailure e) {
+			checkThat(e, message(is(equalTo("actual is not null expected:<[null]> but was:<[{\n  \"string\": \"value1\",\n  \"integer\": 1\n}]>"))));
 		}
 	}
 	
