@@ -96,8 +96,8 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	}
 
 	@Override
-	public CustomisableMatcher<T> ignoring(String string) {
-		pathsToIgnore.add(string);
+	public CustomisableMatcher<T> ignoring(String fieldPath) {
+		pathsToIgnore.add(fieldPath);
 		return this;
 	}
 
@@ -108,8 +108,8 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	}
 	
 	@Override
-	public CustomisableMatcher<T> ignoring(Matcher<String> pattern) {
-	    patternsToIgnore.add(pattern);
+	public CustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern) {
+	    patternsToIgnore.add(fieldNamePattern);
 	    return this;
 	}
 

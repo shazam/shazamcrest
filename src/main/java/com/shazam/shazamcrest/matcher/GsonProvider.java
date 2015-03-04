@@ -36,6 +36,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.graph.GraphAdapterBuilder;
+
 import org.hamcrest.Matcher;
 
 /**
@@ -67,23 +68,34 @@ class GsonProvider {
         
         markSetAndMapFields(gsonBuilder);
         
-        return gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
+        registerExclusionStrategies(gsonBuilder, typesToIgnore, fieldsToIgnore);
+        
+        return gsonBuilder.create();
+    }
+    
+	private static void registerExclusionStrategies(GsonBuilder gsonBuilder, final List<Class<?>> typesToIgnore, final List<Matcher<String>> fieldsToIgnore) {
+		if (typesToIgnore.isEmpty() && fieldsToIgnore.isEmpty()) {
+			return;
+		}
+		
+		gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes f) {
-                for(Matcher<String> p:fieldsToIgnore) {
+                for (Matcher<String> p : fieldsToIgnore) {
                     if (p.matches(f.getName())) {
                         return true;
                     }
                 }
                 return false;
             }
+            
             @Override
             public boolean shouldSkipClass(Class<?> clazz) {
                 return (typesToIgnore.contains(clazz));
             }
-        }).create();
-    }
-    
+        });
+	}
+
 	private static void markSetAndMapFields(final GsonBuilder gsonBuilder) {
 		gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
 			@Override
