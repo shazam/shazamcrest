@@ -1,6 +1,12 @@
 Changelog
 ===========
 
+Version 0.11 - 2015/03/04
+-----
+
+It's now possible to ignore all the fields which name matches a given Hamcrest matcher.
+Fixed diagnostic in case actual value is null.
+
 Version 0.10 - 2015/02/16
 -----
 

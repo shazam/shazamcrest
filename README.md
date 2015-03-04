@@ -17,7 +17,8 @@ Having a Person bean with the following structure:
     |-- String surname
     |-- Address address
         |-- String streetName
-        |-- int streetNumber</pre>
+        |-- int streetNumber
+        |-- String postcode</pre>
 
 to compare two Person beans with Shazamcrest we would write:
 
@@ -30,7 +31,8 @@ instead of explicitly match every field of the bean and sub-beans:
         hasProperty("surname", equalTo(expectedPerson.surname)),
         hasProperty("address", allOf(
             hasProperty("streetName", equalTo(expectedPerson.address.streetName)),
-            hasProperty("streetNumber", equalTo(expectedPerson.address.streetNumber)))
+            hasProperty("streetNumber", equalTo(expectedPerson.address.streetNumber)),
+            hasProperty("postcode", equalTo(expectedPerson.address.postcode)))
         )
     ));</code></pre>
 
@@ -58,9 +60,15 @@ rather than org.hamcrest.MatcherAssert.assertThat
 Ignoring fields
 -----
 
-If we are not interested in matching the street name, we can ignore it:
+If we are not interested in matching the street name, we can ignore it by specifying the field path:
 
 <code>assertThat(actualPerson, sameBeanAs(expectedPerson).ignoring("address.streetName"));</code>
+
+If we want to match the address only by the postcode, we can ignore street name and number by specifying the fields name pattern:
+
+<code>assertThat(actualPerson, sameBeanAs(expectedPerson).ignoring(startsWith("street")));</code>
+
+where startsWith is an Hamcrest matcher.
 
 
 Custom matching
@@ -69,8 +77,6 @@ Custom matching
 If we want to make sure that the street name starts with "Via" at least:
 
 <code>assertThat(actualPerson, sameBeanAs(expectedPerson).with("address.streetName"), startsWith("Via"));</code>
-
-where startsWith is an Hamcrest matcher.
 
 
 Circular references
@@ -126,5 +132,5 @@ To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
-        <version>0.10</version>
+        <version>0.11</version>
     </dependency>
