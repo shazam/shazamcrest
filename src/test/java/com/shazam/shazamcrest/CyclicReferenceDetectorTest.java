@@ -24,9 +24,10 @@ import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertThat;
 
 /**
- * Test that verifies that the {@link com.shazam.shazamcrest.CyclicReferenceDetector} works as anticipated.
+ * Tests which verify the {@link com.shazam.shazamcrest.CyclicReferenceDetector} returns the classes which participate in a cyclic reference.
  */
-public class CyclicReferenceDetectorTests {
+public class CyclicReferenceDetectorTest {
+	
     @Test
     public void shouldReturnAnEmptySetWhenTheObjectIsNull() {
         Set<Class<?>> returnedObjects = getClassesWithCircularReferences(null);
@@ -78,7 +79,6 @@ public class CyclicReferenceDetectorTests {
         Set<Class<?>> returnedClasses = getClassesWithCircularReferences(one);
 
         assertThat(returnedClasses.isEmpty(), is(true));
-
     }
 
     @Test
