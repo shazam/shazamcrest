@@ -51,7 +51,7 @@ If the person address streetName does not match the expectations, the following 
 
 The exception thrown is a ComparisonFailure which can be used by IDEs like Eclipse and IntelliJ to display a visual representation of the differences.
 
-![Comparison failure diagnostic](http://tech.shazam.com/wp-content/uploads/2013/08/Screenshot.png)
+![Comparison failure diagnostic](/DiffScreenshot.png)
 
 Note: in order to get the ComparisonFailure on mismatch the "assertThat" to use is com.shazam.shazamcrest.MatcherAssert.assertThat 
 rather than org.hamcrest.MatcherAssert.assertThat
