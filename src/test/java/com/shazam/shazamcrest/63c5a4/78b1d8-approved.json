@@ -1,0 +1,11 @@
+/*com.shazam.shazamcrest.JsonMatcherBeanWithPrimitivesTest.shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJson*/
+{
+  "beanInteger": 4,
+  "beanByte": 2,
+  "beanChar": "c",
+  "beanShort": 1,
+  "beanLong": 6,
+  "beanFloat": 3.0,
+  "beanDouble": 5.0,
+  "beanBoolean": true
+}

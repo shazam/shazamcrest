@@ -1,10 +1,10 @@
 /*
  * Copyright 2013 Shazam Entertainment Limited
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
- * 
+ *
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 package com.shazam.shazamcrest;
@@ -34,11 +34,11 @@ import com.google.gson.JsonParser;
  */
 public class FieldsIgnorer {
 	public static final String MARKER = "!_TO_BE_SORTED_!";
-	
+
 	public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind) {
 		JsonParser jsonParser = new JsonParser();
 		JsonElement jsonElement = jsonParser.parse(gson.toJson(object));
-		
+
 		JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
 		if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
 			return sortArray(filteredJson);
@@ -46,11 +46,11 @@ public class FieldsIgnorer {
 		return filteredJson;
 	}
 
-	private static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
+	public static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
 		if (pathsToFind.isEmpty()) {
 			return jsonElement;
 		}
-		
+
 		String pathToFind = headOf(pathsToFind);
 		List<String> pathSegments = asList(pathToFind.split(Pattern.quote(".")));
 		try {
@@ -69,7 +69,7 @@ public class FieldsIgnorer {
 
 	private static void findPath(JsonElement jsonElement, String pathToFind, final List<String> pathSegments) {
 		String field = headOf(pathSegments);
-		
+
 		if (jsonElement.isJsonArray()) {
 			Iterator<JsonElement> iterator = jsonElement.getAsJsonArray().iterator();
 			while (iterator.hasNext()) {
@@ -91,7 +91,7 @@ public class FieldsIgnorer {
 					}
 					List<String> tail = pathSegments.subList(1, pathSegments.size());
 					findPath(child, pathToFind, tail);
-					
+
 					child = sortArray(child);
 					jsonElement.getAsJsonObject().add(MARKER + field, child);
 				} else {
@@ -101,7 +101,7 @@ public class FieldsIgnorer {
 			}
 		}
 	}
-	
+
 	private static JsonElement sortArray(JsonElement jsonElement) {
 		TreeSet<JsonElement> orderedSet = newTreeSet(new Comparator<JsonElement>() {
 			@Override
@@ -126,13 +126,13 @@ public class FieldsIgnorer {
 			jsonElement.getAsJsonObject().remove(MARKER + getLastSegmentOf(pathToIgnore));
 		}
 	}
-	
+
 	private static String getLastSegmentOf(String fieldPath) {
 		String[] paths = fieldPath.split(Pattern.quote("."));
 		if (paths.length == 0) {
 			return fieldPath;
 		}
-		
+
 		return paths[max(0, paths.length-1)];
 	}
 
