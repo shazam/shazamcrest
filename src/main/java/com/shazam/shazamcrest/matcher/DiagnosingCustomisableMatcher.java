@@ -41,9 +41,9 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
 	protected final List<Matcher<String>> patternsToIgnore = new ArrayList<Matcher<String>>();
-    protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
-    protected final T expected;
-    private GsonConfiguration configuration;
+  protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
+  protected final T expected;
+  private GsonConfiguration configuration;
 
     public DiagnosingCustomisableMatcher(T expected) {
         this.expected = expected;

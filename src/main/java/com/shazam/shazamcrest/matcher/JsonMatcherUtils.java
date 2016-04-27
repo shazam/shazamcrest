@@ -3,6 +3,8 @@ package com.shazam.shazamcrest.matcher;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+
 import org.junit.Test;
 
 /**
@@ -12,7 +14,7 @@ import org.junit.Test;
  * @author Andras_Gyuro
  *
  */
-public final class JsonMatcherUtils {
+public class JsonMatcherUtils {
 
 	public static final Object SEPARATOR = "-";
 	private static final String SRC_TEST_JAVA_PATH = "src" + File.separator + "test" + File.separator + "java"
@@ -20,9 +22,6 @@ public final class JsonMatcherUtils {
 	private static final String FILE_EXTENSION = ".json";
 	private static final String APPROVED_NAME_PART = "approved";
 	private static final String NOT_APPROVED_NAME_PART = "not-approved";
-
-	private JsonMatcherUtils() {
-	}
 
 	/**
 	 * Creates file with '-not-approved' suffix and .json extension and writes the
@@ -32,11 +31,11 @@ public final class JsonMatcherUtils {
 	 * @param jsonObject the file's content
 	 * @throws IOException exception thrown when failed to create the file
 	 */
-	public static String createNotApproved(final String fileNameWithPath, final String jsonObject, final String comment)
+	public String createNotApproved(final String fileNameWithPath, final String jsonObject, final String comment)
 			throws IOException {
 		File file = new File(getFullFileName(fileNameWithPath, false));
 		file.getParentFile().mkdirs();
-		FileWriter writer = new FileWriter(file);
+		Writer writer = new FileWriter(file);
 		writer.append("/*" + comment + "*/");
 		writer.append("\n");
 		writer.append(jsonObject);
@@ -50,7 +49,7 @@ public final class JsonMatcherUtils {
 	 * @param fileNameWithPath the name of the file with full path (relative to project root)
 	 * @return the {@link File} object
 	 */
-	public static File getApproved(final String fileNameWithPath) {
+	public File getApproved(final String fileNameWithPath) {
 		File file = new File(getFullFileName(fileNameWithPath, true));
 		return file;
 	}
@@ -60,7 +59,7 @@ public final class JsonMatcherUtils {
 	 *
 	 * @return test method name in String
 	 */
-	public static String getCallerTestMethodName() {
+	public String getCallerTestMethodName() {
 		StackTraceElement testStackTraceElement = getTestStackTraceElement(Thread.currentThread().getStackTrace());
 		return testStackTraceElement != null ? testStackTraceElement.getMethodName() : null;
 	}
@@ -70,7 +69,7 @@ public final class JsonMatcherUtils {
 	 *
 	 * @return test method's class name
 	 */
-	public static String getCallerTestClassName() {
+	public String getCallerTestClassName() {
 		StackTraceElement testStackTraceElement = getTestStackTraceElement(Thread.currentThread().getStackTrace());
 		return testStackTraceElement.getClassName();
 	}
@@ -80,14 +79,14 @@ public final class JsonMatcherUtils {
 	 *
 	 * @return test method name in String
 	 */
-	public static String getCallerTestClassPath() {
+	public String getCallerTestClassPath() {
 		StackTraceElement testStackTraceElement = getTestStackTraceElement(Thread.currentThread().getStackTrace());
 		String fileName = testStackTraceElement.getFileName().substring(0,
 				testStackTraceElement.getFileName().lastIndexOf("."));
 		return SRC_TEST_JAVA_PATH + testStackTraceElement.getClassName().replace(".", File.separator).replace(fileName, "");
 	}
 
-	private static StackTraceElement getTestStackTraceElement(final StackTraceElement[] stackTrace) {
+	private StackTraceElement getTestStackTraceElement(final StackTraceElement[] stackTrace) {
 		StackTraceElement result = null;
 		for (int i = 0; i < stackTrace.length; i++) {
 			StackTraceElement s = stackTrace[i];
@@ -99,7 +98,7 @@ public final class JsonMatcherUtils {
 		return result;
 	}
 
-	private static boolean isTestMethod(final StackTraceElement element) {
+	private boolean isTestMethod(final StackTraceElement element) {
 		boolean isTest;
 
 		String fullClassName = element.getClassName();
@@ -115,11 +114,11 @@ public final class JsonMatcherUtils {
 		return isTest;
 	}
 
-	public static String getFullFileName(final String fileName, final boolean approved) {
+	public String getFullFileName(final String fileName, final boolean approved) {
 		return getFileNameWithExtension(fileName, approved);
 	}
 
-	private static String getFileNameWithExtension(final String fileName, final boolean approved) {
+	private String getFileNameWithExtension(final String fileName, final boolean approved) {
 		StringBuilder stringBuilder = new StringBuilder();
 
 		stringBuilder.append(fileName);

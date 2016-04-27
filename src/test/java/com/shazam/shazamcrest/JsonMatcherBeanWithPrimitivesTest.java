@@ -3,6 +3,10 @@ package com.shazam.shazamcrest;
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameJsonAsApproved;
 
+import java.lang.reflect.Type;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -10,6 +14,14 @@ import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.Test.None;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.shazam.shazamcrest.matcher.GsonConfiguration;
 import com.shazam.shazamcrest.model.BeanWithPrimitives;
 /**
  * Unit tests which verify the basic usage of the
@@ -17,7 +29,7 @@ import com.shazam.shazamcrest.model.BeanWithPrimitives;
  * @author Andras_Gyuro
  *
  */
-public class JsonMatcherBeanWithPrimitivesTest {
+public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 
 	private BeanWithPrimitives actual;
 
@@ -26,10 +38,9 @@ public class JsonMatcherBeanWithPrimitivesTest {
 		actual = getBeanWithPrimitives();
 	}
 
-
 	@Test(expected = None.class)
 	public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJson(){
-			assertThat(actual, sameJsonAsApproved());
+		assertThat(actual, sameJsonAsApproved());
 	}
 
 	@Test(expected = ComparisonFailure.class)
@@ -60,7 +71,7 @@ public class JsonMatcherBeanWithPrimitivesTest {
 
 	@Test(expected = None.class)
 	public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJsonWithUniqueId(){
-			assertThat(actual, sameJsonAsApproved().withUniqueId("idTest"));
+		assertThat(actual, sameJsonAsApproved().withUniqueId("idTest"));
 	}
 
 	@Test(expected = None.class)
@@ -73,27 +84,41 @@ public class JsonMatcherBeanWithPrimitivesTest {
 		assertThat(actual, sameJsonAsApproved().withPathName("src/test/jsons").withFileName("bean-with-primitive-values-2"));
 	}
 
-	private BeanWithPrimitives getBeanWithPrimitives(){
-		short beanShort = 1;
-		boolean beanBoolean = true;
-		byte beanByte = 2;
-		char beanChar = 'c';
-		float beanFloat = 3f;
-		int beanInt = 4;
-		double beanDouble = 5d;
-		long beanLong = 6L;
+	@Test(expected = None.class)
+	public void shouldNotThrowAssertionErrorWhenModelAsStringIsSameAsApprovedJson(){
+		String model = getBeanAsJsonString();
 
-		BeanWithPrimitives bean = BeanWithPrimitives.Builder.beanWithPrimitives()
-				.beanShort(beanShort)
-				.beanBoolean(beanBoolean)
-				.beanByte(beanByte)
-				.beanChar(beanChar)
-				.beanFloat(beanFloat)
-				.beanInt(beanInt)
-				.beanDouble(beanDouble)
-				.beanLong(beanLong)
-				.build();
-
-		return bean;
+		assertThat(model, sameJsonAsApproved());
 	}
+
+	@Test(expected = None.class)
+	public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJsonWithGsonConfiguration(){
+	  GsonConfiguration config = new GsonConfiguration();
+	  Date date = new GregorianCalendar(2016, 4, 27, 13, 30).getTime();
+	  config.addTypeAdapter(Long.class, new DummyStringJsonSerializer());
+
+		assertThat(actual, sameJsonAsApproved().withGsonConfiguration(config));
+	}
+
+	private class DummyStringJsonSerializer implements JsonDeserializer<Long>,JsonSerializer<Long>  {
+
+		private static final String LONG_SUFFIX = " Long_variable";
+
+		@Override
+    public Long deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException {
+        Long result = null;
+        if (!json.isJsonNull()) {
+            String asString = json.getAsString();
+            result = Long.parseLong(asString.replace(LONG_SUFFIX, ""));
+        }
+        return result;
+    }
+
+    @Override
+    public JsonElement serialize(final Long src, final Type typeOfSrc, final JsonSerializationContext context) {
+        return new JsonPrimitive(src+LONG_SUFFIX);
+    }
+
+}
+
 }
