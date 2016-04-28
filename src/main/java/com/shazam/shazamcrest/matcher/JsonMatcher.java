@@ -234,25 +234,24 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
 			throw new IllegalStateException(
 					String.format("Exception while initializing expected from file: %s", approvedFile.toString()), e);
 		}
-
 	}
 
 	private String readFile(File file) throws IOException {
-    BufferedReader br = new BufferedReader(new FileReader(file));
-    try {
-        StringBuilder sb = new StringBuilder();
-        String line = br.readLine();
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		try {
+		    StringBuilder sb = new StringBuilder();
+		    String line = br.readLine();
 
-        while (line != null) {
-            sb.append(line);
-            sb.append("\n");
-            line = br.readLine();
-        }
-        return sb.toString();
-    } finally {
-        br.close();
-    }
-}
+		    while (line != null) {
+		        sb.append(line);
+		        sb.append("\n");
+		        line = br.readLine();
+		    }
+		    return sb.toString();
+		} finally {
+		    br.close();
+		}
+	}
 
 	private String filterJson(final Gson gson, final JsonElement jsonElement) {
 		Set<String> set = new HashSet<String>();

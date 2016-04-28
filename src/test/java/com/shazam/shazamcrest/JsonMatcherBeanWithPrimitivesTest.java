@@ -105,19 +105,19 @@ public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 		private static final String LONG_SUFFIX = " Long_variable";
 
 		@Override
-    public Long deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException {
-        Long result = null;
-        if (!json.isJsonNull()) {
-            String asString = json.getAsString();
-            result = Long.parseLong(asString.replace(LONG_SUFFIX, ""));
-        }
-        return result;
-    }
+		public Long deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException {
+		        Long result = null;
+		        if (!json.isJsonNull()) {
+		            String asString = json.getAsString();
+		            result = Long.parseLong(asString.replace(LONG_SUFFIX, ""));
+		        }
+		        return result;
+		    }
 
-    @Override
-    public JsonElement serialize(final Long src, final Type typeOfSrc, final JsonSerializationContext context) {
-        return new JsonPrimitive(src+LONG_SUFFIX);
-    }
+		@Override
+		public JsonElement serialize(final Long src, final Type typeOfSrc, final JsonSerializationContext context) {
+		    return new JsonPrimitive(src+LONG_SUFFIX);
+		}
 
 }
 

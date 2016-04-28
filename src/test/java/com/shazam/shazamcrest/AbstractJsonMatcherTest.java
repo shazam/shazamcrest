@@ -6,7 +6,7 @@ import com.shazam.shazamcrest.model.BeanWithPrimitives;
  * @author Andras_Gyuro
  *
  */
-public class AbstractJsonMatcherTest {
+public abstract class AbstractJsonMatcherTest {
 
 	protected BeanWithPrimitives getBeanWithPrimitives(){
 		short beanShort = 1;

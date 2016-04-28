@@ -1,7 +1,5 @@
 package com.shazam.shazamcrest;
 
-import java.util.Date;
-
 import org.junit.Test;
 
 import com.shazam.shazamcrest.matcher.Matchers;
@@ -21,16 +19,16 @@ public class JsonMatcherSampleTest {
 	 * file name.
 	 *
 	 * The following example will create 'abe6b8\fc5014-not-approved.json' which must be renamed
-	 * to 'abe6b8\fc5014-approved.json' after it's contents has been verified.
-	 * The next test run will find this approved file and will assert it's contents to the actual beanChild
+	 * to 'abe6b8\fc5014-approved.json' after its contents has been verified.
+	 * The next test run will find this approved file and will assert its contents to the actual beanChild
 	 * object.
 	 */
 	@Test
 	public void testWithSameJsonAsApprovedMatcher(){
-			DummyBean beanParent = new DummyBean(1, "a parent bean", true, null);
-			DummyBean beanChild = new DummyBean(2, "a child bean", false, beanParent);
+		DummyBean beanParent = new DummyBean(1, "a parent bean", true, null);
+		DummyBean beanChild = new DummyBean(2, "a child bean", false, beanParent);
 
-			MatcherAssert.assertThat(beanChild, Matchers.sameJsonAsApproved());
+		MatcherAssert.assertThat(beanChild, Matchers.sameJsonAsApproved());
 	}
 
 
@@ -38,7 +36,6 @@ public class JsonMatcherSampleTest {
 
 		private int beanInt;
 		private String beanString;
-		private Date beanDate;
 		private boolean beanBoolean;
 		private DummyBean beanParent;
 
@@ -60,6 +57,10 @@ public class JsonMatcherSampleTest {
 
 		public boolean isBeanBoolean() {
 			return beanBoolean;
+		}
+
+		public DummyBean getBeanParent() {
+			return beanParent;
 		}
 
 	}
