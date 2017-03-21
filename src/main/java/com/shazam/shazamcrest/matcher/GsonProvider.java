@@ -15,7 +15,9 @@ import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,6 +35,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.TypeAdapterFactory;
@@ -46,6 +49,9 @@ import org.hamcrest.Matcher;
  */
 @SuppressWarnings("rawtypes")
 class GsonProvider {
+
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSS aa");
+
 	/**
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
@@ -64,8 +70,8 @@ class GsonProvider {
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
 
         registerSetSerialisation(gsonBuilder);
-
         registerMapSerialisation(gsonBuilder);
+        registerDateSerialisation(gsonBuilder);
 
         markSetAndMapFields(gsonBuilder);
 
@@ -193,6 +199,15 @@ class GsonProvider {
 
         		Set<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson);
         		return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
+        	}
+        });
+	}
+
+	private static void registerDateSerialisation(final GsonBuilder gsonBuilder) {
+		gsonBuilder.registerTypeHierarchyAdapter(Date.class, new JsonSerializer<Date>() {
+        	@Override
+        	public JsonElement serialize(Date date, Type type, JsonSerializationContext context) {
+        		return new JsonPrimitive(DATE_FORMAT.format(date));
         	}
         });
 	}
