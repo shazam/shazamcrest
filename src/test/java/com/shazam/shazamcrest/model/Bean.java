@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.shazam.shazamcrest.model.Bean.Builder;
-
 /**
  * Simple bean used for tests
  */
@@ -28,7 +26,7 @@ public class Bean {
 	private HashSet<Bean> hashSet;
 	private HashMap<Bean, Bean> hashMap;
 	private Bean[] array;
-	
+
 	private Bean(Builder builder) {
 		string = builder.string;
 		integer = builder.integer;
@@ -38,7 +36,7 @@ public class Bean {
 		hashMap = builder.hashMap;
 		array = builder.array;
 	}
-	
+
 	public String getField1() {
 		return string;
 	}
@@ -55,42 +53,42 @@ public class Bean {
 		public static Builder bean() {
 			return new Builder();
 		}
-		
+
 		public Builder string(String string) {
 			this.string = string;
 			return this;
 		}
-		
+
 		public Builder integer(int integer) {
 			this.integer = integer;
 			return this;
 		}
-		
+
 		public Builder set(Set<Bean> set) {
 			this.set = set;
 			return this;
 		}
-		
+
 		public Builder map(Map<Bean, Bean> map) {
 			this.map = map;
 			return this;
 		}
-		
+
 		public Builder hashSet(HashSet<Bean> hashSet) {
 			this.hashSet = hashSet;
 			return this;
 		}
-		
+
 		public Builder hashMap(HashMap<Bean, Bean> hashMap) {
 			this.hashMap = hashMap;
 			return this;
 		}
-		
+
 		public Builder array(Bean... array) {
 			this.array = array;
 			return this;
 		}
-		
+
 		public Bean build() {
 			return new Bean(this);
 		}

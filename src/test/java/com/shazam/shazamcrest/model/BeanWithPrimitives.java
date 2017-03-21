@@ -9,8 +9,6 @@
  */
 package com.shazam.shazamcrest.model;
 
-import com.shazam.shazamcrest.model.BeanWithPrimitives.Builder;
-
 /**
  * Bean with all java primitives, used for tests
  */
@@ -20,11 +18,11 @@ public class BeanWithPrimitives {
 	private byte beanByte;
 	private char beanChar;
 	private short beanShort;
-	private int beanLong;
+	private long beanLong;
 	private float beanFloat;
 	private double beanDouble;
 	private boolean beanBoolean;
-	
+
 	private BeanWithPrimitives(Builder builder) {
 		beanInteger = builder.beanInt;
 		beanByte = builder.beanByte;
@@ -41,7 +39,7 @@ public class BeanWithPrimitives {
 		private byte beanByte;
 		private char beanChar;
 		private short beanShort;
-		private int beanLong;
+		private long beanLong;
 		private float beanFloat;
 		private double beanDouble;
 		private boolean beanBoolean;
@@ -49,47 +47,47 @@ public class BeanWithPrimitives {
 		public static Builder beanWithPrimitives() {
 			return new Builder();
 		}
-		
+
 		public Builder beanInt(int beanInt) {
 			this.beanInt = beanInt;
 			return this;
 		}
-		
+
 		public Builder beanByte(byte beanByte) {
 			this.beanByte = beanByte;
 			return this;
 		}
-		
+
 		public Builder beanChar(char beanChar) {
 			this.beanChar = beanChar;
 			return this;
 		}
-		
+
 		public Builder beanShort(short beanShort) {
 			this.beanShort = beanShort;
 			return this;
 		}
-		
-		public Builder beanLong(int beanLong) {
+
+		public Builder beanLong(long beanLong) {
 			this.beanLong = beanLong;
 			return this;
 		}
-		
+
 		public Builder beanFloat(float beanFloat) {
 			this.beanFloat = beanFloat;
 			return this;
 		}
-		
+
 		public Builder beanDouble(double beanDouble) {
 			this.beanDouble = beanDouble;
 			return this;
 		}
-		
+
 		public Builder beanBoolean(boolean beanBoolean) {
 			this.beanBoolean = beanBoolean;
 			return this;
 		}
-		
+
 		public BeanWithPrimitives build() {
 			return new BeanWithPrimitives(this);
 		}

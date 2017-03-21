@@ -1,10 +1,10 @@
 /*
  * Copyright 2013 Shazam Entertainment Limited
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
- * 
+ *
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 package com.shazam.shazamcrest.matcher;
@@ -41,16 +41,17 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
 	protected final List<Matcher<String>> patternsToIgnore = new ArrayList<Matcher<String>>();
-    protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
-	protected final T expected;
+  protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
+  protected final T expected;
+  private GsonConfiguration configuration;
 
     public DiagnosingCustomisableMatcher(T expected) {
         this.expected = expected;
     }
 
-	@Override
+    @Override
 	public void describeTo(Description description) {
-		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes);
+		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes, configuration);
 		description.appendText(filterJson(gson, expected));
 		for (String fieldPath : customMatchers.keySet()) {
 			description.appendText("\nand ")
@@ -63,12 +64,12 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	protected boolean matches(Object actual, Description mismatchDescription) {
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual));
         circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
-		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes);
-		
-		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
-			return false;
-		}
-		
+        Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes, configuration);
+
+    		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
+    			return false;
+    		}
+
 		String expectedJson = filterJson(gson, expected);
 
 		if (actual == null) {
@@ -86,7 +87,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 			Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
 			customMatching.put(object, customMatchers.get(entry.getKey()));
 		}
-		
+
 		for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
 			Matcher<?> matcher = entry.getValue();
 			Object object = entry.getKey();
@@ -111,7 +112,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		typesToIgnore.add(clazz);
 		return this;
 	}
-	
+
 	@Override
 	public CustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern) {
 	    patternsToIgnore.add(fieldNamePattern);
@@ -123,6 +124,13 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		customMatchers.put(fieldPath, matcher);
 		return this;
 	}
+
+    @Override
+    public CustomisableMatcher<T> withGsonConfiguration(final GsonConfiguration configuration) {
+        this.configuration = configuration;
+        return this;
+    }
+
 
 	protected boolean appendMismatchDescription(Description mismatchDescription, String expectedJson, String actualJson, String message) {
 		if (mismatchDescription instanceof ComparisonDescription) {
@@ -154,7 +162,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 			mismatchDescription.appendText("\n" + gson.toJson(actual));
 		}
 	}
-	
+
 	private void appendFieldPath(Matcher<?> matcher, Description mismatchDescription) {
 		for (Entry<String, Matcher<?>> entry : customMatchers.entrySet()) {
 			if (entry.getValue().equals(matcher)) {
@@ -171,7 +179,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 		return removeSetMarker(gson.toJson(filteredJson));
 	}
-	
+
 	private String removeSetMarker(String json) {
 		return json.replaceAll(MARKER, "");
 	}

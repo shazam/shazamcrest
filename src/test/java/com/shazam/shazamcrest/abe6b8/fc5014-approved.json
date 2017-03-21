@@ -1,0 +1,11 @@
+/*com.shazam.shazamcrest.JsonMatcherSampleTest.testWithSameJsonAsApprovedMatcher*/
+{
+  "beanInt": 2,
+  "beanString": "a child bean",
+  "beanBoolean": false,
+  "beanParent": {
+    "beanInt": 1,
+    "beanString": "a parent bean",
+    "beanBoolean": true
+  }
+}
