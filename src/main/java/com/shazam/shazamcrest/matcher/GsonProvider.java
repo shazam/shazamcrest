@@ -50,6 +50,7 @@ import org.hamcrest.Matcher;
 class GsonProvider {
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSS aa");
+	private static Map<Type,Object> customTypeAdaptors = new HashMap<Type, Object>();
 
 	/**
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
@@ -235,5 +236,15 @@ class GsonProvider {
             result.add(context.serialize(src.orNull()));
             return result;
         }
+    }
+	
+    static void registerTypeAdapter(Type type, Object typeAdapter) {
+		customTypeAdaptors.put(type,typeAdapter);
+	}
+
+	static void removeCustomTypeAdapter(Type type) {
+    	if (customTypeAdaptors.containsKey(type)) {
+			customTypeAdaptors.remove(type);
+		}
     }
 }
