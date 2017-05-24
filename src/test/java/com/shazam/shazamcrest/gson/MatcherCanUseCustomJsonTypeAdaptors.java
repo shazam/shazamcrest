@@ -55,7 +55,27 @@ public class MatcherCanUseCustomJsonTypeAdaptors {
     }
 
     private void registerType() {
-        
+        registerCustomGsonTypeAdaptor(CustomType.class, new TypeAdapter<CustomType>() {
+            @Override
+            public void write(JsonWriter jsonWriter, CustomType customType) throws IOException {
+                jsonWriter.beginObject();
+                jsonWriter.name("class");
+                if (customType.getClassType()!=null ) {
+                    jsonWriter.value(customType.getClassType().getName());
+                }
+                else {
+                    jsonWriter.nullValue();
+                }
+                jsonWriter.name("classTypeString");
+                jsonWriter.value(customType.getClassTypeString());
+                jsonWriter.endObject();
+            }
+
+            @Override
+            public CustomType read(JsonReader jsonReader) throws IOException {
+                return new CustomType(CustomType.class);
+            }
+        });
     }
 
 
