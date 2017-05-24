@@ -5,5 +5,4 @@ jdk:
   - oraclejdk8
 install: true
 
-after_success:
-  - codecov
+
