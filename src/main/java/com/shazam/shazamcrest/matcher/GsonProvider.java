@@ -72,6 +72,7 @@ class GsonProvider {
         registerSetSerialisation(gsonBuilder);
         registerMapSerialisation(gsonBuilder);
         registerDateSerialisation(gsonBuilder);
+	registerCustomTypeAdaptors(gsonBuilder);    
 
         markSetAndMapFields(gsonBuilder);
         
@@ -137,6 +138,12 @@ class GsonProvider {
         		return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
         	}
         });
+	}
+	
+	private static void registerCustomTypeAdaptors(GsonBuilder gsonBuilder) {
+		for (Type type : customTypeAdaptors.keySet()) {
+			gsonBuilder.registerTypeAdapter(type,customTypeAdaptors.get(type));
+		}
 	}
 
 	private static void registerDateSerialisation(final GsonBuilder gsonBuilder) {
