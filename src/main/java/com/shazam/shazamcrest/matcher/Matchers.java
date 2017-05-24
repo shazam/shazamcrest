@@ -35,4 +35,25 @@ public class Matchers {
 		
 		return new DiagnosingCustomisableMatcher<T>(expected);
 	}
+	
+		/**
+	 * This allows you to register Gson Builder TypeAdaptors
+	 * @param type This is the Class that you would like to change the Json representation of
+	 * @param typeAdaptor this must be an implementation of JsonDeserializer/TypeAdator otherwise it will not know how to Render the JSON for your type
+	 * @see /"https://google.github.io/gson/apidocs/com/google/gson/GsonBuilder.html#registerTypeAdapter-java.lang.reflect.Type-java.lang.Object-/"
+	 */
+	public static void registerCustomGsonTypeAdaptor(Type type,Object typeAdaptor) {
+		GsonProvider.registerTypeAdapter(type,typeAdaptor);
+	}
+
+	/**
+	 * This allows you to Remove a Gson Builder TypeAdaptor
+	 * @param type The Class that you would remove from the Custom Gson Type Adaptors
+
+	 */
+	public static void unRegisterCustomGsonTypeAdaptor(Type type) {
+		GsonProvider.removeCustomTypeAdapter(type);
+	}
+
+
 }
