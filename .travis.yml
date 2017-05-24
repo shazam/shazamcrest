@@ -1,0 +1,11 @@
+language: java
+os:
+  - linux
+before_script:
+  - pip install --user codecov
+jdk:
+  - oraclejdk8
+install: true
+
+after_success:
+  - codecov

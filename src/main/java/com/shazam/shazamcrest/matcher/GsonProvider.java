@@ -18,6 +18,7 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,6 +51,7 @@ import org.hamcrest.Matcher;
 class GsonProvider {
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSS aa");
+	private static Map<Type,Object> customTypeAdaptors = new HashMap<Type, Object>();
 
 	/**
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
@@ -71,6 +73,7 @@ class GsonProvider {
         registerSetSerialisation(gsonBuilder);
         registerMapSerialisation(gsonBuilder);
         registerDateSerialisation(gsonBuilder);
+	registerCustomTypeAdaptors(gsonBuilder);    
 
         markSetAndMapFields(gsonBuilder);
         
@@ -136,6 +139,12 @@ class GsonProvider {
         		return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
         	}
         });
+	}
+	
+	private static void registerCustomTypeAdaptors(GsonBuilder gsonBuilder) {
+		for (Type type : customTypeAdaptors.keySet()) {
+			gsonBuilder.registerTypeAdapter(type,customTypeAdaptors.get(type));
+		}
 	}
 
 	private static void registerDateSerialisation(final GsonBuilder gsonBuilder) {
@@ -235,5 +244,15 @@ class GsonProvider {
             result.add(context.serialize(src.orNull()));
             return result;
         }
+    }
+	
+    static void registerTypeAdapter(Type type, Object typeAdapter) {
+		customTypeAdaptors.put(type,typeAdapter);
+	}
+
+	static void removeCustomTypeAdapter(Type type) {
+    	if (customTypeAdaptors.containsKey(type)) {
+			customTypeAdaptors.remove(type);
+		}
     }
 }
