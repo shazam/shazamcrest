@@ -28,6 +28,7 @@ public class MatcherCanUseCustomJsonTypeAdaptors {
 
     @Before
     public void setUp() throws Exception {
+        unRegisterCustomGsonTypeAdaptor(CustomType.class);
         customTypeString1 = new CustomType(String.class);
         customTypeString2 = new CustomType(String.class);
         customTypeInteger = new CustomType(Integer.class);
@@ -41,9 +42,17 @@ public class MatcherCanUseCustomJsonTypeAdaptors {
     }
 
     @Test
-    @Ignore("Test Will fail untill I've Implemented the change")
     public void testThatAfterRegisteringATypeAdaptorExceptionIsNotThrown() {
         registerType();
+        doAssertion();
+    }
+    
+    @Test
+    public void testThatTypeAdaptorRemovalWillThrowExpectionAsExpected() {
+        expectedException.expectMessage("Forgot to register a type adapter?");
+        expectedException.expect(UnsupportedOperationException.class);
+        registerType();
+        unRegisterCustomGsonTypeAdaptor(CustomType.class);
         doAssertion();
     }
 
@@ -51,7 +60,6 @@ public class MatcherCanUseCustomJsonTypeAdaptors {
         assertThat(customTypeString1, not(sameBeanAs(customTypeInteger)));
         assertThat(customTypeString2, not(sameBeanAs(customTypeInteger)));
         assertThat(customTypeString1, sameBeanAs(customTypeString2));
-
     }
 
     private void registerType() {
