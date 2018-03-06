@@ -25,6 +25,7 @@ import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.TypeAdapter;
 import com.shazam.shazamcrest.ComparisonDescription;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
@@ -42,6 +43,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
 	protected final List<Matcher<String>> patternsToIgnore = new ArrayList<Matcher<String>>();
     protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
+    protected final Map<Class,TypeAdapter> typeAdapters= new HashMap<Class,TypeAdapter>();
 	protected final T expected;
 
     public DiagnosingCustomisableMatcher(T expected) {
@@ -50,7 +52,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 
 	@Override
 	public void describeTo(Description description) {
-		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes);
+		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes,typeAdapters);
 		description.appendText(filterJson(gson, expected));
 		for (String fieldPath : customMatchers.keySet()) {
 			description.appendText("\nand ")
@@ -63,7 +65,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	protected boolean matches(Object actual, Description mismatchDescription) {
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual));
         circularReferenceTypes.addAll(getClassesWithCircularReferences(expected));
-		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes);
+		Gson gson = gson(typesToIgnore, patternsToIgnore, circularReferenceTypes, typeAdapters);
 		
 		if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
 			return false;
@@ -122,6 +124,19 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	public <V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
 		customMatchers.put(fieldPath, matcher);
 		return this;
+	}
+
+	@Override
+	public CustomisableMatcher<T> usingTypeAdaptors(Map<Class,TypeAdapter> typeAdapters) {
+		for (Class aClass : typeAdapters.keySet()) {
+			registerTypeAdaptor(aClass, typeAdapters.get(aClass));
+		}
+		return this;
+	}
+
+	public <V> CustomisableMatcher<T> registerTypeAdaptor(Class aClass, TypeAdapter typeAdapter) {
+		typeAdapters.put(aClass, typeAdapter);
+    	return this;
 	}
 
 	protected boolean appendMismatchDescription(Description mismatchDescription, String expectedJson, String actualJson, String message) {
