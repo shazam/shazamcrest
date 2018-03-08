@@ -107,8 +107,8 @@ public class TestingCustomizableTypeAdaptor {
 
             @Override
             public CustomTypeAdapted read(JsonReader in) throws IOException {
-                //Read not used
-                return null;
+                throw new UnsupportedOperationException("should notbe used");
+                //return null;
             }
         };
     }

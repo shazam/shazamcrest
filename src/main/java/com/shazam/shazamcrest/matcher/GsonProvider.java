@@ -72,9 +72,6 @@ class GsonProvider {
     }
 
 	private static void registerTypeAdaptors(GsonBuilder gsonBuilder, Map<Class,TypeAdapter> typeAdapters) {
-		if (typeAdapters.isEmpty()) {
-			return;
-		}
 		for (Class typeAdapter : typeAdapters.keySet()) {
 			gsonBuilder.registerTypeAdapter(typeAdapter,typeAdapters.get(typeAdapter));
 		}
