@@ -1,7 +1,9 @@
 Shazamcrest
 ===========
+# **This is Junit5 compatible version of original Shazamcrest.**
 
 'Shazamcrest' is a library that extends the functionality of [hamcrest](http://hamcrest.org/).
+
 
 Assertions on complete beans are made simpler by serialising the actual and expected beans to json, and comparing
   the two. The diagnostics are leveraging the comparison functionality of IDEs like Eclipse or IntelliJ.
@@ -132,5 +134,5 @@ To use, [download the zip](https://github.com/shazam/shazamcrest/archive/master.
     <dependency>
         <groupId>com.shazam</groupId>
         <artifactId>shazamcrest</artifactId>
-        <version>0.11</version>
+        <version>0.2</version>
     </dependency>
