@@ -19,12 +19,13 @@ import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
 import static com.shazam.shazamcrest.util.AssertionHelper.assertThat;
 import static com.shazam.shazamcrest.util.AssertionHelper.sameBeanAs;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import com.shazam.shazamcrest.model.Bean;
 import com.shazam.shazamcrest.model.BeanWithPrimitives;
@@ -44,12 +45,13 @@ public class MatcherAssertIgnoringFieldTest {
 		assertThat(actual, sameBeanAs(expected).ignoring("string"));
 	}
 	
-	@Test(expected = ComparisonFailure.class)
+	@Test
 	public void failsWhenBeanDoesNotMatchedEvenAfterIgnoringField() {
 		Bean.Builder expected = bean().string("banana").integer(2);
 		Bean.Builder actual = bean().string("apple");
-		
-		assertThat(actual, sameBeanAs(expected).ignoring("string"));
+
+		assertThrows(AssertionFailedError.class, () ->
+				assertThat(actual, sameBeanAs(expected).ignoring("string")));
 	}
 	
 	@Test
@@ -68,12 +70,13 @@ public class MatcherAssertIgnoringFieldTest {
 		assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString"));
 	}
 	
-	@Test(expected = ComparisonFailure.class)
+	@Test
 	public void failsWhenBeanDoesNotMatchEvenAfterIgnoringFieldInNestedBean() {
 		ParentBean.Builder expected = parent().parentString("expected").childBean(child().childString("banana"));
 		ParentBean.Builder actual = parent().childBean(child().childString("orange"));
-		
-		assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString"));
+
+		assertThrows(AssertionFailedError.class, () ->
+				assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString")));
 	}
 	
 	@Test
@@ -92,12 +95,13 @@ public class MatcherAssertIgnoringFieldTest {
 		assertThat(actual, sameBeanAs(expected).ignoring("childBean"));
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void throwsIllegalArgumentExceptionWhenSubpathIsSpecifiedOnPrimitiveField() {
 		ParentBean.Builder expected = parent().childBean(child().childString("banana"));
 		ParentBean.Builder actual = parent().childBean(child().childString("orange"));
-		
-		assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString.subpath"));
+
+		assertThrows(IllegalArgumentException.class, () ->
+				assertThat(actual, sameBeanAs(expected).ignoring("childBean.childString.subpath")));
 	}
 	
 	@Test
@@ -112,7 +116,7 @@ public class MatcherAssertIgnoringFieldTest {
 		assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString"));
 	}
 	
-	@Test(expected = ComparisonFailure.class)
+	@Test
 	public void failsWhenBeanDoesNotMatchAfterIgnoringFieldsInBeansWhitinList() {
 		ParentBean.Builder expected = parent()
 				.addToChildBeanList(child().childString("kiwi").childInteger(2))
@@ -120,8 +124,9 @@ public class MatcherAssertIgnoringFieldTest {
 		ParentBean.Builder actual = parent()
 				.addToChildBeanList(child().childString("banana"))
 				.addToChildBeanList(child().childString("grape"));
-		
-		assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString"));
+
+		assertThrows(AssertionFailedError.class, () ->
+				assertThat(actual, sameBeanAs(expected).ignoring("childBeanList.childString")));
 	}
 	
 	@Test

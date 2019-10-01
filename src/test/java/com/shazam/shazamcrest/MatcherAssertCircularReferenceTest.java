@@ -9,28 +9,27 @@
  */
 package com.shazam.shazamcrest;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
+
 import com.shazam.shazamcrest.model.cyclic.CircularReferenceBean;
 import com.shazam.shazamcrest.model.cyclic.Element;
 import com.shazam.shazamcrest.model.cyclic.Four;
 import com.shazam.shazamcrest.model.cyclic.One;
 import com.shazam.shazamcrest.model.cyclic.Two;
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-import org.junit.Test.None;
-
-import static com.shazam.shazamcrest.MatcherAssert.assertThat;
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static com.shazam.shazamcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.fail;
 
 /**
  * Unit tests which verify circular references are handled automatically.
  */
 public class MatcherAssertCircularReferenceTest {
 
-    @Test(expected = None.class)
+    @Test
     public void doesNothingWhenAutoDetectCircularReferenceIsCalled() {
         CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
@@ -38,15 +37,16 @@ public class MatcherAssertCircularReferenceTest {
         assertThat(actual, sameBeanAs(expected));
     }
 
-    @Test(expected = ComparisonFailure.class)
+    @Test
     public void shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull() {
         CircularReferenceBean expected = null;
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
-        assertThat(actual, sameBeanAs(expected));
+        assertThrows(AssertionFailedError.class, () ->
+                assertThat(actual, sameBeanAs(expected)));
     }
 
-    @Test(expected = None.class)
+    @Test
     public void shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph() {
         Four root = new Four();
         Four child1 = new Four();
@@ -65,24 +65,26 @@ public class MatcherAssertCircularReferenceTest {
         assertThat(root, sameBeanAs(root));
     }
 
-    @Test(expected = ComparisonFailure.class)
+    @Test
     public void doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences() {
-        Object expected = new One();
+        One expected = new One();
         One expectedChild = new One();
-        ((One)expected).setGenericObject(expectedChild);
+        expected.setGenericObject(expectedChild);
         expectedChild.setGenericObject(expected);
 
-        Object actual = new Two();
+        Two actual = new Two();
         Two actualChild = new Two();
-        ((Two)actual).setGenericObject(actualChild);
+        actual.setGenericObject(actualChild);
         actualChild.setGenericObject(actual);
 
-        assertThat(actual, sameBeanAs(expected));
+        assertThrows(AssertionFailedError.class, () ->
+                assertThat(actual, sameBeanAs(expected)));
     }
 
-    @Test(expected = ComparisonFailure.class, timeout = 150)
+    @Test
     public void shouldNotTakeAges() {
-        assertThat(Element.ONE, sameBeanAs(Element.TWO));
+        assertThrows(AssertionFailedError.class, () ->
+                assertThat(Element.ONE, sameBeanAs(Element.TWO)));
     }
 
     @Test
@@ -93,7 +95,7 @@ public class MatcherAssertCircularReferenceTest {
     @Test
     public void doesNotThrowStackOverflowExceptionWithAMoreNestedObject() {
         final Throwable throwable = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
-        
+
         assertThat(throwable, sameBeanAs(throwable));
     }
 
@@ -103,9 +105,9 @@ public class MatcherAssertCircularReferenceTest {
             assertThat(Element.ONE, sameBeanAs(Element.TWO));
 
             fail("expected ComparisonFailure");
-        } catch (ComparisonFailure e) {
-            assertThat(e.getExpected(), not(containsString("0x1")));
-            assertThat(e.getActual(), not(containsString("0x1")));
+        } catch (AssertionFailedError e) {
+            assertThat(e.getExpected().getStringRepresentation(), not(containsString("0x1")));
+            assertThat(e.getActual().getStringRepresentation(), not(containsString("0x1")));
         }
     }
 }

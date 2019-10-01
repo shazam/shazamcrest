@@ -12,14 +12,13 @@ package com.shazam.shazamcrest;
 import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
-import static com.shazam.shazamcrest.util.AssertionHelper.assertThat;
-import static com.shazam.shazamcrest.util.AssertionHelper.sameBeanAs;
+import static com.shazam.shazamcrest.util.AssertionHelper.*;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringEndsWith.endsWith;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.hamcrest.MatcherAssert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.shazam.shazamcrest.model.ParentBean;
 

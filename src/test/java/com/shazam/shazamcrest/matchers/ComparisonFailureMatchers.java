@@ -10,43 +10,44 @@
 package com.shazam.shazamcrest.matchers;
 
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
-import org.junit.ComparisonFailure;
+import org.opentest4j.AssertionFailedError;
 
 /**
  * ComparisonFailure hamcrest matchers.
  */
 public class ComparisonFailureMatchers {
-	public static Matcher<ComparisonFailure> expected(Matcher<String> expectedMatcher) {
-		return new FeatureMatcher<ComparisonFailure, String>(expectedMatcher, "ComparisonFailure with expected string", "expected string") {
-			@Override
-			protected String featureValueOf(ComparisonFailure actual) {
-				return actual.getExpected();
-			}
-		};
-	}
+    public static Matcher<AssertionFailedError> expected(Matcher<String> expectedMatcher) {
+        return new FeatureMatcher<AssertionFailedError, String>(expectedMatcher, "ComparisonFailure with expected string", "expected string") {
+            @Override
+            protected String featureValueOf(AssertionFailedError actual) {
+                return actual.getExpected().getStringRepresentation();
+            }
+        };
+    }
 
-	public static Matcher<ComparisonFailure> actual(Matcher<String> actualMatcher) {
-		return new FeatureMatcher<ComparisonFailure, String>(actualMatcher, "ComparisonFailure with actual string", "actual string") {
-			@Override
-			protected String featureValueOf(ComparisonFailure actual) {
-				return actual.getActual();
-			}
-		};
-	}
-	
-	public static Matcher<ComparisonFailure> message(Matcher<String> messageMatcher) {
-		return new FeatureMatcher<ComparisonFailure, String>(messageMatcher, "ComparisonFailure with message string", "message string") {
-			@Override
-			protected String featureValueOf(ComparisonFailure actual) {
-				return actual.getMessage();
-			}
-		};
-	}
-	
-	public static void checkThat(ComparisonFailure e, Matcher<ComparisonFailure>... matchers) {
-		org.hamcrest.MatcherAssert.assertThat(e, allOf(matchers));
-	}
+    public static Matcher<AssertionFailedError> actual(Matcher<String> actualMatcher) {
+        return new FeatureMatcher<AssertionFailedError, String>(actualMatcher, "ComparisonFailure with actual string", "actual string") {
+            @Override
+            protected String featureValueOf(AssertionFailedError actual) {
+                return actual.getActual().getStringRepresentation();
+            }
+        };
+    }
+
+    public static Matcher<AssertionFailedError> message(Matcher<String> messageMatcher) {
+        return new FeatureMatcher<AssertionFailedError, String>(messageMatcher, "ComparisonFailure with message string", "message string") {
+            @Override
+            protected String featureValueOf(AssertionFailedError actual) {
+                return actual.getMessage();
+            }
+        };
+    }
+
+    public static void checkThat(AssertionFailedError e, Matcher<AssertionFailedError>... matchers) {
+        assertThat(e, allOf(matchers));
+    }
 }

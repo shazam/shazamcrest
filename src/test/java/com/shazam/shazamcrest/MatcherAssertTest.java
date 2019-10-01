@@ -13,7 +13,7 @@ import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.shazam.shazamcrest.model.Bean;
 import com.shazam.shazamcrest.model.ChildBean;

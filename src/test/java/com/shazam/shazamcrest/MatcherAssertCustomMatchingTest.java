@@ -13,14 +13,14 @@ import static com.shazam.shazamcrest.matchers.ChildBeanMatchers.childStringEqual
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
-import static com.shazam.shazamcrest.util.AssertionHelper.assertThat;
-import static com.shazam.shazamcrest.util.AssertionHelper.sameBeanAs;
+import static com.shazam.shazamcrest.util.AssertionHelper.*;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.shazam.shazamcrest.model.ParentBean;
 
@@ -37,12 +37,13 @@ public class MatcherAssertCustomMatchingTest {
 		assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("banana")));
 	}
 	
-	@Test(expected = AssertionError.class)
+	@Test
 	public void failsWhenCustomMatcherDoesNotMatchOnPrimitive() {
 		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
 		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
-		
-		assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("kiwi")));
+
+		assertThrows(AssertionError.class, () ->
+				assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("kiwi"))));
 	}
 	
 	@Test
@@ -61,12 +62,13 @@ public class MatcherAssertCustomMatchingTest {
 		assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("banana")).with("parentString", equalTo("strawberry")));
 	}
 	
-	@Test(expected = AssertionError.class)
+	@Test
 	public void failsWhenCustomMatcherDoesNotMatchOnField() {
 		ParentBean.Builder expected = parent().childBean(child().childString("apple"));
 		ParentBean.Builder actual = parent().childBean(child().childString("banana"));
-		
-		assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("kiwi")));
+
+		assertThrows(AssertionError.class, () ->
+				assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("kiwi"))));
 	}
 	
 	@Test
@@ -77,12 +79,13 @@ public class MatcherAssertCustomMatchingTest {
 		assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("banana"))));
 	}
 	
-	@Test(expected = AssertionError.class)
+	@Test
 	public void failsWhenCustomMatcherDoesNotMatchACollection() {
 		ParentBean.Builder expected = parent().addToChildBeanList(child().childString("kiwi"));
 		ParentBean.Builder actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana"));
-		
-		assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("kiwi"))));
+
+		assertThrows(AssertionError.class, () ->
+				assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("kiwi")))));
 	}
 	
 	@Test
@@ -93,16 +96,18 @@ public class MatcherAssertCustomMatchingTest {
 		assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("banana"))));
 	}
 	
-	@Test(expected = AssertionError.class)
+	@Test
 	public void failsWhenCustomMatcherDoesNotMatchAMap() {
 		ParentBean.Builder expected = parent().putToChildBeanMap("key", child().childString("apple"));
 		ParentBean.Builder actual = parent().putToChildBeanMap("key", child().childString("banana"));
-		
-		assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi"))));
+
+		assertThrows(AssertionError.class, () ->
+				assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi")))));
 	}
 	
-	@Test(expected = AssertionError.class)
+	@Test
 	public void failsWhenActualIsNull() {
-		MatcherAssert.assertThat(null, sameBeanAs(bean()).with("string", startsWith("field")));
+		assertThrows(AssertionError.class, () ->
+				MatcherAssert.assertThat(null, sameBeanAs(bean()).with("string", startsWith("field"))));
 	}
 }

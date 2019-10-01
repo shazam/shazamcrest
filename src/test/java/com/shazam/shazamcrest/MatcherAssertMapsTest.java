@@ -10,26 +10,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.shazam.shazamcrest.model.Bean;
 
 /**
  * Tests which verifies maps comparison is not affected by the order of the entries.
  */
-@RunWith(Parameterized.class)
 public class MatcherAssertMapsTest {
-	
-	@Parameterized.Parameters
+
     public static List<Object[]> data() {
         return asList(new Object[20][0]);
     }
 
-    public MatcherAssertMapsTest() {}
-	
-	@Test
+	@ParameterizedTest
+	@MethodSource("data")
 	public void ignoresOrderingInMap() {
 		Map<Bean, Bean> expectedMap = newHashMap();
 		expectedMap.put(bean().string("key1").build(), bean().string("value1").build());
@@ -43,8 +39,9 @@ public class MatcherAssertMapsTest {
 		
 		assertThat(actual, sameBeanAs(expected));
 	}
-	
-	@Test
+
+	@ParameterizedTest
+	@MethodSource("data")
 	public void ignoresOrderingInMapImplementations() {
 		HashMap<Bean, Bean> expectedMap = newHashMap();
 		expectedMap.put(bean().string("key1").build(), bean().string("value1").build());
@@ -58,8 +55,8 @@ public class MatcherAssertMapsTest {
 		
 		assertThat(actual, sameBeanAs(expected));
 	}
-	
-	@Test
+	@ParameterizedTest
+	@MethodSource("data")
 	public void ignoresOrderingInMapWithTwoEntriesWithSameJsonRepresentationAsKeyButDifferentValues() {
 		Map<Bean, Bean> expectedMap = newHashMap();
 		expectedMap.put(bean().string("key1").build(), bean().string("value1").build());
@@ -75,8 +72,9 @@ public class MatcherAssertMapsTest {
 		
 		assertThat(actual, sameBeanAs(expected));
 	}
-	
-	@Test
+
+	@ParameterizedTest
+	@MethodSource("data")
 	public void ignoresOrderingInNestedMap() {
 		Map<Bean, Bean> expectedNestedMap1 = newHashMap();
 		expectedNestedMap1.put(bean().string("nestedMap1Key1").build(), bean().string("nestedMap1Value1").build());
