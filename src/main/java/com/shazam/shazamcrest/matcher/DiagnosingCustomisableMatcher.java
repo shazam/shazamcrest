@@ -11,8 +11,7 @@ package com.shazam.shazamcrest.matcher;
 
 import static com.shazam.shazamcrest.BeanFinder.findBeanAt;
 import static com.shazam.shazamcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
-import static com.shazam.shazamcrest.FieldsIgnorer.MARKER;
-import static com.shazam.shazamcrest.FieldsIgnorer.findPaths;
+import static com.shazam.shazamcrest.FieldsIgnorer.*;
 import static com.shazam.shazamcrest.matcher.GsonProvider.gson;
 
 import java.util.ArrayList;
@@ -23,25 +22,27 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.shazam.shazamcrest.ComparisonDescription;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.shazam.shazamcrest.ComparisonDescription;
+
 /**
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
  * ignore in the comparison, or fields to be matched with a custom matcher
  */
 class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements CustomisableMatcher<T> {
-	private final Set<String> pathsToIgnore = new HashSet<String>();
-	private final Map<String, Matcher<?>> customMatchers = new HashMap<String, Matcher<?>>();
-	protected final List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
-	protected final List<Matcher<String>> patternsToIgnore = new ArrayList<Matcher<String>>();
-    protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
+
+	private final Set<String> pathsToIgnore = new HashSet<>();
+	private final Map<String, Matcher<?>> customMatchers = new HashMap<>();
+	protected final List<Class<?>> typesToIgnore = new ArrayList<>();
+	protected final List<Matcher<String>> patternsToIgnore = new ArrayList<>();
+    protected final Set<Class<?>> circularReferenceTypes = new HashSet<>();
 	protected final T expected;
 
     public DiagnosingCustomisableMatcher(T expected) {
@@ -139,9 +140,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	private boolean assertEquals(final String expectedJson, String actualJson, Description mismatchDescription) {
 		try {
 			JSONAssert.assertEquals(expectedJson, actualJson, true);
-		} catch (AssertionError e) {
-			return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());
-		} catch (JSONException e) {
+		} catch (AssertionError | JSONException e) {
 			return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());
 		}
 
@@ -164,7 +163,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	}
 
 	private String filterJson(Gson gson, Object object) {
-		Set<String> set = new HashSet<String>();
+		Set<String> set = new HashSet<>();
 		set.addAll(pathsToIgnore);
 		set.addAll(customMatchers.keySet());
 		JsonElement filteredJson = findPaths(gson, object, set);

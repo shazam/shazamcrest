@@ -11,16 +11,14 @@ package com.shazam.shazamcrest;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.actual;
-import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.checkThat;
-import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.expected;
+import static com.shazam.shazamcrest.matchers.ComparisonFailureMatchers.*;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import com.shazam.shazamcrest.model.Bean;
 
@@ -30,17 +28,17 @@ import com.shazam.shazamcrest.model.Bean;
  */
 public class MatcherAssertIgnoringFieldDiagnosticTest {
 
-	@Test
-	@SuppressWarnings("unchecked")
-	public void doesNotIncludeIgnoredFieldsInDiagnostics() {
-		Bean expected = bean().string("value1").integer(1).build();
-		Bean actual = bean().string("value2").integer(2).build();
-		
-		try {
-			assertThat(actual, sameBeanAs(expected).ignoring("string"));
-			fail("Exceptionexpected");
-		} catch (ComparisonFailure e) {
-			checkThat(e, expected(not(containsString("string"))), actual(not(containsString("string"))));
-		}
-	}
+    @Test
+    @SuppressWarnings("unchecked")
+    public void doesNotIncludeIgnoredFieldsInDiagnostics() {
+        Bean expected = bean().string("value1").integer(1).build();
+        Bean actual = bean().string("value2").integer(2).build();
+
+        try {
+            assertThat(actual, sameBeanAs(expected).ignoring("string"));
+            fail("Exceptionexpected");
+        } catch (AssertionFailedError e) {
+            checkThat(e, expected(not(containsString("string"))), actual(not(containsString("string"))));
+        }
+    }
 }

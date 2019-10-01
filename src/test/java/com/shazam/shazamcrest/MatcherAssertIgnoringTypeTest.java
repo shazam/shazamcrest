@@ -14,9 +14,10 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static com.shazam.shazamcrest.model.ChildBean.Builder.child;
 import static com.shazam.shazamcrest.model.ParentBean.Builder.parent;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import com.shazam.shazamcrest.model.Bean;
 import com.shazam.shazamcrest.model.ChildBean;
@@ -35,11 +36,12 @@ public class MatcherAssertIgnoringTypeTest {
 		assertThat(actual, sameBeanAs(expected).ignoring(ChildBean.class));
 	}
 	
-	@Test(expected = ComparisonFailure.class)
+	@Test
 	public void failsWhenBeanDoesNotMatchAfterIgnoringType() {
 		Bean expected = bean().string("string").build();
 		Bean actual = bean().integer(1).build();
 
-		assertThat(actual, sameBeanAs(expected).ignoring(Boolean.class));
+		assertThrows(AssertionFailedError.class, () ->
+				assertThat(actual, sameBeanAs(expected).ignoring(Boolean.class)));
 	}
 }

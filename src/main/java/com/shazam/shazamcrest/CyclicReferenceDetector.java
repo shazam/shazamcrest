@@ -9,6 +9,10 @@
  */
 package com.shazam.shazamcrest;
 
+import static java.lang.reflect.Modifier.isStatic;
+import static java.util.Collections.newSetFromMap;
+import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
+
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,21 +20,17 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static java.lang.reflect.Modifier.isStatic;
-import static java.util.Collections.newSetFromMap;
-import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
-
 /**
  * Detects classes with fields that have circular reference and returns a set of those classes.
  */
 public class CyclicReferenceDetector {
 
-    private Set<Object> nodesInPaths = newSetFromMap(new IdentityHashMap<Object, Boolean>());
-    private Set<Object> objectsWithCircularReferences = newSetFromMap(new IdentityHashMap<Object, Boolean>());
-    
+    private Set<Object> nodesInPaths = newSetFromMap(new IdentityHashMap<>());
+    private Set<Object> objectsWithCircularReferences = newSetFromMap(new IdentityHashMap<>());
+
     /**
      * Returns a set of classes that have circular reference.
-     * 
+     *
      * @param object the object to check if it has circular reference fields
      */
     public static Set<Class<?>> getClassesWithCircularReferences(Object object) {
@@ -58,7 +58,7 @@ public class CyclicReferenceDetector {
 
     /**
      * Detects classes that have circular reference.
-     * 
+     *
      * @param object the object to check if it has circular reference fields
      * @param clazz the class being used (necessary if we also checking super class as getDeclaredFields only returns
      *              fields of a given class, but not its super class)
@@ -92,8 +92,8 @@ public class CyclicReferenceDetector {
      *
      * @param object the object to detect circular reference on
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	private void detectCircularReferenceOnObject(Object object) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void detectCircularReferenceOnObject(Object object) {
         boolean isValid = validateAnObject(object);
         boolean isInPath = nodesInPaths.contains(object);
 
@@ -123,7 +123,7 @@ public class CyclicReferenceDetector {
 
     /**
      * For objects with super classes, check for objects subject to circular reference in super class.
-     * 
+     *
      * @param object the object to check if it has circular reference
      * @param clazz Used to prevent stackOverFlow exception
      */
@@ -137,7 +137,7 @@ public class CyclicReferenceDetector {
 
     /**
      * Detects circular references on {@link Map}s, i.e HashMap, TreeMap, etc.
-     * 
+     *
      * @param map the {@link Map} with objects to checks for cyclic references on
      */
     private void detectCircularReferencesFromObjectsInAMap(Map<Object, Object> map) {
@@ -147,7 +147,7 @@ public class CyclicReferenceDetector {
 
     /**
      * Detects circular references on {@link Iterable}s, i.e {@link Collection}s.
-     * 
+     *
      * @param iterable the object to iterate through.
      */
     private void detectCircularReferenceFromObjectsContainedInAnIterable(Iterable<Object> iterable) {
@@ -164,7 +164,7 @@ public class CyclicReferenceDetector {
      *
      * @param object The object to validate
      * @return true if the object is not primitive/wrapper class and not an instance of
-     * 			{@link String}, {@link Iterable}, {@link Map} or {@link Enum})
+     *            {@link String}, {@link Iterable}, {@link Map} or {@link Enum})
      */
     private boolean validateAnObject(Object object) {
         return !isPrimitiveOrWrapper(object.getClass())

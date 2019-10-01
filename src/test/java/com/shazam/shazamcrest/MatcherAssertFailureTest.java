@@ -13,9 +13,10 @@ import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static com.shazam.shazamcrest.model.Bean.Builder.bean;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import com.shazam.shazamcrest.model.Bean;
 
@@ -24,16 +25,18 @@ import com.shazam.shazamcrest.model.Bean;
  */
 public class MatcherAssertFailureTest {
 
-	@Test(expected = ComparisonFailure.class)
+	@Test
 	public void throwsComparisonFailureWhenBeansNotMatching() {
 		Bean expected = bean().string("value1").integer(1).build();
 		Bean actual = bean().string("value2").integer(2).build();
 
-		assertThat(actual, sameBeanAs(expected));
+		assertThrows(AssertionFailedError.class, () ->
+				assertThat(actual, sameBeanAs(expected)));
 	}
 
-	@Test(expected = AssertionError.class)
+	@Test
 	public void throwsAssertionErrorWhenNormalMatchersUsed() {
-		assertThat("value1", equalTo("value2"));
+		assertThrows(AssertionError.class, () ->
+				assertThat("value1", equalTo("value2")));
 	}
 }
