@@ -9,7 +9,11 @@
  */
 package com.shazam.shazamcrest.matcher;
 
+import com.google.gson.TypeAdapter;
 import org.hamcrest.Matcher;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * {@link Matcher} implementation where fields and object types can be skipped from the comparison, or matched with
@@ -57,4 +61,6 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
 	 * @return the instance of the matcher
 	 */
     CustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern);
+
+    CustomisableMatcher<T> usingTypeAdaptors(Map<Class,TypeAdapter> typeAdapters);
 }

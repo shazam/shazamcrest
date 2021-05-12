@@ -27,17 +27,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.FieldNamingStrategy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import com.google.gson.graph.GraphAdapterBuilder;
 
 import org.hamcrest.Matcher;
@@ -57,9 +47,10 @@ class GsonProvider {
      *
      * @param typesToIgnore the object types to exclude from serialisation
      * @param circularReferenceTypes cater for circular referenced objects
-     * @return an instance of {@link Gson}
+     * @param typeAdapters
+	 * @return an instance of {@link Gson}
      */
-    public static Gson gson(final List<Class<?>> typesToIgnore, final List<Matcher<String>> fieldsToIgnore, Set<Class<?>> circularReferenceTypes) {
+    public static Gson gson(final List<Class<?>> typesToIgnore, final List<Matcher<String>> fieldsToIgnore, Set<Class<?>> circularReferenceTypes, Map<Class,TypeAdapter> typeAdapters) {
     	final GsonBuilder gsonBuilder = initGson();
     	
         if (!circularReferenceTypes.isEmpty()) {
@@ -71,6 +62,7 @@ class GsonProvider {
         registerSetSerialisation(gsonBuilder);
         registerMapSerialisation(gsonBuilder);
         registerDateSerialisation(gsonBuilder);
+		registerTypeAdaptors(gsonBuilder,typeAdapters);
 
         markSetAndMapFields(gsonBuilder);
         
@@ -78,7 +70,14 @@ class GsonProvider {
         
         return gsonBuilder.create();
     }
-    
+
+	private static void registerTypeAdaptors(GsonBuilder gsonBuilder, Map<Class,TypeAdapter> typeAdapters) {
+		for (Class typeAdapter : typeAdapters.keySet()) {
+			gsonBuilder.registerTypeAdapter(typeAdapter,typeAdapters.get(typeAdapter));
+		}
+
+	}
+
 	private static void registerExclusionStrategies(GsonBuilder gsonBuilder, final List<Class<?>> typesToIgnore, final List<Matcher<String>> fieldsToIgnore) {
 		if (typesToIgnore.isEmpty() && fieldsToIgnore.isEmpty()) {
 			return;
