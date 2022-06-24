@@ -33,7 +33,7 @@ import java.util.*;
 @SuppressWarnings("rawtypes")
 public final class GraphAdapterBuilder {
 	private final Map<Type, InstanceCreator<?>> instanceCreators = new HashMap<Type, InstanceCreator<?>>();
-	private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators);
+	private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators, true);
 
 	public GraphAdapterBuilder addType(Type type) {
 		final ObjectConstructor<?> objectConstructor = constructorConstructor.get(TypeToken.get(type));
