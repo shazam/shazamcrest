@@ -6,3 +6,6 @@ target
 *.iml
 **/dependency-reduced-pom.xml
 *.versionsBackup
+build/
+.gradle/
+.kotlin/

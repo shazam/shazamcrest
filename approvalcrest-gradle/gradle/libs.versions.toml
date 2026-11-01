@@ -1,0 +1,16 @@
+# The same versions as the Maven integration-test modules that these projects run.
+[versions]
+hamcrest = "3.0"
+junit4 = "4.13.2"
+junit-jupiter = "5.14.4"
+testng = "7.10.2"
+
+[libraries]
+hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+testng = { module = "org.testng:testng", version.ref = "testng" }

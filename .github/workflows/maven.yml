@@ -134,3 +134,20 @@ jobs:
           set | grep JAVA
       - name: Build with Maven
         run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
+  gradle:
+    name: Gradle build on JDK 25
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'zulu'
+          cache: maven
+      - name: Install the artifacts that the Gradle build tests
+        run: mvn -B install -DskipTests --file pom.xml
+      - name: Build with Gradle
+        working-directory: approvalcrest-gradle
+        run: ./gradlew check --configuration-cache --warning-mode=fail
