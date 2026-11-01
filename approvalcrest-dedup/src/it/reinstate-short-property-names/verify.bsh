@@ -1,0 +1,15 @@
+source(verifyLib);
+
+expectFilesUnder("src", new String[] {
+        "it/java/billing/a7b8c9/0d1e2f-approved.json",
+        "it/java/orders/c1a2b3/9f8e7d-approved.json",
+        "it/java/orders/c1a2b3/d4e5f6-approved.json",
+        "it/java/shipping/b3c4d5/e6f7a8-approved.json"});
+
+String content = "\n{\n  \"total\": 42,\n  \"currency\": \"GBP\"\n}";
+expectContentUnder("src/it/java", "orders/c1a2b3/d4e5f6-approved.json", "/*orders.OrderTest.c*/" + content);
+expectContentUnder("src/it/java", "billing/a7b8c9/0d1e2f-approved.json", "/*billing.InvoiceTest.a*/" + content);
+expectContentUnder("src/it/java", "shipping/b3c4d5/e6f7a8-approved.json", "/*shipping.ParcelTest.b*/" + content);
+expectContentUnder("src/it/java", "orders/c1a2b3/9f8e7d-approved.json", "/*orders.OrderTest.unique*/\n{\n  \"total\": 7\n}");
+expectLogLine("Reinstate complete: 3 pointer(s) replaced with standalone content, 1 canonical(s) deleted.");
+expectLogLacks("is read-only");

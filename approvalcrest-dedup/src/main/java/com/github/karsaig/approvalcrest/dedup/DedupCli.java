@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Set;
 
 import com.github.karsaig.approvalcrest.ApprovedFileType;
+import com.github.karsaig.approvalcrest.EnvVarReader;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 
 /**
@@ -17,7 +18,7 @@ import com.github.karsaig.approvalcrest.FileMatcherConfig;
  *   java -jar approvalcrest-dedup-VERSION-standalone.jar [options]
  *
  *   Options:
- *     --dir &lt;path&gt;          Scan directory (default: src/test/java)
+ *     --dir &lt;path&gt;          Scan directory (default: fileMatcherSourceRoot, else src/test/java)
  *     --shared-dir &lt;path&gt;   Shared approvals directory (default: src/test/java/shared-approvals)
  *     --bucket-depth &lt;n&gt;    Bucket prefix depth 1-6 (default: 2)
  *     --types &lt;list&gt;        Approved file types to process: json, content, json,content or all
@@ -26,8 +27,10 @@ import com.github.karsaig.approvalcrest.FileMatcherConfig;
  *     --reinstate           Replace all pointers with standalone content and clear the shared dir
  * </pre>
  *
- * <p>All options also read from system properties ({@code fmSharedDir},
- * {@code fmSharedDirBucketDepth}, etc.) when not provided on the command line.
+ * <p>Without the option, {@code --dir}, {@code --shared-dir} and {@code --bucket-depth} read the system
+ * properties that the tests read: {@code fileMatcherSourceRoot}, {@code fileMatcherSharedDir} and
+ * {@code fileMatcherSharedDirBucketDepth}, or their aliases {@code fmSourceRoot}, {@code fmSharedDir} and
+ * {@code fmSharedDirBucketDepth}. The other options read no system property.
  */
 public class DedupCli {
 
@@ -67,7 +70,15 @@ public class DedupCli {
             }
         }
 
-        FileMatcherConfig config = new FileMatcherConfig();
+        FileMatcherConfig config;
+        String sourceRoot;
+        try {
+            config = new FileMatcherConfig();
+            sourceRoot = EnvVarReader.getStringProperties("src/test/java", "fileMatcherSourceRoot", "fmSourceRoot");
+        } catch (IllegalStateException e) {
+            // A conflicting or invalid system property is misconfiguration too, so main reports it plainly.
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
         if (sharedDir == null) {
             sharedDir = config.getSharedApprovalDirectory();
         }
@@ -75,7 +86,8 @@ public class DedupCli {
             bucketDepth = config.getSharedBucketDepth();
         }
 
-        Path scanDirPath = dir != null ? workingDirectory.resolve(dir) : workingDirectory.resolve("src/test/java");
+        // Backslashes in the property become separators, as in the tests, so that both find the same directory.
+        Path scanDirPath = workingDirectory.resolve(dir != null ? dir : sourceRoot.replace('\\', '/'));
         Set<ApprovedFileType> selectedTypes = ApprovedFileType.parse(types);
 
         if (reinstate) {

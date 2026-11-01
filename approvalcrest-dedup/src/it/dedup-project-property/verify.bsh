@@ -1,0 +1,16 @@
+source(verifyLib);
+
+expectFilesUnder("src", new String[] {
+        "it/java/billing/a7b8c9/0d1e2f-approved.json",
+        "it/java/orders/c1a2b3/9f8e7d-approved.json",
+        "it/java/orders/c1a2b3/d4e5f6-approved.json",
+        "it/java/shipping/b3c4d5/e6f7a8-approved.json",
+        "test/java/shared-approvals/75/752a56a58607-38-approved.json"});
+
+String pointer = "/*pointer:src/test/java/shared-approvals/75/752a56a58607-38-approved.json*/";
+expectContentUnder("src/it/java", "orders/c1a2b3/d4e5f6-approved.json", "/*orders.OrderTest.c*/\n" + pointer);
+expectContentUnder("src/it/java", "billing/a7b8c9/0d1e2f-approved.json", "/*billing.InvoiceTest.a*/\n" + pointer);
+expectContentUnder("src/it/java", "shipping/b3c4d5/e6f7a8-approved.json", "/*shipping.ParcelTest.b*/\n" + pointer);
+expectContentUnder("src/it/java", "orders/c1a2b3/9f8e7d-approved.json", "/*orders.OrderTest.unique*/\n{\n  \"total\": 7\n}");
+expectLogLine("Deduplication complete: 1 canonical(s) created, 3 pointer(s) written, 0 orphaned canonical(s) removed.");
+expectLogLacks("is read-only");

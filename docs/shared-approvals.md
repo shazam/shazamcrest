@@ -34,7 +34,7 @@ src/test/java/shared-approvals/a1/a1b2c3d4e5f6-4827-approved.json
 
 The `{bucket}` directory is the first N characters of the hash (default N=2, which gives 256 buckets). The hash prefix and the byte length together prevent hash collisions in practice, for practical file sizes. If the bucket depth is not in the supported range of 1–6, approvalcrest rejects it with a configuration error that names the property.
 
-> **A change to the bucket depth moves every canonical.** The depth is part of the path that a pointer resolves to. After a change, approvalcrest cannot find the old canonicals, and writes duplicate content again under the new layout without a warning. To migrate, first run `mvn approvalcrest:reinstate` with the old depth. Then run `mvn approvalcrest:dedup` with the new depth. Both goals need the plugin in your POM (see [Adding the dedup tool](#adding-the-dedup-tool)).
+> **A change to the bucket depth moves every canonical.** The depth is part of the path that a pointer resolves to. After a change, approvalcrest cannot find the old canonicals, and writes duplicate content again under the new layout without a warning. To migrate, first run `mvn approvalcrest:reinstate`. It needs no depth, because each pointer holds the full path of its canonical. Then change the depth, and run `mvn approvalcrest:dedup`. Both goals need the plugin in your POM (see [Adding the dedup tool](#adding-the-dedup-tool)).
 
 ## Deduplication workflow
 
@@ -67,7 +67,7 @@ mvn dependency:copy -Dartifact=com.github.karsaig:approvalcrest-dedup:1.6.1:jar:
 After your test suite generates all approved files, run the dedup tool. It does not run tests. It only reads, writes and deletes files:
 
 ```bash
-# as a Maven plugin (reads fmSharedDir from system property or POM)
+# as a Maven plugin (reads fileMatcherSharedDir, fileMatcherSharedDirBucketDepth, fileMatcherSourceRoot and fileMatcherSharedTypes)
 mvn approvalcrest:dedup
 
 # standalone JAR
@@ -86,6 +86,8 @@ java -jar approvalcrest-dedup-VERSION-standalone.jar
 Each run is **idempotent**. A second run on a tree that is already deduplicated changes nothing.
 
 **Scan directory and reference lookup.** `--dir` controls which files the tool *converts* into pointers. It does not control which canonicals are *in use*. The tool looks for references in the full project.
+
+Without `--dir` (`<dir>` in the plugin configuration), the tool scans the directory that `fileMatcherSourceRoot` (alias `fmSourceRoot`) names. Without the property, it scans `src/test/java`.
 
 A pointer outside the scanned subtree needs its canonical as much as a pointer inside it. This is important when you make `--dir` narrower, or run the goal for each module against a shared directory for several modules. The tool does not touch the canonicals of the modules that you did not scan.
 
@@ -144,9 +146,12 @@ Use reinstate when you:
 | `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | Path to the shared directory for canonical files, relative to the project root |
 | `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Turns on write-side integration. New approved files and in-place updates look for a canonical that matches. `true`/`all` for both types, `json` or `content` for one type, `false`/`none` for neither |
 | `fileMatcherSharedDirBucketDepth` | `fmSharedDirBucketDepth` | `2` | The number of characters from the start of the hash that make the name of the bucket subdirectory (1–6) |
+| `fileMatcherSourceRoot` | `fmSourceRoot` | `src/test/java` | The directory that the tool scans when `--dir` (`<dir>` in the plugin configuration) is not set. The tests read the same property to find the approved files. |
 | `fileMatcherSharedTypes` | — | `all` | The approved file types that `approvalcrest:dedup` and `approvalcrest:reinstate` process: `json`, `content`, `json,content` or `all`. Only the tool uses it. It has no effect on the matchers at test time. |
 
-> **Warning:** if you change `fileMatcherSharedDirBucketDepth` after you commit pointer files, all the pointers become invalid, because the canonical paths are different. Run `mvn approvalcrest:reinstate` with the old depth. Then run `mvn approvalcrest:dedup` with the new depth.
+For `fileMatcherSharedDir`, `fileMatcherSharedDirBucketDepth` and `fileMatcherSourceRoot`, the goals and the standalone JAR read the long name and the alias, as the tests do. A long name and its alias with different values stop the tool with an `Ambiguous configuration` error. The goals also read these three properties from the `<properties>` of your POM.
+
+> **Warning:** if you change `fileMatcherSharedDirBucketDepth` after you commit pointer files, all the pointers become invalid, because the canonical paths are different. Run `mvn approvalcrest:reinstate`, which needs no depth. Then change the depth, and run `mvn approvalcrest:dedup`.
 
 ### Enabling write-side integration
 
@@ -190,7 +195,7 @@ A pointer whose target file does not exist always fails.
 ```
 java -jar approvalcrest-dedup-VERSION-standalone.jar [options]
 
-  --dir <path>          Scan directory (default: src/test/java)
+  --dir <path>          Scan directory (default: fileMatcherSourceRoot, else src/test/java)
   --shared-dir <path>   Shared approvals directory (default: src/test/java/shared-approvals)
   --bucket-depth <n>    Bucket prefix depth 1-6 (default: 2)
   --types <list>        Approved file types to process: json, content, json,content or all

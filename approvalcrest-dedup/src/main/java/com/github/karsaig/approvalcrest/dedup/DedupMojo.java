@@ -2,11 +2,8 @@ package com.github.karsaig.approvalcrest.dedup;
 
 import com.github.karsaig.approvalcrest.ApprovedFileType;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -18,42 +15,26 @@ import org.apache.maven.plugins.annotations.Parameter;
  * <p>Run with: {@code mvn approvalcrest:dedup}
  */
 @Mojo(name = "dedup")
-public class DedupMojo extends AbstractMojo {
+public class DedupMojo extends AbstractDedupMojo {
 
-    @Parameter(defaultValue = "${project.basedir}", readonly = true, required = true)
-    private File projectBaseDir;
+    private static final int DEFAULT_BUCKET_DEPTH = 2;
 
-    /** Shared approvals directory, relative to the project base directory. */
-    @Parameter(property = "fileMatcherSharedDir", defaultValue = "src/test/java/shared-approvals")
-    private String sharedDir;
+    /** Number of characters of the hash prefix used as bucket directory name (1-6). Default: 2. */
+    @Parameter(property = "fileMatcherSharedDirBucketDepth")
+    private Integer bucketDepth;
 
-    /** Number of characters of the hash prefix used as bucket directory name (1-6). */
-    @Parameter(property = "fileMatcherSharedDirBucketDepth", defaultValue = "2")
-    private int bucketDepth;
-
-    /** Directory to scan for approved files, relative to the project base directory. */
-    @Parameter(defaultValue = "src/test/java")
-    private String dir;
-
-    /** When true, print what would be done without writing any files. */
-    @Parameter(property = "dryRun", defaultValue = "false")
-    private boolean dryRun;
-
-    /**
-     * Approved file types to process: {@code json}, {@code content}, {@code json,content} or
-     * {@code all}. Files of any other type are left alone, and so are their canonicals.
-     */
-    @Parameter(property = "fileMatcherSharedTypes", defaultValue = "all")
-    private String types;
+    /** Short alias of {@code fileMatcherSharedDirBucketDepth}. */
+    @Parameter(property = "fmSharedDirBucketDepth")
+    private Integer fmSharedDirBucketDepth;
 
     @Override
     public void execute() throws MojoExecutionException {
-        Path workingDirectory = projectBaseDir.toPath();
-        Path scanDirPath = workingDirectory.resolve(dir);
+        int depth = resolve("fileMatcherSharedDirBucketDepth", bucketDepth, "fmSharedDirBucketDepth", fmSharedDirBucketDepth,
+                DEFAULT_BUCKET_DEPTH);
         try {
             ApprovalDeduplicator deduplicator = new ApprovalDeduplicator(
-                    workingDirectory, scanDirPath, sharedDir, bucketDepth, dryRun,
-                    ApprovedFileType.parse(types));
+                    workingDirectory(), scanDir(), sharedDir(), depth, dryRun(),
+                    ApprovedFileType.parse(types()));
             ApprovalDeduplicator.DeduplicatorResult result = deduplicator.deduplicate();
             getLog().info(result.toString());
         } catch (IOException e) {

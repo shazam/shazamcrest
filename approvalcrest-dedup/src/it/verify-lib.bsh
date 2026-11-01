@@ -18,8 +18,12 @@ void collectFiles(File dir, String prefix, List out) {
 }
 
 void expectFiles(String[] expected) {
+    expectFilesUnder("src/test/java", expected);
+}
+
+void expectFilesUnder(String root, String[] expected) {
     List files = new ArrayList();
-    collectFiles(new File(basedir, "src/test/java"), "", files);
+    collectFiles(new File(basedir, root), "", files);
     Collections.sort(files);
     List expectedFiles = Arrays.asList(expected);
     if (!expectedFiles.equals(files)) {
@@ -28,7 +32,11 @@ void expectFiles(String[] expected) {
 }
 
 void expectContent(String relative, String expected) {
-    File file = new File(new File(basedir, "src/test/java"), relative);
+    expectContentUnder("src/test/java", relative, expected);
+}
+
+void expectContentUnder(String root, String relative, String expected) {
+    File file = new File(new File(basedir, root), relative);
     String actual = new String(Files.readAllBytes(file.toPath()), "UTF-8");
     if (!expected.equals(actual)) {
         throw new IllegalStateException(relative + "\nexpected:\n" + expected + "\nactual:\n" + actual);
@@ -39,5 +47,19 @@ void expectLogLine(String expected) {
     String log = new String(Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8").replace("\r\n", "\n");
     if (log.indexOf("[INFO] " + expected + "\n") < 0) {
         throw new IllegalStateException("build.log has no line: [INFO] " + expected);
+    }
+}
+
+void expectLogLacks(String unexpected) {
+    String log = new String(Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+    if (log.indexOf(unexpected) >= 0) {
+        throw new IllegalStateException("build.log contains: " + unexpected);
+    }
+}
+
+void expectLogContains(String expected) {
+    String log = new String(Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+    if (log.indexOf(expected) < 0) {
+        throw new IllegalStateException("build.log does not contain: " + expected);
     }
 }

@@ -122,7 +122,15 @@ All frameworks use the same property. Only the value **when you do not set it** 
 
 ### Keeping approved files under test resources
 
-The approved files do not have to be next to the test sources. To keep them in a separate tree, set the root to a directory under `src/test/resources`. Approvalcrest still adds the package path and a directory for each test class, so the layout under the root stays the same:
+The approved files do not have to be next to the test sources. To keep them in a separate tree, set the root to a directory under `src/test/resources`. Approvalcrest still adds the package path and a directory for each test class, so the layout under the root stays the same.
+
+Define the root as a property of your POM, and give it to the test JVM through Surefire. The `approvalcrest:dedup` and `approvalcrest:reinstate` goals read the same POM property, so they scan the same tree:
+
+```xml
+<properties>
+    <fileMatcherSourceRoot>src/test/resources/approvalcrest</fileMatcherSourceRoot>
+</properties>
+```
 
 ```xml
 <plugin>
@@ -130,7 +138,7 @@ The approved files do not have to be next to the test sources. To keep them in a
     <artifactId>maven-surefire-plugin</artifactId>
     <configuration>
         <systemPropertyVariables>
-            <fileMatcherSourceRoot>src/test/resources/approvalcrest</fileMatcherSourceRoot>
+            <fileMatcherSourceRoot>${fileMatcherSourceRoot}</fileMatcherSourceRoot>
         </systemPropertyVariables>
     </configuration>
 </plugin>
