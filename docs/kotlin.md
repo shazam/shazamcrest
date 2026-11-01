@@ -2,7 +2,7 @@
 
 # kotlin
 
-Using approvalcrest with Kotlin and JUnit 5 & 6.
+How to use approvalcrest with Kotlin and JUnit 5 & 6.
 
 ## Dependency
 
@@ -27,7 +27,7 @@ import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers.sameContentAsApp
 
 ## Why a Kotlin-Specific Module?
 
-Kotlin's type inference mishandles F-bounded (recursive) generics — [KT-5464](https://youtrack.jetbrains.com/issue/KT-5464). Without the Kotlin module, chaining methods like `.with()` / `.alsoCheck()`, `.ignoring()`, and `.withUniqueId()` fail to compile. The `approvalcrest-junit-jupiter-kotlin` module provides extension functions that work around this.
+The type inference of Kotlin does not work correctly with F-bounded (recursive) generics: [KT-5464](https://youtrack.jetbrains.com/issue/KT-5464). Without the Kotlin module, a chain of methods such as `.with()` / `.alsoCheck()`, `.ignoring()` and `.withUniqueId()` does not compile. The `approvalcrest-junit-jupiter-kotlin` module has extension functions that let these chains compile.
 
 ## Basic Tests
 
@@ -52,7 +52,7 @@ fun contentApprovalTest() {
 
 ## Chaining
 
-These chains compile correctly thanks to the extension functions (they would not compile using the plain Java API):
+These chains compile because of the extension functions. With the plain Java API, they do not compile:
 
 ```kotlin
 // sameBeanAs with .with() and .ignoring()
@@ -71,7 +71,7 @@ assertThat("content", sameContentAsApproved<String>().withUniqueId("myCase"))
 
 ## Parameterized Tests
 
-Same pattern as JUnit 5 & 6 Java — add `TestInfo` as a parameter:
+Use the same pattern as for JUnit 5 & 6 with Java. Add `TestInfo` as a parameter:
 
 ```kotlin
 @ParameterizedTest
@@ -91,20 +91,17 @@ companion object {
 
 ## Inherited test methods
 
-The Kotlin matchers use the JUnit 5 machinery, so the same rule applies: a test function declared in
-an abstract base class and run by several subclasses fails with a clear error, because the stack
-frame names the declaring class rather than the subclass. Pass `TestInfo` to get one approved file
-per subclass. See [junit5-jupiter](junit5-jupiter.md#inherited-test-methods).
+The Kotlin matchers use the JUnit Jupiter mechanism, so the same rule applies. Sometimes an abstract base class declares a test function, and several subclasses run it. Such a test fails, because the stack frame names the class that declares the function, not the subclass. The error message lists the fixes. Pass `TestInfo` to get one approved file for each subclass. See [junit5-jupiter](junit5-jupiter.md#inherited-test-methods).
 
 ## Where approved files are stored
 
-Kotlin approved files default to `src/test/kotlin`, alongside the test class, rather than the `src/test/java` used by the Java matchers. If your Kotlin tests live somewhere else, point approvalcrest at it with the shared `fileMatcherSourceRoot` property:
+By default, the Kotlin matchers keep approved files in `src/test/kotlin`, next to the test class. By default, the Java matchers use `src/test/java`. If your Kotlin tests are in a different directory, set the shared `fileMatcherSourceRoot` property to that directory:
 
 ```bash
 mvn verify -DfileMatcherSourceRoot=src/it/kotlin
 ```
 
-Only the default differs per framework — the property itself is shared, so in a project with both Java and Kotlin tests it moves both. See [file-control](file-control.md#configuring-the-test-source-root).
+Only the default value is different for the Kotlin matchers and the Java matchers. All the matchers use the same property. Thus, in a project with Java and Kotlin tests, the property moves the approved files of both. See [file-control](file-control.md#configuring-the-test-source-root).
 
 ## Related
 

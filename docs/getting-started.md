@@ -2,7 +2,7 @@
 
 # Getting Started
 
-Add approvalcrest to your project and write your first assertion in minutes.
+Add approvalcrest to your project. Then write your first assertion.
 
 ## Choosing the Right Artifact
 
@@ -13,7 +13,7 @@ Add approvalcrest to your project and write your first assertion in minutes.
 | Kotlin + JUnit 5 & 6 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.6.0` |
 | TestNG | `com.github.karsaig:approvalcrest-testng:1.6.0` |
 
-One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-agent:1.6.0` is a java agent that keeps output field-based on JDK 26, where the JDK disables the `sun.misc.Unsafe` calls approvalcrest uses to open locked modules. See [field-access-modes](field-access-modes.md#the-agent).
+For all frameworks, you can also add `com.github.karsaig:approvalcrest-agent:1.6.0`. This Java agent keeps the output field-based on JDK 26. JDK 26 disables the `sun.misc.Unsafe` calls that approvalcrest uses to open locked modules. See [field-access-modes](field-access-modes.md#the-agent).
 
 ### JUnit 4 / Vintage (Maven)
 
@@ -61,7 +61,7 @@ One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-a
 
 ## Your First `sameBeanAs` Assertion
 
-`sameBeanAs` serialises both objects to JSON and diffs them, giving a clear error message when any field differs.
+`sameBeanAs` serialises both objects to JSON and compares the results. If a field differs, the error message shows the difference.
 
 ```java
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
@@ -76,11 +76,11 @@ void comparesTwoBeansFieldByField() {
 }
 ```
 
-No need to list every field — the whole object graph is compared automatically. See [same-bean-as](same-bean-as.md) for more.
+You do not have to list the fields. The matcher compares the full object graph. See [same-bean-as](same-bean-as.md) for more information.
 
 ## Your First `sameJsonAsApproved` Assertion
 
-`sameJsonAsApproved` compares the actual output against a stored JSON file that you approve once and commit.
+`sameJsonAsApproved` serialises the actual value to JSON and compares it with an approved file. You approve this file one time and commit it.
 
 ```java
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
@@ -95,16 +95,16 @@ void myBeanMatchesApprovedSnapshot() {
 
 **Approval workflow:**
 
-1. **First run** — no approved file exists yet. The library writes `<classHash>/<methodHash>-not-approved.json` next to your test source.
-2. **Review** the generated file to make sure the output is correct.
+1. **First run** — there is no approved file yet. The matcher writes `<classHash>/<methodHash>-not-approved.json` next to your test source.
+2. **Review** the generated file to make sure that the output is correct.
 3. **Rename** it from `*-not-approved.json` to `*-approved.json`.
-4. **Subsequent runs** compare against the approved file and pass (or fail with a diff on mismatch).
+4. **Later runs** compare the output with the approved file. A run passes if the two match. If they do not match, the run fails and shows a diff.
 
-See [same-json-as-approved](same-json-as-approved.md) for parameterized tests, file naming options, and more.
+See [same-json-as-approved](same-json-as-approved.md) for parameterized tests, file name options and more information.
 
 ## Your First `sameContentAsApproved` Assertion
 
-Works like `sameJsonAsApproved` but for arbitrary text — rendered templates, API response bodies, log output, generated reports, HTML fragments. Uses a `.content` file extension; no JSON parsing is performed.
+`sameContentAsApproved` works like `sameJsonAsApproved`, but for any text. Examples are rendered templates, API response bodies, log output, generated reports and HTML fragments. The file extension is `.content`, and the matcher does not parse JSON.
 
 ```java
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
@@ -117,14 +117,14 @@ void renderedTemplateMatchesSnapshot() {
 }
 ```
 
-The approval workflow is identical to `sameJsonAsApproved`: on first run a `*-not-approved.content` file is created, you review and rename it to `*-approved.content`, and subsequent runs compare against it.
+The approval workflow is the same as for `sameJsonAsApproved`. The first run writes a `*-not-approved.content` file. You review the file and rename it to `*-approved.content`. Later runs compare the output with it.
 
-See [same-content-as-approved](same-content-as-approved.md) for parameterized tests and further details.
+See [same-content-as-approved](same-content-as-approved.md) for parameterized tests and more details.
 
 ## IDE Diff View
 
-All matchers throw a `ComparisonFailure`-compatible exception, so IDEs (IntelliJ, Eclipse) display a side-by-side diff automatically.
+All matchers throw an exception that is compatible with `ComparisonFailure`. Thus IDEs such as IntelliJ and Eclipse show a side-by-side diff.
 
 ![IDE diff view](DiffScreenshot.png)
 
-**Important:** use `MatcherAssert.assertThat` from the approvalcrest package — **not** Hamcrest's `assertThat` — to get the `ComparisonFailure` that triggers the IDE diff view.
+**Important:** use `MatcherAssert.assertThat` from the approvalcrest package, **not** the `assertThat` of Hamcrest. The approvalcrest method throws the `ComparisonFailure` that opens the IDE diff view. The `assertThat` of Hamcrest does not.

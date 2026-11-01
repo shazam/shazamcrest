@@ -2,7 +2,7 @@
 
 # TestNG
 
-Using approvalcrest with TestNG.
+How to use approvalcrest with TestNG.
 
 ## Dependency
 
@@ -27,7 +27,7 @@ import static com.github.karsaig.approvalcrest.testng.matcher.Matchers.sameConte
 
 ## Basic Test
 
-No extra configuration is needed for non-parameterized tests:
+A test that is not parameterized needs no extra configuration:
 
 ```java
 @Test
@@ -39,7 +39,7 @@ public void myTest() {
 
 ## Parameterized Tests with `@DataProvider`
 
-Add `Method` as a parameter — TestNG injects it automatically. Pass it to `sameJsonAsApproved(method)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
+Add `Method` as a parameter. TestNG injects it automatically. Pass it to `sameJsonAsApproved(method)`, so that the matcher can find the correct test method. Use `.withUniqueId(name)` to make a separate approved file for each case:
 
 ```java
 @DataProvider
@@ -65,7 +65,7 @@ public void testContentParameterized(String name, String content, Method method)
 }
 ```
 
-**Note:** `Method` injection requires **TestNG 6.14.2+**. On older versions, use the zero-arg `sameJsonAsApproved()` which resolves the test method via stack-trace walking (works on any TestNG 6.0+, but requires the test method to be public).
+`Method` injection needs **TestNG 6.14.2+**. On older versions, use `sameJsonAsApproved()` with no arguments. It finds the test method from the stack trace. This works on all versions from TestNG 6.0, but the test method must be public.
 
 ## `assertThrows`
 
@@ -83,17 +83,13 @@ assertThrows(sameBeanAs(expectedException),
 | Basic API (`sameJsonAsApproved()`) | 6.0 |
 | Method injection (`sameJsonAsApproved(Method)`) | 6.14.2 |
 
-The `approvalcrest-testng` artifact uses TestNG as a `provided` dependency — you bring your own TestNG version at runtime.
+The `approvalcrest-testng` artifact has TestNG as a `provided` dependency. Add TestNG to your project. Approvalcrest uses that version at runtime.
 
 ## Inherited test methods
 
-A test method declared in an abstract base class and run by several subclasses cannot be resolved
-automatically. Both the stack frame and TestNG's injected `java.lang.reflect.Method` report the class
-the method is *declared* in, not the subclass running it, so every subclass would resolve to the same
-approved file. Approvalcrest fails with a clear error rather than letting them overwrite each other.
+Sometimes an abstract base class declares a test method, and several subclasses run it. Approvalcrest cannot identify that subclass automatically. The stack frame and the `java.lang.reflect.Method` that TestNG injects both give the class that *declares* the method, not the subclass that runs it. Thus all the subclasses would use the same approved file and overwrite each other. To prevent this, approvalcrest fails with an error message that lists the fixes.
 
-Give each subclass its own test method, or supply a custom `TestMetaInformation` that knows the
-concrete class. A **concrete** base class has the same ambiguity but cannot be detected.
+Give each subclass its own test method. Alternatively, supply a custom `TestMetaInformation` that knows the concrete class. A **concrete** base class has the same problem, but approvalcrest cannot detect it.
 
 ## Related
 
