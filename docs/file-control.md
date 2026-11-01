@@ -306,7 +306,7 @@ An approved file can contain a _pointer reference_ instead of content. Approvalc
 - With `-DfmSharedEnabled=false` (default): approvalcrest detaches the pointer and replaces it with a standalone approved file. The canonical does not change.
 - With `-DfmSharedEnabled=true`: approvalcrest writes a new pointer if a canonical that matches exists. If not, it detaches the pointer as above.
 
-After the tests, run `mvn approvalcrest:dedup` to replace the detached files with pointers to shared canonicals again.
+After the tests, run `mvn approvalcrest:dedup` to replace the detached files with pointers to shared canonicals again. The goal needs the plugin in your POM (see [Adding the dedup tool](shared-approvals.md#adding-the-dedup-tool)).
 
 See [shared-approvals](shared-approvals.md) for the full deduplication workflow.
 

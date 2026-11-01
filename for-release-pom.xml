@@ -7,6 +7,7 @@
     <modules>
         <module>approvalcrest-agent</module>
         <module>approvalcrest-core</module>
+        <module>approvalcrest-dedup</module>
         <module>approvalcrest</module>
         <module>approvalcrest-junit-jupiter</module>
         <module>approvalcrest-testng</module>

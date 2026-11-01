@@ -34,9 +34,33 @@ src/test/java/shared-approvals/a1/a1b2c3d4e5f6-4827-approved.json
 
 The `{bucket}` directory is the first N characters of the hash (default N=2, which gives 256 buckets). The hash prefix and the byte length together prevent hash collisions in practice, for practical file sizes. If the bucket depth is not in the supported range of 1–6, approvalcrest rejects it with a configuration error that names the property.
 
-> **A change to the bucket depth moves every canonical.** The depth is part of the path that a pointer resolves to. After a change, approvalcrest cannot find the old canonicals, and writes duplicate content again under the new layout without a warning. To migrate, first run `mvn approvalcrest:reinstate` with the old depth. Then run `mvn approvalcrest:dedup` with the new depth.
+> **A change to the bucket depth moves every canonical.** The depth is part of the path that a pointer resolves to. After a change, approvalcrest cannot find the old canonicals, and writes duplicate content again under the new layout without a warning. To migrate, first run `mvn approvalcrest:reinstate` with the old depth. Then run `mvn approvalcrest:dedup` with the new depth. Both goals need the plugin in your POM (see [Adding the dedup tool](#adding-the-dedup-tool)).
 
 ## Deduplication workflow
+
+### Adding the dedup tool
+
+The dedup tool is in the `com.github.karsaig:approvalcrest-dedup` artifact. To run its goals with Maven, declare the plugin in your POM:
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-dedup</artifactId>
+            <version>1.6.1</version>
+        </plugin>
+    </plugins>
+</build>
+```
+
+Maven resolves the `approvalcrest:` prefix from the plugins that your POM declares. The goals need Maven 3.9.6 or later.
+
+The standalone JAR is the same artifact with the `standalone` classifier. It contains all its dependencies, so `java -jar` runs it without a build tool. To download it into the current directory:
+
+```bash
+mvn dependency:copy -Dartifact=com.github.karsaig:approvalcrest-dedup:1.6.1:jar:standalone -DoutputDirectory=.
+```
 
 ### One-time setup (no test re-runs required)
 

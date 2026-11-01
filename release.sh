@@ -184,8 +184,10 @@ else
     update_doc_versions() {
         local new_ver="$1"
         local file="$2"
-        # Pattern 1: <version>ANY</version> within a <dependency> block containing com.github.karsaig
-        sed -i -E '/groupId.*com\.github\.karsaig/,/<\/dependency>/{s|<version>[^<]+</version>|<version>'"${new_ver}"'</version>|;}' "$file"
+        # Pattern 1: <version>ANY</version> within a <dependency> or <plugin> block containing com.github.karsaig.
+        # The range must also end at </plugin>: otherwise it runs on to the next </dependency> and rewrites
+        # the versions of unrelated plugins on the way.
+        sed -i -E '/groupId.*com\.github\.karsaig/,/<\/(dependency|plugin)>/{s|<version>[^<]+</version>|<version>'"${new_ver}"'</version>|;}' "$file"
         # Pattern 2: inline artifact coordinates like com.github.karsaig:approvalcrest[-...]:VERSION
         sed -i -E 's|(com\.github\.karsaig:approvalcrest[a-z0-9-]*):[0-9][0-9a-zA-Z._-]*|\1:'"${new_ver}"'|g' "$file"
         # Pattern 3: jar file names like approvalcrest-agent-VERSION.jar, used by the -javaagent

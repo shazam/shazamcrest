@@ -3,6 +3,10 @@
 Changelog
 ===========
 
+Version 1.6.1 - Unreleased
+-----
+- `approvalcrest-dedup` is now on Maven Central. No earlier release published it. To run `mvn approvalcrest:dedup` and `mvn approvalcrest:reinstate`, declare the plugin in your POM, as [shared-approvals](docs/shared-approvals.md#adding-the-dedup-tool) shows. The goals need Maven 3.9.6 or later. The standalone JAR is the same artifact with the `standalone` classifier.
+
 Version 1.6.0 - 2026/09/05
 -----
 - Added `-DfileMatcherSkipCustomMatchersOnUpdate=true` (alias `fMSCMOUpdate`). It defers custom matchers while `-DfileMatcherUpdateInPlace=true` regenerates approved files. When a custom matcher fails, approvalcrest does not regenerate the approved file of that assertion. Without the flag, that file stays out of date, however often the regeneration job runs again. Also, later assertions in the same test method do not run. The flag applies to the full run. Thus approvalcrest also skips the matchers of a test whose approved file is already current. That test passes where it would fail without the flag. The failure comes back on the next verification run, and that run decides whether the regenerated files are correct. The default does not change, and the flag does nothing unless an in-place update runs. `.with` and `.withMatcher` still remove their field. Thus the regenerated file is the file that a run would give if all matchers passed. `.alsoCheck` and `.alsoCheckMatching` keep their field. Thus approvalcrest writes the rejected value, and that test fails on the next run. JSON matchers only. See [file-control](docs/file-control.md).

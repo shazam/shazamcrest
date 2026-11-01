@@ -18,6 +18,7 @@
         <maven.plugin.api.version>3.9.6</maven.plugin.api.version>
         <maven.plugin.annotations.version>3.15.2</maven.plugin.annotations.version>
         <maven.plugin.plugin.version>3.15.2</maven.plugin.plugin.version>
+        <maven.invoker.plugin.version>3.10.1</maven.invoker.plugin.version>
         <junit5.version>5.10.2</junit5.version>
     </properties>
 
@@ -111,6 +112,9 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>standalone</shadedClassifierName>
+                            <!-- The main jar is the Maven plugin and stays unshaded, so its POM must keep
+                                 approvalcrest-core. A reduced POM drops it, and the goal cannot load its classes. -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.github.karsaig.approvalcrest.dedup.DedupCli</mainClass>
@@ -127,6 +131,28 @@
                                 </filter>
                             </filters>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Runs the goals from src/it the way a user does: through the published POM and the plugin prefix.
+                 The verify hooks are BeanShell, not Groovy: the Groovy that invoker bundles cannot read JDK 27 class files. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <version>${maven.invoker.plugin.version}</version>
+                <configuration>
+                    <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                    <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                    <settingsFile>src/it/settings.xml</settingsFile>
+                    <postBuildHookScript>verify</postBuildHookScript>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>install</goal>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

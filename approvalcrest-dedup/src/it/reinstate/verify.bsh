@@ -1,0 +1,45 @@
+import java.io.File;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+File root = new File(basedir, "src/test/java");
+
+void collect(File dir, String prefix, List out) {
+    File[] children = dir.listFiles();
+    for (int i = 0; i < children.length; i++) {
+        String name = prefix + children[i].getName();
+        if (children[i].isDirectory()) {
+            collect(children[i], name + "/", out);
+        } else {
+            out.add(name);
+        }
+    }
+}
+
+void expectContent(String relative, String expected) {
+    String actual = new String(Files.readAllBytes(new File(root, relative).toPath()), "UTF-8");
+    if (!expected.equals(actual)) {
+        throw new IllegalStateException(relative + "\nexpected:\n" + expected + "\nactual:\n" + actual);
+    }
+}
+
+List files = new ArrayList();
+collect(root, "", files);
+Collections.sort(files);
+List expectedFiles = Arrays.asList(new String[] {
+        "billing/a7b8c9/0d1e2f-approved.json",
+        "orders/c1a2b3/9f8e7d-approved.json",
+        "orders/c1a2b3/d4e5f6-approved.json",
+        "shipping/b3c4d5/e6f7a8-approved.json"});
+if (!expectedFiles.equals(files)) {
+    throw new IllegalStateException("files: expected " + expectedFiles + " but was " + files);
+}
+
+String content = "\n{\n  \"total\": 42,\n  \"currency\": \"GBP\"\n}";
+expectContent("orders/c1a2b3/d4e5f6-approved.json", "/*orders.OrderTest.c*/" + content);
+expectContent("billing/a7b8c9/0d1e2f-approved.json", "/*billing.InvoiceTest.a*/" + content);
+expectContent("shipping/b3c4d5/e6f7a8-approved.json", "/*shipping.ParcelTest.b*/" + content);
+expectContent("orders/c1a2b3/9f8e7d-approved.json", "/*orders.OrderTest.unique*/\n{\n  \"total\": 7\n}");
