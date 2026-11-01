@@ -2,18 +2,18 @@
 
 # same-bean-as
 
-Compare two Java beans with a deep structural comparison of the full object graph.
+Compare two Java objects field by field, through the full object graph.
 
 ## Why Not `equals()`?
 
-`sameBeanAs` intentionally bypasses Java's `equals()` method. In practice, `equals()` is frequently inadequate for testing:
+`sameBeanAs` does not use the `equals()` method of the objects, and this is intentional. An `equals()` method is often not sufficient for a test:
 
-- **It can miss fields.** A hand-written `equals()` only checks the fields the developer thought about at the time. Fields added later are silently excluded from the comparison.
-- **It can be outright wrong.** IDE-generated `equals()` often covers only a subset of fields. Business objects frequently override `equals()` for identity purposes — comparing by ID only — which would pass the assertion even when every other field is wrong.
-- **It gives no diagnostic information.** When `equals()` returns `false` you know the objects differ but not where. `sameBeanAs` shows a JSON diff with the exact field path and both values.
-- **It can be `true` for objects that differ in ways that matter.** Two objects with the same ID but different state would pass an ID-based `equals()` — and your test would give you false confidence.
+- **It can leave out fields.** A hand-written `equals()` checks only the fields that the developer thought of at that time. Fields that someone adds later are not in the comparison, and nothing tells you.
+- **It can be wrong.** An `equals()` that an IDE generates often covers only some of the fields. Business objects often override `equals()` to compare only the ID. Then the assertion passes, also when all the other fields are wrong.
+- **It does not tell you where the difference is.** When `equals()` returns `false`, you know that the objects differ, but not where. `sameBeanAs` shows a JSON diff with the exact field path and both values.
+- **It can be `true` for objects that differ in an important way.** Two objects with the same ID and a different state pass an `equals()` that compares only the ID. Then your test passes when it must fail.
 
-By serialising both objects to JSON and comparing the full graph, `sameBeanAs` catches every field difference regardless of how (or whether) `equals()` is implemented.
+`sameBeanAs` serialises both objects to JSON and compares the full graph. Thus it finds each field difference, however the class implements `equals()`, and also when the class does not implement `equals()`.
 
 ## Basic Usage
 
@@ -32,7 +32,7 @@ void orderMatchesExpected() {
 
 ## Why Use It
 
-Traditional Hamcrest requires a matcher for every field you care about:
+With usual Hamcrest matchers, you need one matcher for each field that you want to check:
 
 ```java
 // Before — tedious and easy to forget a field
@@ -42,7 +42,7 @@ assertThat(actual.getPrice(), equalTo(expected.getPrice()));
 // ... and so on for every field
 ```
 
-With `sameBeanAs`, the entire object graph is compared in one call:
+With `sameBeanAs`, one call compares the full object graph:
 
 ```java
 // After — complete comparison with no boilerplate
@@ -68,21 +68,21 @@ Expected:
 }
 ```
 
-Use `MatcherAssert.assertThat` from the approvalcrest package (not Hamcrest's) to get a `ComparisonFailure` with IDE side-by-side diff support.
+Use `MatcherAssert.assertThat` from the approvalcrest package, not the `assertThat` of Hamcrest. Then you get a `ComparisonFailure`, and the IDE can show a side-by-side diff.
 
 ## Skipping Class Comparison
 
-By default, `sameBeanAs` requires both objects to be the same type. Use `.skipClassComparison()` when comparing objects of different types that have the same serialised structure:
+By default, `sameBeanAs` requires that both objects have the same type. To compare objects of different types that have the same serialised structure, use `.skipClassComparison()`:
 
 ```java
 assertThat(actualDto, sameBeanAs(expectedEntity).skipClassComparison());
 ```
 
-To suppress the type check globally, set `-DbeanMatcherSkipClassComparison=true`.
+To turn off the type check for all tests, set `-DbeanMatcherSkipClassComparison=true`.
 
 ## Circular References
 
-Circular object graphs are handled automatically. Each object is serialised once; subsequent references to the same instance are replaced with a `0xN` pointer:
+The matcher handles circular object graphs automatically. It serialises each object one time. It replaces each later reference to the same instance with a `0xN` pointer:
 
 ```json
 {
@@ -97,11 +97,11 @@ Circular object graphs are handled automatically. Each object is serialised once
 }
 ```
 
-No configuration is needed — the library detects cycles automatically.
+You do not have to configure anything. The matcher finds circular references automatically.
 
 ## Related
 
-- [ignoring-fields](ignoring-fields.md) — exclude fields from comparison; paths fan out through collections
-- [custom-matching](custom-matching.md) — assert constraints on individual fields; paths fan out through collections
-- [sorting](sorting.md) — stabilise collection order; `sortType` for element-type-based sorting
-- [supported-types](supported-types.md) — how common Java types are serialised
+- [ignoring-fields](ignoring-fields.md) — remove fields from the comparison; a path applies to each element of a collection
+- [custom-matching](custom-matching.md) — assert conditions on single fields; a path applies to each element of a collection
+- [sorting](sorting.md) — make the order of collections stable; `sortType` sorts each collection whose element type you name
+- [supported-types](supported-types.md) — how approvalcrest serialises common Java types

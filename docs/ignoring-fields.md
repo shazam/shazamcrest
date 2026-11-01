@@ -2,26 +2,26 @@
 
 # ignoring-fields
 
-Exclude specific fields from comparison using path, Hamcrest matcher, or type — or remove whole array elements by value with `ignoringElementsWhere`.
+Remove specific fields from the comparison by path, by Hamcrest matcher or by type. You can also remove full array elements by value with `ignoringElementsWhere`.
 
-Works with `sameBeanAs` and `sameJsonAsApproved`. Multiple `.ignoring()` calls can be chained.
+This works with `sameBeanAs` and `sameJsonAsApproved`. You can chain several `.ignoring()` calls.
 
 ## When to Use Ignoring
 
-`.ignoring()` is the right choice when a field is genuinely irrelevant to the test — not as a blanket way to silence noise. Overuse makes the approved file less precise and reduces the safety net.
+Use `.ignoring()` when a field is not relevant to the test. Do not use it as a general way to remove unwanted differences. Too many ignored fields make the approved file less precise, and the tests can then miss defects.
 
-For volatile fields that still matter, consider [aliasing](aliasing.md) (document the field with a placeholder) or [custom matching](custom-matching.md) (assert a structural property like non-null or matches a pattern). If you can control the source — injecting a clock, seeding an ID generator — see [dynamic-values](dynamic-values.md) for the preferred approach.
+A field can change from run to run and still be important. For such a field, use [aliasing](aliasing.md) to show the field with a placeholder. Or use [custom matching](custom-matching.md) to assert a structural property, for example not null, or a match with a pattern. If you can control the source, for example with an injected clock or a seeded ID generator, do that. It is the preferred approach. See [dynamic-values](dynamic-values.md).
 
 ## By Field Path
 
-Use a dot-separated path to exclude a specific nested field:
+Use a dot-separated path to remove a specific nested field:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
     .ignoring("address.streetName"));
 ```
 
-For top-level fields, just use the field name:
+For a top-level field, use the field name:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -30,7 +30,7 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("id"));
 ```
 
-Deep paths work at any nesting level:
+A deep path works at any nesting level:
 
 ```java
 // Ignore a field nested several levels down
@@ -40,7 +40,7 @@ assertThat(actual, sameJsonAsApproved()
 
 ## Paths Through Collections (Fan-out)
 
-When any path segment resolves to a collection or array, traversal **fans out** — the rest of the path is applied to every element of that collection. You write the same path regardless of whether intermediate segments are single objects or collections.
+When a path segment resolves to a collection or an array, the traversal **fans out**. Approvalcrest applies the rest of the path to each element of that collection. You write the same path, whether the middle segments are single objects or collections.
 
 ```java
 // 'orders' is a List<Order>; each Order has a 'trackingCode' field.
@@ -49,7 +49,7 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("orders.trackingCode"));
 ```
 
-Fan-out applies at every level — if a sub-field is also a collection, it fans out again:
+Fan-out applies at each level. If a sub-field is also a collection, the path fans out again:
 
 ```java
 // orders → List<Order>, each Order has items → List<Item>, each Item has a price
@@ -58,11 +58,11 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("orders.items.price"));
 ```
 
-This works identically whether the type is `List`, `Set`, any `Collection` subtype, or a JSON array. Paths through empty collections do nothing silently.
+This works the same for `List`, `Set`, any `Collection` subtype and a JSON array. A path through an empty collection does nothing, and gives no warning.
 
 ## Paths Through Maps
 
-A `Map` is **not** fanned out over — it is traversed by key. The key is a path segment:
+A path does **not** fan out over a `Map`. Approvalcrest goes through a map by key, and the key is a path segment:
 
 ```java
 // Removes generatedId from the order stored under key "A-1" only
@@ -78,25 +78,16 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("ordersByRef.*.generatedId"));
 ```
 
-`*` means "every named child at that position" — a map key, an object property, or a bean field. It
-behaves the same in `.with(path, matcher)`, so an ignore and a custom matcher written over the same
-shape agree.
+`*` means "every named child at that position": a map key, an object property or a bean field. It has the same meaning in `.with(path, matcher)`. Thus an ignore rule and a custom matcher for the same structure agree.
 
 Two limits:
 
-- **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning —
-  a key literally named `*`, which a JSON document or a `Map<String,?>` may have. So
-  `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than
-  meaning "every value", which is a silent no-op if there is none.
-- **Emptying every value removes the field.** If the ignored field is the only one on each value, every
-  value empties, so each entry is removed, the array empties, and the map field disappears from the
-  output altogether. A named key does the same for one entry; `*` applies to every entry at once, so the
-  whole field usually goes.
+- **`*` is a wildcard only in a segment that is not the last.** As the last segment, it keeps its usual meaning: a key with the literal name `*`. A JSON document or a `Map<String,?>` can have such a key. Thus `.ignoring("headers.*")` removes that key. `.ignoring("ordersByRef.*")` also looks for such a key, and does not mean "every value". If there is no such key, it does nothing and gives no warning.
+- **If all values become empty, the field disappears.** Sometimes the ignored field is the only field of each value. Then each value becomes empty, and approvalcrest removes each entry. Then the array becomes empty, and the map field disappears from the output. A named key does the same for one entry. `*` applies to all entries at the same time, so usually the full field disappears.
 
 ### Removing elements under every map entry
 
-`ignoringElementsWhere` takes the same `*` segment, which is the only way to reach the array under each
-entry of a `Map<String, List<T>>`:
+`ignoringElementsWhere` accepts the same `*` segment. This is the only way to get to the array under each entry of a `Map<String, List<T>>`:
 
 ```java
 // Removes tags with that system from the list under EVERY entry
@@ -104,23 +95,17 @@ assertThat(actual, sameJsonAsApproved()
     .ignoringElementsWhere("ordersByRef.*.tag.system", FLOW_ID_TAG_SYSTEM));
 ```
 
-Compare it against the **wildcard-free** form, not against a named key.
-`ordersByRef.system` filters the outer array of map entries, testing each entry object for a `system`
-field — which matches nothing, so it is a silent no-op. `ordersByRef.*.system` filters the list *inside*
-each entry, which is what you want for a map of lists. Naming a key, `ordersByRef.A-1.system`, reaches
-that same inner list for that one entry, so the wildcard is the named form applied to every entry.
+Compare it with the form **without the wildcard**, not with a named key. `ordersByRef.system` filters the outer array of map entries. It looks for a `system` field in each entry object, finds none, and thus does nothing and gives no warning. `ordersByRef.*.system` filters the list *inside* each entry, which is what you want for a map of lists. A named key, `ordersByRef.A-1.system`, gets to the same inner list for that one entry. Thus the wildcard is the named form, applied to each entry.
 
-A `*` that ends the whole path is the leaf field name rather than a wildcard, as everywhere else.
+A `*` at the end of the full path is the leaf field name, not a wildcard. This is the same as in all other places.
 
-A map with non-primitive keys serialises differently — as pairs rather than as single-entry objects — so
-a path through it reaches fields of the **key** objects as well as the values. That is existing
-behaviour for a named path, and `*` behaves the same.
+A map whose keys are not strings, primitives or enums serialises in a different way: as pairs, not as single-entry objects. Thus a path through such a map gets to the fields of the **key** objects, and also of the values. A named path already does this, and `*` does the same.
 
 ## Removing Array Elements by Value
 
-`.ignoring()` removes *fields*; it cannot drop an individual array element based on what that element contains. `.ignoringElementsWhere()` fills that gap: it removes the array elements whose nested field has a given value.
+`.ignoring()` removes *fields*. It cannot remove one array element because of the content of that element. `.ignoringElementsWhere()` does this. It removes the array elements whose nested field has a given value.
 
-The path points at a field **within each element**. The **innermost array on the path** is the one filtered — every element whose leaf field value satisfies the matcher is removed:
+The path points to a field **in each element**. `ignoringElementsWhere` filters the **innermost array on the path**. It removes each element whose leaf field value satisfies the matcher:
 
 ```java
 import static org.hamcrest.Matchers.equalTo;
@@ -131,14 +116,14 @@ assertThat(actual, sameJsonAsApproved()
     .ignoringElementsWhere("meta.tag.system", equalTo(FLOW_ID_TAG_SYSTEM)));
 ```
 
-Any `Matcher` works (`startsWith`, `greaterThan`, `not(...)`, …). A convenience overload takes a plain `String`, matching the field's value coerced to a String:
+Any `Matcher` works (`startsWith`, `greaterThan`, `not(...)`, …). An overload also accepts a plain `String`. It matches the value of the field, converted to a String:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
     .ignoringElementsWhere("meta.tag.system", FLOW_ID_TAG_SYSTEM));
 ```
 
-Like the other ignore styles, the path fans out through intermediate collections, so it works for nested structures such as a FHIR `Bundle` — this removes matching `tag` elements from every entry's resource, not the entries themselves:
+As with the other ignore styles, the path fans out through the collections before the innermost array. Thus it works for nested structures such as a FHIR `Bundle`. This example removes the `tag` elements that match from the resource of each entry, not the entries:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -147,14 +132,14 @@ assertThat(actual, sameJsonAsApproved()
 
 Behaviour:
 
-- Matching happens against the **serialized JSON** field names. When the input is a JSON string (or a value that serializes with those names) the path is written exactly as it appears in the JSON. Objects that serialize under different internal names (for example raw library model objects with a custom Gson `TypeAdapter`) must expose the JSON-level names for the path to match.
-- If **all** elements match, the array is left empty (`[]`) rather than removed — the approved file is expected to contain the empty array after regeneration.
-- An element without the leaf field, or that is not a JSON object, is kept. A missing, empty or non-array path is a silent no-op.
-- In strict file matching (the default), elements are removed from the **actual** side only, so the approved file must be regenerated to drop them — identical to how `.ignoring()` behaves.
+- The path matches the field names of the **serialised JSON**. Write the path exactly as it is in the JSON. Do this when the input is a JSON string, or a value that serialises with those names. Some objects serialise with different internal names, for example raw library model objects with a custom Gson `TypeAdapter`. Such objects must use the JSON-level names in their serialised form, or the path does not match.
+- If **all** elements match, approvalcrest keeps the array as an empty array (`[]`), and does not remove it. After regeneration, the approved file contains the empty array.
+- Approvalcrest keeps an element that does not have the leaf field, or that is not a JSON object. A path that is absent, empty or not an array does nothing, and gives no warning.
+- In strict mode (the default), approvalcrest removes elements only from the **actual** side. Thus you must regenerate the approved file to remove them from it. `.ignoring()` works in the same way.
 
 ## By Hamcrest Matcher on Field Name
 
-Pass a `Matcher<String>` to exclude all fields whose name matches, at any depth in the object graph:
+Pass a `Matcher<String>` to remove all fields whose name matches, at any depth in the object graph:
 
 ```java
 import static org.hamcrest.Matchers.startsWith;
@@ -174,18 +159,18 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring(is("transientId")));
 ```
 
-This is useful when many fields share a naming convention and you want to exclude the whole group without listing each one individually.
+Use this when many fields have the same naming convention. Then you can remove all of them, and you do not have to list each field.
 
 ## By Type
 
-Ignore all fields of a given Java type throughout the entire object graph:
+Ignore all fields of a given Java type in the full object graph:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
     .ignoring(Instant.class));
 ```
 
-Useful for excluding all timestamp fields when they share a type. Multiple types can be chained:
+Use this to remove all timestamp fields, when they have the same type. You can chain several types:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -195,15 +180,15 @@ assertThat(actual, sameJsonAsApproved()
 
 ## Null Field Serialization
 
-By default, null-valued fields are included in the serialized JSON. This is important for `.ignoring()` to work correctly when a field has a null value inside a collection element — without null serialization, the field is stripped before ignore logic runs and the ignored element is never removed from the collection.
+By default, the serialised JSON includes fields that have a null value. `.ignoring()` needs this when a field has a null value in a collection element. Without null serialisation, approvalcrest leaves the field out of the JSON before the ignore logic runs. Then approvalcrest never removes the ignored element from the collection.
 
-**Disabling null serialization globally** (restores the old behaviour where null fields are omitted):
+**Turn off null serialisation for all tests.** This gives the old behaviour, where the JSON leaves out null fields:
 
 ```bash
 mvn test -DapprovalcrestSerializeNulls=false
 ```
 
-**Disabling null serialization per matcher:**
+**Turn off null serialisation for one matcher:**
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -211,7 +196,7 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("id"));
 ```
 
-When null serialization is off, `.ignoring("field")` will have no effect if `field` is null — the field is not present in the JSON so there is nothing to remove.
+When null serialisation is off and `field` is null, `.ignoring("field")` has no effect. The field is not in the JSON, so there is nothing to remove.
 
 **Migration from pre-1.0.2 approved files:**
 
@@ -223,7 +208,7 @@ mvn test -DfileMatcherUpdateInPlace=true
 
 ## Strict Mode (default on)
 
-By default, `ignoring()` operates in **strict mode**: ignored fields are stripped from the **actual** side only. If the approved file was written before strict mode was enabled — and still contains the value of an ignored field — the test will fail.
+By default, `ignoring()` operates in **strict mode**: approvalcrest removes ignored fields only from the **actual** side. Sometimes approvalcrest wrote an approved file while strict mode was off, for example in a version before 1.0.1. If that file still contains the value of an ignored field, the test fails.
 
 **Migration from pre-1.0.1 approved files:**
 
@@ -233,13 +218,13 @@ Re-run your tests with `-DfileMatcherUpdateInPlace=true` to regenerate the appro
 mvn test -DfileMatcherUpdateInPlace=true
 ```
 
-**Disabling strict mode globally** (restores the old two-sided behaviour where ignored fields are stripped from both actual and approved before comparison):
+**Turn off strict mode for all tests.** This gives the old two-sided behaviour. Approvalcrest then removes ignored fields from the actual side and from the approved side before the comparison:
 
 ```bash
 mvn test -DfileMatcherStrictFileMatching=false
 ```
 
-**Disabling strict mode per test** (via `FileMatcherConfig` constructor — last parameter):
+**Turn off strict mode for one test** (with the last parameter of the `FileMatcherConfig` constructor):
 
 ```java
 // new FileMatcherConfig(overwriteInPlace, passOnCreate, buildIndex, approvedDir, sortInputFile, strictMatching)
@@ -248,7 +233,7 @@ FileMatcherConfig config = new FileMatcherConfig(false, false, false, false, fal
 
 ## Chaining
 
-All three styles chain freely:
+You can chain the three styles in any combination:
 
 ```java
 assertThat(actual, sameBeanAs(expected)
@@ -259,11 +244,9 @@ assertThat(actual, sameBeanAs(expected)
 
 ## A map key that looks like a circular-reference marker
 
-An object holding a circular reference is written wrapped under a generated key — `{"0x1": {…}}` — and that
-key is skipped during path navigation, so a path reads the same whether or not the type has cycles. The test
-for "is this a wrapper key" is `0x` followed by lowercase hex digits, which a map key of your own can spell.
+Approvalcrest writes an object with a circular reference in a wrapper, under a generated key: `{"0x1": {…}}`. Path navigation skips that key, so a path is the same whether or not the type has cycles. Approvalcrest treats a key as a wrapper key if it is `0x` followed by lowercase hex digits. A map key of your own can have this form.
 
-A path that omits such a key still reaches through it, where for any other key it would match nothing:
+A path that leaves out such a key still goes through it. For any other key, such a path matches nothing:
 
 ```java
 // map has one entry, keyed "0x1"
@@ -272,16 +255,12 @@ A path that omits such a key still reaches through it, where for any other key i
 .ignoring("map.k1.leaf")    // for an ordinary key "k1", omitting it matches nothing
 ```
 
-Both sides of a comparison are filtered the same way, so this does not produce a spurious failure; it
-silently removes more from the comparison than you asked, which weakens the assertion rather than breaking
-it. The same applies to `sortField(...)` and `ignoringElementsWhere(...)`, which navigate paths the same way.
+Approvalcrest filters both sides of a comparison in the same way, so this does not cause a false failure. But it removes more from the comparison than you asked for, and gives no warning. Thus the assertion becomes weaker. The same applies to `sortField(...)` and `ignoringElementsWhere(...)`, because they navigate paths in the same way.
 
-Affected keys are exactly those matching `0x` plus lowercase hex: `0x1`, `0xff`, `0xdeadbeef`. A key with an
-uppercase digit (`0xFF`), a prefix, or a suffix is unaffected. If you hold such keys and need paths under
-them to be exact, rename the key for the comparison or address the entry by a path that does not cross it.
+Exactly the keys that are `0x` plus lowercase hex have this effect: `0x1`, `0xff`, `0xdeadbeef`. A key with an uppercase digit (`0xFF`), a prefix or a suffix does not. If you have such keys and need exact paths under them, rename the key for the comparison. Alternatively, use a path to the entry that does not go through the key.
 
 ## Related
 
-- [dynamic-values](dynamic-values.md) — choosing between ignore, alias, and custom matching
+- [dynamic-values](dynamic-values.md) — how to select ignore, alias or custom matching
 - [same-bean-as](same-bean-as.md)
 - [same-json-as-approved](same-json-as-approved.md)

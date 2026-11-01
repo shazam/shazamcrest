@@ -2,7 +2,7 @@
 
 # junit4-vintage
 
-Using approvalcrest with JUnit 4 and JUnit 5 Vintage.
+How to use approvalcrest with JUnit 4 and JUnit 5 Vintage.
 
 ## Dependency
 
@@ -44,11 +44,11 @@ public class MyTest {
 }
 ```
 
-No extra runner or rule is needed for non-parameterized tests.
+A test that is not parameterized needs no extra runner or rule.
 
 ## Parameterized Tests
 
-JUnit 4 cannot automatically provide test metadata to the matcher. Add a `Junit4DesciptionWatcher` rule and optionally pass the description to the matcher:
+JUnit 4 cannot give test metadata to the matcher automatically. Add a `Junit4DesciptionWatcher` rule. You can also pass the description to the matcher:
 
 ```java
 import com.github.karsaig.approvalcrest.Junit4DesciptionWatcher;
@@ -111,13 +111,9 @@ assertThrows(sameBeanAs(expectedException),
 
 ## Inherited test methods
 
-A test method declared in an abstract base class and run by several subclasses cannot be resolved by
-the default stack-trace detection: a stack frame names the class a method is *declared* in, not the
-subclass running it, so every subclass would resolve to the same approved file. Approvalcrest fails
-with a clear error rather than letting them overwrite each other.
+Sometimes an abstract base class declares a test method, and several subclasses run it. The default stack-trace detection cannot identify the subclass that runs such a method. A stack frame names the class that *declares* the method, not the subclass that runs it. Thus all the subclasses would use the same approved file and overwrite each other. To prevent this, approvalcrest fails with an error message that lists the fixes.
 
-Use `Junit4DesciptionWatcher` as a `@Rule` and the matcher constructor taking a `Description`, which
-knows the concrete test class:
+Use `Junit4DesciptionWatcher` as a `@Rule`. Then create the matcher with a `Description`, which knows the concrete test class:
 
 ```java
 public abstract class AbstractContractTest {
@@ -131,4 +127,4 @@ public abstract class AbstractContractTest {
 }
 ```
 
-A **concrete** base class with subclasses has the same ambiguity but cannot be detected.
+A **concrete** base class with subclasses has the same problem, but approvalcrest cannot detect it.

@@ -6,7 +6,7 @@ How approvalcrest serialises common Java types to JSON.
 
 ## Primitives and Strings
 
-Serialised as their natural JSON values (`42`, `true`, `"hello"`).
+Approvalcrest serialises them as their natural JSON values (`42`, `true`, `"hello"`).
 
 ## Date and Time — Legacy
 
@@ -16,7 +16,7 @@ Serialised as their natural JSON values (`42`, `true`, `"hello"`).
 | `java.sql.Date` | `"1970-01-01T00:00:13.000Z"` |
 | `java.sql.Timestamp` | `"1970-01-01T00:00:13.000Z"` |
 
-All serialised as ISO-8601 UTC strings.
+Approvalcrest serialises all of them as ISO-8601 UTC strings.
 
 ## Date and Time — `java.time.*`
 
@@ -30,13 +30,15 @@ All serialised as ISO-8601 UTC strings.
 | `OffsetTime` | `"21:58:17.000000163Z"` |
 | `ZonedDateTime` | `"2020-04-01T22:01:02.000000003Z[UTC]"` |
 
-`ZonedDateTime` and `OffsetDateTime` are normalised to UTC for comparison — two values representing the same instant in different timezones will compare equal; two values at different instants will fail.
+For the comparison, approvalcrest normalises `ZonedDateTime` and `OffsetDateTime` to UTC. The comparison treats two values that show the same instant in different time zones as equal. Two values at different instants are not equal, and the assertion fails.
 
 ## Set
 
-A `Set` has no stable iteration order, so its elements are sorted by their JSON representation before being written. Sorting only orders them — every element is kept, including elements that are not `equals()` to each other but happen to serialise identically. That case arises with classes that do not override `equals()`, where two instances holding the same values are distinct set members, and with classes whose distinguishing field is not serialised (a `transient` field, for example).
+A `Set` has no stable iteration order. Thus approvalcrest sorts its elements by their JSON representation before it writes them. The sort changes only the order, and keeps all the elements. This includes elements that are not `equals()` to each other, but serialise identically.
 
-Before 1.5.0 those elements were collapsed into a single entry, so a set that lost or gained such an element serialised identically either way and the difference could not fail a test. If you have a large approved-file corpus to re-approve, `-DapprovalcrestLegacySetCollapse=true` restores the old behaviour temporarily — see [system-properties](system-properties.md).
+Such elements occur with classes that do not override `equals()`. There, two instances with the same values are different members of the set. It also occurs when approvalcrest does not serialise the field that makes two instances different, for example a `transient` field.
+
+Before 1.5.0, approvalcrest merged those elements into one entry. A set that lost or got such an element then serialised the same as the original set, so the difference could not fail a test. If you must re-approve many approved files, set `-DapprovalcrestLegacySetCollapse=true` to get the old behaviour for a transition period. See [system-properties](system-properties.md).
 
 ## Optional
 
@@ -55,22 +57,22 @@ Before 1.5.0 those elements were collapsed into a single entry, so a set that lo
 
 ### Interface, abstract and polymorphic types inside Optional
 
-When the declared type parameter of an `Optional` is an interface, abstract class, or a concrete base class, the serializer uses the **runtime type** of the contained value. This ensures all fields of the actual implementation are included:
+Sometimes the declared type parameter of an `Optional` is an interface, an abstract class or a concrete base class. Then the serialiser uses the **runtime type** of the value in the `Optional`. Thus the output includes all the fields of the actual implementation:
 
 ```java
 Optional<Drawable> opt = Optional.of(new Circle("red", 5.0));
 // Serialises all Circle fields (color, radius), not just Drawable methods
 ```
 
-Specifically:
-- `Optional<SomeInterface>` — runtime type of the value is used
-- `Optional<AbstractBase>` — runtime type of the value is used
-- `Optional<ConcreteBase>` holding a subclass — runtime type (subclass) is used, preserving subclass-specific fields
-- `Optional<ConcreteBase>` holding an exact match — declared type is used (no difference in practice)
+In detail:
+- `Optional<SomeInterface>` — the serialiser uses the runtime type of the value
+- `Optional<AbstractBase>` — the serialiser uses the runtime type of the value
+- `Optional<ConcreteBase>` that holds a subclass — the serialiser uses the runtime type (the subclass), and keeps the fields of the subclass
+- `Optional<ConcreteBase>` that holds an instance of `ConcreteBase` — the serialiser uses the declared type. Here the declared type and the runtime type are the same, so the output does not change
 
 ### Configuring additional types to skip in fallback factories
 
-If you register a custom `TypeAdapter` or `TypeAdapterFactory` for a library type (e.g. Vavr's `Option`, `Either`, `List`), you may need to tell approvalcrest's internal fallback factories not to claim that type. Use `addTypeToSkipInFallbackFactories`:
+You can register a custom `TypeAdapter` or `TypeAdapterFactory` for a library type, for example the Vavr types `Option`, `Either` or `List`. Then it can be necessary to tell the internal fallback factories of approvalcrest not to handle that type. Use `addTypeToSkipInFallbackFactories`:
 
 ```java
 GsonConfiguration config = new GsonConfiguration();
@@ -78,11 +80,11 @@ config.addTypeToSkipInFallbackFactories(io.vavr.control.Option.class);
 config.addTypeAdapterFactory(myVavrOptionFactory);
 ```
 
-This prevents the `UnsafeFieldTypeAdapterFactory` and `GetterBasedTypeAdapterFactory` from handling the specified type, allowing your custom adapter to take precedence.
+Then the `UnsafeFieldTypeAdapterFactory` and the `GetterBasedTypeAdapterFactory` do not handle the specified type, and your custom adapter has priority.
 
 ## `java.nio.file.Path`
 
-Serialised as a string:
+Approvalcrest serialises a `Path` as a string:
 
 ```json
 "/something/anything"
@@ -90,7 +92,7 @@ Serialised as a string:
 
 ## `Class<?>`
 
-Serialised as the fully qualified class name:
+Approvalcrest serialises a `Class<?>` as the fully qualified class name:
 
 ```json
 "com.example.MyClass"
@@ -98,7 +100,7 @@ Serialised as the fully qualified class name:
 
 ## `Throwable`
 
-Serialised with the following fields. On JDK 26 this switches to getter-based property names unless the [agent](field-access-modes.md#the-agent) is attached — see [field-access-modes](field-access-modes.md).
+Approvalcrest serialises a `Throwable` with the fields below. On JDK 26, it uses getter-based property names, unless you attach the [agent](field-access-modes.md#the-agent). See [field-access-modes](field-access-modes.md).
 
 ```json
 {
@@ -111,7 +113,7 @@ Serialised with the following fields. On JDK 26 this switches to getter-based pr
 
 ## Circular References
 
-Circular object graphs are handled automatically. Each object instance is serialised once; all subsequent references to the same instance are replaced with a `0xN` pointer:
+Approvalcrest handles circular object graphs automatically. It serialises each object instance one time. It replaces each later reference to the same instance with a `0xN` pointer:
 
 ```json
 {
@@ -126,11 +128,11 @@ Circular object graphs are handled automatically. Each object instance is serial
 }
 ```
 
-No configuration is needed — cycle detection is automatic.
+You do not have to configure anything. Approvalcrest finds cycles automatically.
 
 ## Custom Types
 
-For types approvalcrest does not natively handle, register a custom Gson adapter using `withGsonConfiguration`. This also lets you change how any existing type is serialised — for example, serialising a class as a single string instead of a JSON object:
+For a type that approvalcrest does not handle natively, register a custom Gson adapter with `withGsonConfiguration`. You can also use this to change how approvalcrest serialises any type. For example, you can serialise a class as one string, not as a JSON object:
 
 ```java
 import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
@@ -146,17 +148,17 @@ assertThat(actual, sameJsonAsApproved()
     .withGsonConfiguration(gsonConfig));
 ```
 
-Three registration methods are available on `GsonConfiguration`:
+`GsonConfiguration` has three methods to register an adapter:
 
 | Method | When to use |
 |---|---|
 | `addTypeAdapter(Type, Object)` | Exact type — `UUID.class`, `MyValueType.class` |
-| `addTypeHierarchyAdapter(Class<?>, Object)` | Type and all subclasses — useful for interfaces or abstract base types |
-| `addTypeAdapterFactory(TypeAdapterFactory)` | When you need to inspect the type at resolution time |
+| `addTypeHierarchyAdapter(Class<?>, Object)` | The type and all its subclasses — for example, for interfaces or abstract base types |
+| `addTypeAdapterFactory(TypeAdapterFactory)` | When you must examine the type at resolution time |
 
 ### Custom types and aliasing
 
-Aliasing applies only to JSON primitives (strings and numbers). When a custom adapter serialises a type as a JSON **string**, that field's value becomes available for aliasing:
+Aliases apply only to JSON strings and JSON numbers. When a custom adapter serialises a type as a JSON **string**, you can alias the value of that field:
 
 ```java
 // UUID serialised as a string → value can be aliased
@@ -169,7 +171,7 @@ assertThat(actual, sameJsonAsApproved()
     .withAlias("orderId", "550e8400-e29b-41d4-a716-446655440000", "<orderId>"));
 ```
 
-If the type is left as a Gson JSON object (the default for class instances), aliasing does not apply to it.
+If the type stays a Gson JSON object, aliases do not apply to it. A JSON object is the default for class instances.
 
 ## Related
 

@@ -8,9 +8,9 @@ All options on this page apply to both `sameJsonAsApproved` and `sameContentAsAp
 
 ## `.withUniqueId(String id)`
 
-Appends an ID to the approved filename. This is required in two common situations:
+Adds an ID to the name of the approved file. You need this in two frequent cases:
 
-**Multiple assertions in the same test method** — each file-based matcher call in a test resolves to the same filename by default (class hash + method hash). Without a unique ID the second assertion would read/write the same file as the first, causing a collision:
+**Several assertions in the same test method** — by default, each call of a file-based matcher in a test gets the same file name (class hash + method hash). Without a unique ID, the second assertion reads and writes the same file as the first, and the two collide:
 
 ```java
 @Test
@@ -21,7 +21,7 @@ void myTest() {
 }
 ```
 
-**Parameterized tests** — all iterations share the same method name, so each iteration needs a distinct ID:
+**Parameterized tests** — all iterations have the same method name, so each iteration needs a different ID:
 
 ```java
 @ParameterizedTest
@@ -32,7 +32,7 @@ void paramTest(String name, MyDto value) {
 }
 ```
 
-**Note:** if `id` starts with `-`, the leading separator is not doubled:
+If `id` starts with `-`, approvalcrest does not add a second separator:
 
 ```java
 assertThat(value, sameJsonAsApproved().withUniqueId("-scenario1"));
@@ -41,7 +41,7 @@ assertThat(value, sameJsonAsApproved().withUniqueId("-scenario1"));
 
 ## `.withFileName(String name)`
 
-Override the auto-generated filename entirely:
+Replace the generated file name completely:
 
 ```java
 assertThat(actual, sameJsonAsApproved().withFileName("my-custom-name"));
@@ -50,18 +50,18 @@ assertThat(actual, sameJsonAsApproved().withFileName("my-custom-name"));
 
 ## `.withPath(Path path)`
 
-Override the directory where approved files are stored. Use this for specific scenarios where the default location (alongside the test source) is not suitable — for example, storing approved files in a resources directory that is excluded from compilation:
+Override the directory of the approved files. Use this in specific cases where the default location (next to the test source) is not suitable. An example is a resources directory that the build does not compile:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
     .withPath(Paths.get("src/test/resources/approved")));
 ```
 
-The default behaviour — approved files living next to the test class — is generally preferred. It keeps the approved file and the test that owns it together, making them easy to find and review.
+Usually the default behaviour is better: the approved files are next to the test class. Then the approved file and the test that owns it are together, and they are easy to find and review.
 
 ## `.withPathName(String relativeStr)`
 
-Override the approved file directory using a path **relative to the test class source directory**. Absolute paths are accepted as-is:
+Override the approved file directory with a path **relative to the source directory of the test class**. Approvalcrest accepts an absolute path as it is:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -77,11 +77,11 @@ assertThat(actual, sameJsonAsApproved()
 // → writes to: /abs/path/<methodHash>-approved.json
 ```
 
-**Migration from pre-1.0.1:** previously `withPathName("mydir")` wrote to `mydir/` relative to the working directory. Move existing approved files into the `{testClassPath}/mydir/` subtree.
+**Migration from pre-1.0.1:** before, `withPathName("mydir")` wrote to `mydir/` relative to the working directory. Move the approved files into the `{testClassPath}/mydir/` subtree.
 
 ## `.withRelativePathName(String relStr)`
 
-Override the approved file directory using a path **relative to the working directory**, with the class-name hash inserted as a subdirectory:
+Override the approved file directory with a path **relative to the working directory**. Approvalcrest adds the hash of the class name as a subdirectory:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -89,11 +89,11 @@ assertThat(actual, sameJsonAsApproved()
 // → writes to: {workingDir}/snapshots/<classHash>/<methodHash>-approved.json
 ```
 
-**Migration from pre-1.0.1:** previously `withRelativePathName("snapshots")` wrote to `{testClassPath}/snapshots/`. Move existing approved files to `{workingDir}/snapshots/<classHash>/`.
+**Migration from pre-1.0.1:** before, `withRelativePathName("snapshots")` wrote to `{testClassPath}/snapshots/`. Move the approved files to `{workingDir}/snapshots/<classHash>/`.
 
 ## Configuring the test source root
 
-By default approved files are stored alongside the test class under `src/test/java`. When your tests live in a different source directory — integration tests under `src/it/java`, or Kotlin/Groovy tests under `src/test/kotlin` — point approvalcrest at that directory with the `fileMatcherSourceRoot` property (alias `fmSourceRoot`):
+By default, approvalcrest stores approved files next to the test class under `src/test/java`. Your tests can be in a different source directory, for example integration tests under `src/it/java`, or Kotlin or Groovy tests under `src/test/kotlin`. Then set the `fileMatcherSourceRoot` property (alias `fmSourceRoot`) to that directory:
 
 ```bash
 # Integration tests under src/it/java
@@ -103,26 +103,28 @@ mvn verify -DfileMatcherSourceRoot=src/it/java
 mvn verify -DfmSourceRoot=src/it/java
 ```
 
-The value is a path relative to the project root. It sets the base directory the test class's package path is appended to when resolving approved files, so `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. Per-matcher overrides (`.withPath`, `.withPathName`, `.withRelativePathName`) still take precedence when set.
+The value is a path relative to the project root. It sets the base directory. To compute the path of an approved file, approvalcrest adds the package path of the test class to this directory. Thus `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. When you set a per-matcher override (`.withPath`, `.withPathName`, `.withRelativePathName`), it still has priority.
 
-The property applies to both ways of identifying a test — stack-trace detection and the injected `TestInfo` / `Description` / `Method` — so it cannot move approved files for some tests but not others.
+The property applies to both ways to identify a test: stack-trace detection, and the injected `TestInfo` / `Description` / `Method`. Thus it cannot move the approved files of some tests and not of others.
 
 ### Defaults per framework
 
-The property is shared by every framework; only the value used **when it is unset** differs, so a project that does not set it keeps the layout its framework expects:
+All frameworks use the same property. Only the value **when you do not set it** is different. Thus a project that does not set it keeps the layout that its framework expects:
 
 | Matchers | Default when the property is unset |
 |---|---|
 | JUnit 4, JUnit 5 Jupiter, TestNG | `src/test/java` |
 | `approvalcrest-junit-jupiter-kotlin` | `src/test/kotlin` |
 
-> **One property, one root.** Because there is a single property, setting it in a project with **both** Java and Kotlin tests moves both. A mixed project that needs two different roots should leave the property unset and use the per-matcher overrides for whichever set of tests is non-standard. Getting this wrong fails loudly — the approved file is simply not found — rather than silently comparing against the wrong file.
+> **One property, one root.** There is only one property. If you set the property in a project with **both** Java and Kotlin tests, it moves both.
+>
+> For a mixed project that needs two different roots, do not set the property. Instead, use the per-matcher overrides for the set of tests that is not standard. If you set the wrong root, the test fails, because approvalcrest cannot find the approved file. It never compares with the wrong file.
 
 ## Migration from pre-1.0.0 Without Moving Files
 
-In pre-1.0.0, `withPathName(str)` resolved relative to the **working directory**. Since 1.0.0, it resolves relative to **testClassPath**. If your tests used `withPathName` with a path from the project root, the approved files would now be looked up under the wrong directory.
+Before 1.0.0, `withPathName(str)` resolved relative to the **working directory**. From 1.0.0, it resolves relative to **testClassPath**. If your tests used `withPathName` with a path from the project root, approvalcrest now looks for the approved files in the wrong directory.
 
-To keep approved files in place **without moving them**, split the old `withPathName` call into `withRelativePathName` (base from working directory) + `withPathName` (subdirectory):
+Split the old `withPathName` call into `withRelativePathName` (base from the working directory) + `withPathName` (subdirectory). Then the approved files stay **where they are**:
 
 **Before (pre-1.0.0):**
 
@@ -143,7 +145,7 @@ assertThat(actual, sameJsonAsApproved()
     .withFileName("my-snapshot"));
 ```
 
-Both produce the same absolute path: `{projectRoot}/src/test/jsons/my-snapshot-approved.json`. The approved file stays in place — no rename or move needed.
+Both give the same absolute path: `{projectRoot}/src/test/jsons/my-snapshot-approved.json`. The approved file stays where it is. You do not have to rename or move it.
 
 **Resolution logic when both are set:**
 
@@ -151,45 +153,47 @@ Both produce the same absolute path: `{projectRoot}/src/test/jsons/my-snapshot-a
 fileNameWithPath = workingDirectory() / relativePathName / pathName / fileName
 ```
 
-Since `workingDirectory()` is the project root, this is equivalent to the old `withPathName` behaviour that resolved directly from the working directory.
+`workingDirectory()` is the project root. Thus this is the same as the old `withPathName` behaviour, which resolved directly from the working directory.
 
 ## In-Place Update
 
-Re-running tests with `-DfileMatcherUpdateInPlace=true` overwrites approved files with the current actual output:
+When you run the tests again with `-DfileMatcherUpdateInPlace=true`, approvalcrest overwrites the approved files with the current actual output:
 
 ```bash
 mvn test -DfileMatcherUpdateInPlace=true
 ```
 
-Use this **locally** after intentional changes (e.g. adding a field, changing serialisation). Review the diffs, then commit the updated approved files.
+Use this **locally** after an intentional change, for example a new field or a change to the serialisation. Review the diffs. Then commit the updated approved files.
 
-**Never set this in the build that gates merge.** A verification build has to fail on drift rather than absorb it, and every approved file must exist before it runs. A deliberate regeneration job is a different thing, triggered on demand and reviewed before its output is committed — see [best-practices](best-practices.md#ci-workflow).
+**Never set this in the build that must pass before a merge.** A verification run must fail when the output differs from the approved file, and not accept the change. Also, each approved file must exist before the run starts. A deliberate regeneration job is different. You start it manually, and you review its output before you commit it. See [best-practices](best-practices.md#ci-workflow).
 
 ### Custom matchers during a regeneration run
 
-JSON only — `sameContentAsApproved` compares text and has no custom matchers.
+This section is for JSON only. `sameContentAsApproved` compares text and has no custom matchers.
 
-Custom matchers are evaluated before the content comparison and stop the assertion on the first failure, which also stops the rewrite. That file then never regenerates, however many times the job is re-run — and any later assertion in the same test method is skipped with it, as is every later module unless the build uses `--fail-at-end`. `-DfileMatcherSkipCustomMatchersOnUpdate=true` defers the evaluation for that run:
+Approvalcrest evaluates custom matchers before the content comparison, and stops the assertion at the first failure. This also stops the rewrite. Then that file never regenerates, however many times the job runs again. Any later assertion in the same test method does not run either. Each later module also does not run, unless the build uses `--fail-at-end`. `-DfileMatcherSkipCustomMatchersOnUpdate=true` defers the evaluation for that run:
 
 ```bash
 mvn test -DfileMatcherUpdateInPlace=true -DfileMatcherSkipCustomMatchersOnUpdate=true
 ```
 
-It does nothing unless `fileMatcherUpdateInPlace` is also set, so a verification build is unaffected however the property is configured.
+It does nothing unless you also set `fileMatcherUpdateInPlace`. Thus it has no effect on a verification run, whatever the value of the property is.
 
-**It applies to the whole run.** A test whose approved file is already current has its matchers skipped too, so it passes where it would otherwise have failed. Nothing is lost permanently — a custom matcher's verdict comes from the actual object, never from the approved file, so no regeneration can fix one and the failure returns on the next verification run. But a regeneration run is not a verification of anything, and its green result must not be read as one. That is why the flag is off by default and belongs on the regeneration job alone.
+**It applies to the full run.** Approvalcrest also skips the custom matchers of a test whose approved file is already current. Thus that test passes where it fails without the property. You lose nothing permanently. The verdict of a custom matcher comes from the actual object, never from the approved file. Thus no regeneration can fix a custom matcher failure, and the failure comes back on the next verification run.
+
+But a regeneration run verifies nothing. Do not read its green result as a verification. For this reason, the property is off by default. Do not set it on any job other than the regeneration job.
 
 What it changes, and what it does not:
 
-- `.with()` and `.withMatcher()` still remove their field, so the regenerated file is byte-for-byte the one a run whose matchers happened to pass would have written. That is the point: the file has to be what the next verification run compares against.
-- `.alsoCheck()` and `.alsoCheckMatching()` keep their field, so the regenerated file carries the value the matcher rejects. Expect that test to fail on the next verification run.
-- A field path that names nothing is no longer an error **for a file that needed rewriting**, because the check that raised it was part of the evaluation. On a file already in sync the deferred evaluation still runs, and still raises.
-- A path that crosses a non-object — `beanChar.subpath` — still fails, exactly as the same path under `.ignoring()` does. That comes from removing the field, not from matching it.
-- With `-DfmSharedEnabled=true`, tests that previously stopped at a failing matcher can now attach to or detach from a shared canonical.
+- `.with()` and `.withMatcher()` still remove their field. Thus the regenerated file is byte-for-byte the same as the file from a run where all matchers passed. This is intentional: the file must be what the next verification run compares with.
+- `.alsoCheck()` and `.alsoCheckMatching()` keep their field. Thus the regenerated file contains the value that the custom matcher rejects. Expect that test to fail on the next verification run.
+- In this run, a field path that names nothing is not an error **for a file that needs a rewrite**. The reason is that the check for it is part of the evaluation. On a file that is already current, the deferred evaluation still runs, and still throws the error.
+- A path that goes through a non-object, for example `beanChar.subpath`, still fails, as the same path under `.ignoring()` does. The failure comes from the removal of the field, not from the match.
+- With `-DfmSharedEnabled=true`, a test that stopped at a failed matcher before can now attach to a shared canonical or detach from it.
 
 ## Machine-Readable / AI-Friendly Output
 
-When a mismatch occurs, enable structured output so AI agents and CI tooling can parse failure details.
+Enable structured output to let AI agents and CI tools parse the details of a test failure.
 
 **Fluent API:**
 
@@ -208,7 +212,7 @@ mvn test -DfMMReadable=true
 
 ### Message format
 
-All machine-readable messages are valid JSON objects emitted in compact form (no whitespace) to minimise token usage for AI consumers. The exact fields depend on the failure type.
+All machine-readable messages are valid JSON objects in compact form (no whitespace). This uses fewer tokens for AI consumers. The exact fields depend on the type of failure.
 
 **File matcher — content mismatch:**
 ```
@@ -232,7 +236,7 @@ All machine-readable messages are valid JSON objects emitted in compact form (no
 
 ### ignoredFields tracking
 
-The `ignoredFields` array records **which fields were actually removed** during filtering and **why**. Each entry contains:
+The `ignoredFields` array records **which fields the filter actually removed**, and **why**. Each entry contains:
 
 | Field | Description |
 |-------|-------------|
@@ -246,30 +250,29 @@ The `ignoredFields` array records **which fields were actually removed** during 
 - `CUSTOM_MATCHER` — removed by `.with("fieldPath", matcher)` (validated separately, unless a regeneration run deferred it)
 - `CUSTOM_MATCHER_PATTERN` — removed by `.withMatcher(patternMatcher, valueMatcher)`
 - `IGNORE_PATTERN` — removed by `.ignoring(Matcher<String>)` applied to the JSON tree
-- `REMOVED_EMPTY` — parent became empty after its children were removed
+- `REMOVED_EMPTY` — the parent became empty after the removal of its children
 
-`.alsoCheck(...)` and `.alsoCheckMatching(...)` produce no entry at all: they add an assertion without
-removing anything, so there is nothing to report.
+`.alsoCheck(...)` and `.alsoCheckMatching(...)` make no entry. They add an assertion and remove nothing, so there is nothing to report.
 
-**Note:** Type-based ignoring (`.ignoring(Class)`) and pattern-based ignoring (`.ignoring(Matcher)`) are applied during Gson serialization via an `ExclusionStrategy`, so individual field removals cannot be tracked. When these are configured, a `"note"` field explains this.
+Approvalcrest applies type-based ignore rules (`.ignoring(Class)`) and pattern-based ignore rules (`.ignoring(Matcher)`) during the Gson serialisation, with an `ExclusionStrategy`. Thus it cannot record each field that these rules remove. When you configure these rules, a `"note"` field tells you this.
 
 ### aliasedFields tracking
 
-The `aliasedFields` array records value replacements made by aliasing. Each entry contains:
+The `aliasedFields` array records the value replacements that aliases made. Each entry contains:
 
 | Field | Description |
 |-------|-------------|
 | `path` | The dotted path of the aliased field |
-| `originalValue` | The original value before aliasing |
+| `originalValue` | The original value, before the alias |
 | `alias` | The replacement value |
 
 ### sortedFields tracking
 
-The `sortedFields` array records **which array fields were actually sorted** due to user-configured sorting. Each entry contains:
+The `sortedFields` array records **only the array fields that a sort you configured actually sorted**. Each entry contains:
 
 | Field | Description |
 |-------|-------------|
-| `path` | The dotted path of the field whose array was sorted (e.g. `items`, `order.lineItems`) |
+| `path` | The dotted path of the field whose array approvalcrest sorted (e.g. `items`, `order.lineItems`) |
 | `reason` | One of: `SORT_PATH`, `SORT_PATTERN` |
 | `pattern` | *(only for `SORT_PATTERN`)* The matcher description that matched |
 
@@ -277,7 +280,7 @@ The `sortedFields` array records **which array fields were actually sorted** due
 - `SORT_PATH` — sorted by `.sortField("fieldPath")` or `.sortFieldPath(SortField.of("path"))`
 - `SORT_PATTERN` — sorted by `.sortField(Matcher<String>)` or `.sortFieldMatcher(SortField.of(matcher))`
 
-**Note:** Type-based sorting (`.sortType(Class)`) is applied during Gson serialization (via a field-name marker), so individual field sorts cannot be tracked. When this is configured, the `"note"` field explains this limitation.
+Approvalcrest applies a type-based sort (`.sortType(Class)`) during the Gson serialisation, with a field-name marker. Thus it cannot record the fields that a type-based sort changes. When you configure a type-based sort, the `"note"` field tells you about this limitation.
 
 ### Passive AI discovery tip
 
@@ -287,11 +290,11 @@ In the default (non-machine-readable) mode, every failure message ends with:
 [AI tip] Re-run with system property fmAI=true for structured, machine-readable output.
 ```
 
-This allows AI agents that encounter a normal test failure to discover the machine-readable mode without any explicit configuration.
+Thus an AI agent that gets a usual test failure can find the machine-readable mode, without explicit configuration.
 
 ## Pointer Files and Shared Approvals
 
-An approved file may contain a _pointer reference_ instead of content. The library follows the pointer transparently so tests require no code changes:
+An approved file can contain a _pointer reference_ instead of content. Approvalcrest follows the pointer automatically, so you do not have to change the tests:
 
 ```
 /*com.example.MyTest.myTestMethod*/
@@ -300,10 +303,10 @@ An approved file may contain a _pointer reference_ instead of content. The libra
 
 **In-place update on a pointer file** (`-DfileMatcherUpdateInPlace=true`):
 
-- With `-DfmSharedEnabled=false` (default): detaches the pointer and replaces it with a standalone approved file. The canonical is untouched.
-- With `-DfmSharedEnabled=true`: writes a new pointer if a matching canonical exists; otherwise detaches as above.
+- With `-DfmSharedEnabled=false` (default): approvalcrest detaches the pointer and replaces it with a standalone approved file. The canonical does not change.
+- With `-DfmSharedEnabled=true`: approvalcrest writes a new pointer if a canonical that matches exists. If not, it detaches the pointer as above.
 
-Run `mvn approvalcrest:dedup` after tests to re-consolidate detached files back into shared canonicals.
+After the tests, run `mvn approvalcrest:dedup` to replace the detached files with pointers to shared canonicals again.
 
 See [shared-approvals](shared-approvals.md) for the full deduplication workflow.
 

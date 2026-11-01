@@ -2,16 +2,16 @@
 
 # same-json-as-approved
 
-Assert that a Java object or JSON string matches a stored approved file.
+Assert that a Java object or a JSON string matches an approved file.
 
 ## The Approval Workflow
 
-1. **First run** — no approved file exists. The library creates `<classHash>/<methodHash>-not-approved.json` next to the test source.
-2. **Review** the generated file and confirm the output is correct.
+1. **First run** — there is no approved file. The matcher writes `<classHash>/<methodHash>-not-approved.json` next to the test source.
+2. **Review** the generated file to make sure that the output is correct.
 3. **Rename** it from `*-not-approved.json` to `*-approved.json`.
-4. **Subsequent runs** compare against the approved file and pass (or fail on diff).
+4. **Later runs** compare the output with the approved file. A run passes if the two match. If they do not match, the run fails and shows a diff.
 
-Approved files are committed to version control. Review changes to them in pull requests just like application code.
+Commit the approved files to version control. Review changes to them in pull requests, as you do for application code.
 
 ## Basic Usage
 
@@ -28,7 +28,7 @@ void runWithDefaultConfigShouldPassWithMatchingApprovedFile() {
 
 ## JSON String as Input
 
-The matcher also accepts a pre-serialised JSON string directly:
+The matcher also accepts a JSON string that is already serialised:
 
 ```java
 @Test
@@ -40,7 +40,7 @@ void rawJsonStringMatchesApprovedFile() {
 
 ## Parameterized Tests (JUnit 5 & 6)
 
-Add `TestInfo` as a test parameter — JUnit 5 & 6 inject it automatically. Pass it to `sameJsonAsApproved(testInfo)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
+Add `TestInfo` as a test parameter. JUnit 5 & 6 inject it automatically. Pass it to `sameJsonAsApproved(testInfo)`, so that the matcher can find the correct test method. Use `.withUniqueId(name)` to make a separate approved file for each case:
 
 ```java
 @ParameterizedTest
@@ -50,19 +50,19 @@ void testParameterized(String name, BeanOne value, TestInfo testInfo) {
 }
 ```
 
-Without `TestInfo`, **private** test methods cannot be resolved and will throw a `NullPointerException` with a message explaining the fix. Public test methods work without `TestInfo` (the stack trace is used to resolve method metadata).
+Without `TestInfo`, the matcher cannot find a **private** test method. It throws a `NullPointerException` with a message that gives the fix. Public test methods work without `TestInfo`, because the matcher finds the method metadata from the stack trace.
 
 ## Parameterized Tests (JUnit 4)
 
-JUnit 4 requires a `Junit4DesciptionWatcher` rule. See [junit4-vintage](junit4-vintage.md) for a complete example.
+JUnit 4 needs a `Junit4DesciptionWatcher` rule. See [junit4-vintage](junit4-vintage.md) for a full example.
 
 ## Related
 
-- [same-content-as-approved](same-content-as-approved.md) — same approval workflow for arbitrary text
+- [same-content-as-approved](same-content-as-approved.md) — the same approval workflow for any text
 - [file-control](file-control.md) — custom file names, paths, and in-place update
 - [ignoring-fields](ignoring-fields.md) — exclude fields from comparison
-- [aliasing](aliasing.md) — stable placeholders for volatile values
-- [sorting](sorting.md) — stabilise collection order
-- [supported-types](supported-types.md) — how common Java types are serialised
+- [aliasing](aliasing.md) — stable placeholders for values that change from run to run
+- [sorting](sorting.md) — make the order of collections stable
+- [supported-types](supported-types.md) — how approvalcrest serialises common Java types
 - [junit4-vintage](junit4-vintage.md) — JUnit 4 / Vintage usage
 - [junit5-jupiter](junit5-jupiter.md) — JUnit 5 & 6 Jupiter usage

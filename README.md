@@ -17,23 +17,23 @@ Approvalcrest
 
 ## What is Approvalcrest
 
-Approvalcrest is a Java testing library for [golden master / characterisation testing](https://en.wikipedia.org/wiki/Characterization_test). It provides three matchers:
+Approvalcrest is a Java test library for [golden master / characterisation testing](https://en.wikipedia.org/wiki/Characterization_test). It has three matchers:
 
-- **`sameBeanAs(expected)`** — performs a deep structural comparison of two live Java objects. Both are serialised to JSON and diffed field by field across the entire object graph. This intentionally bypasses Java's `equals()` method, which is often inadequate for testing: it can miss fields, be incorrectly implemented, or return `true` for objects that differ in ways that matter.
+- **`sameBeanAs(expected)`** — compares two Java objects in memory, field by field, through the full object graph. The matcher serialises both objects to JSON and compares the two results. It does not use the `equals()` method of the objects, and this is intentional. An `equals()` method is often not sufficient for a test. It can leave out fields, it can contain a defect, or it can return `true` for two objects that differ in an important way.
 
-- **`sameJsonAsApproved()`** — serialises the actual object to JSON and compares it against a stored *approved file* that you review once and commit. Any unexpected change to any field fails the test immediately.
+- **`sameJsonAsApproved()`** — serialises the actual object to JSON and compares the result with an *approved file*. You examine the approved file one time and commit it. After that, an unexpected change to any field fails the test.
 
-- **`sameContentAsApproved()`** — same approval workflow as above, but for arbitrary text content (templates, API responses, rendered HTML, log output) rather than structured objects.
+- **`sameContentAsApproved()`** — uses the same approval workflow as `sameJsonAsApproved()`, but for text content, not for objects. Examples are templates, API responses, rendered HTML and log output.
 
-Traditional assertions *allowlist* specific properties — you explicitly name the fields you want to check. Characterisation testing takes the opposite approach: it *blocklists* changes. Once you approve a snapshot, any unexpected change in any field will fail the test immediately. This is analogous to default-deny in security: silent changes do not pass.
+A usual assertion uses an *allowlist*: you name each field that the test checks. Characterisation testing does the opposite, and uses a *blocklist* for changes. After you approve a file, an unexpected change in any field fails the test. This is similar to default-deny in security: a change cannot pass without notice.
 
-This makes approvalcrest a particularly effective guardrail when working with AI coding agents — snapshot coverage catches unintended side effects that targeted per-field assertions would miss. The library works at every level of testing: unit, integration, API, UI, and system tests all use the same API.
+This helps when an AI agent changes the code: an approved file finds unintended side effects that per-field assertions do not find. You can use the library at each level of test. Unit, integration, API, UI and system tests all use the same API.
 
-Approvalcrest was originally built on top of [Shazamcrest](https://github.com/shazam/shazamcrest), extending and evolving its functionality.
+Approvalcrest started from [Shazamcrest](https://github.com/shazam/shazamcrest) as its base. It extends and changes the functions of Shazamcrest.
 
 ## AI-friendly mode
 
-When a test fails, enable machine-readable output so that AI agents and CI tooling can parse the failure details:
+Enable machine-readable output to let AI agents and CI tools parse the details of a test failure:
 
 ```java
 // Fluent API:
@@ -44,7 +44,7 @@ assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 mvn test -DfileMatcherMachineReadable=true
 ```
 
-In this mode, failure messages are structured JSON containing the expected/actual content, the approved file path, an `ignoredFields` array showing which fields were removed and why, an `aliasedFields` array showing value replacements, and a `sortedFields` array showing which arrays were sorted. See [file-control.md](docs/file-control.md) for details.
+In this mode, a failure message is a JSON object. It contains the expected content, the actual content and the path of the approved file. It also contains three arrays. The `ignoredFields` array gives each field that the matcher removed, and the reason. The `aliasedFields` array gives each value replacement. The `sortedFields` array gives each array that the matcher sorted. See [file-control.md](docs/file-control.md) for the details.
 
 ## Version support
 
@@ -57,7 +57,7 @@ In this mode, failure messages are structured JSON containing the expected/actua
 
 ## Installation
 
-Choose the artifact that matches your test runner. All of them run on JDK 26, where types from locked JDK modules serialise from their getters rather than their fields, so approved files holding such a type need regenerating; adding `com.github.karsaig:approvalcrest-agent` keeps the serialised output byte-identical to earlier JDKs — see [field access modes](docs/field-access-modes.md#the-agent).
+Select the artifact for your test runner. All the artifacts run on JDK 26. On JDK 26, approvalcrest serialises a type from a locked JDK module from its getters, not from its fields. If you do not add `com.github.karsaig:approvalcrest-agent`, you must regenerate each approved file that contains such a type. The agent keeps the serialised output byte-identical to earlier JDKs. See [field access modes](docs/field-access-modes.md#the-agent).
 
 ### JUnit 4 & JUnit 5 Vintage
 
@@ -111,19 +111,19 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 |---|---|
 | [Getting started](docs/getting-started.md) | Artifact selection, minimal examples, IDE diff view |
 | [sameBeanAs](docs/same-bean-as.md) | Bean-to-bean comparison |
-| [sameJsonAsApproved](docs/same-json-as-approved.md) | JSON approval workflow and file naming |
+| [sameJsonAsApproved](docs/same-json-as-approved.md) | JSON approval workflow and file names |
 | [sameContentAsApproved](docs/same-content-as-approved.md) | Raw-text approval workflow |
 | [Ignoring fields](docs/ignoring-fields.md) | `.ignoring()` by path, Hamcrest matcher, or type; `.ignoringElementsWhere()` to drop array elements by value |
-| [Custom matching](docs/custom-matching.md) | `.with(path, matcher)` to assert a field instead of comparing it, `.alsoCheck(path, matcher)` to do both |
-| [Sorting](docs/sorting.md) | Stable collection ordering |
-| [Aliasing](docs/aliasing.md) | Replace volatile values with readable placeholders |
-| [Dynamic values](docs/dynamic-values.md) | Handling UUIDs, timestamps, and other run-to-run changes |
+| [Custom matching](docs/custom-matching.md) | `.with(path, matcher)` to assert a field instead of a comparison, `.alsoCheck(path, matcher)` to do both |
+| [Sorting](docs/sorting.md) | Stable order of collections |
+| [Aliasing](docs/aliasing.md) | Replace values that change from run to run with readable placeholders |
+| [Dynamic values](docs/dynamic-values.md) | UUIDs, timestamps and other values that change from run to run |
 | [File control](docs/file-control.md) | withUniqueId, withFileName, withPath, in-place update, machine-readable diff |
-| [Shared approvals](docs/shared-approvals.md) | Pointer files, deduplicating identical approved files, the `dedup` and `reinstate` goals |
+| [Shared approvals](docs/shared-approvals.md) | Pointer files, one shared copy of identical approved files, the `dedup` and `reinstate` goals |
 | [System properties](docs/system-properties.md) | Every property and its short alias |
-| [Field access modes](docs/field-access-modes.md) | Safe, force, and fallback modes — JDK module handling, and the agent that keeps field-based output on JDK 26+ |
+| [Field access modes](docs/field-access-modes.md) | Safe, force and fallback modes, access to JDK modules, and the agent that keeps field-based output on JDK 26+ |
 | [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
-| [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |
+| [Best practices](docs/best-practices.md) | State management, CI workflow, rules for approved files |
 | [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |
 | [JUnit 5 & 6 Jupiter](docs/junit5-jupiter.md) | JUnit 5 & 6 Jupiter specifics |
 | [TestNG](docs/testng.md) | TestNG specifics |

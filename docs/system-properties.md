@@ -1,34 +1,34 @@
 # System Properties Reference
 
-All boolean system properties for approvalcrest can be set via `-Dproperty=value` on the command line or via `System.setProperty(...)` in test setup.
+You can set each boolean system property of approvalcrest with `-Dproperty=value` on the command line, or with `System.setProperty(...)` in the test setup.
 
-Accepted truthy values (case-insensitive): `true`, `t`, `1`, `yes`, `y`.  
-All other values are treated as `false`.
+These values mean true (case-insensitive): `true`, `t`, `1`, `yes`, `y`.  
+All other values mean `false`.
 
-Each property also accepts a **short alias** — a compact name formed by taking the initial of each camelCase word except the last, then appending the last word in full (first word contributes a lowercase initial, subsequent words an uppercase initial).
+Each property also accepts a **short alias**. The alias is the initial of each camelCase word except the last, followed by the last word in full. The first word gives a lowercase initial, and each later word gives an uppercase initial.
 
-Setting both the canonical name and the alias to the **same value** is allowed.  
-Setting them to **different values** throws `IllegalStateException` at test startup.
+You can set the full property name and the alias to the **same value**.  
+If you set them to **different values**, approvalcrest throws `IllegalStateException` when the tests start.
 
 ## Property table
 
 | Property | Alias | Default | Description | Docs |
 |---|---|---|---|---|
-| `approvalcrestReflection` | `aCReflection` | `safe` | Field access mode: `safe` (auto-opens modules; on JDK 26+ only with the approvalcrest agent, otherwise getter-based for locked types), `force` (requires --add-opens), or `fallback` (getter-based). | [field-access-modes](field-access-modes.md) |
-| `fileMatcherUpdateInPlace` | `fMUInPlace` | `false` | Re-write approved files in-place from actual output instead of failing. The legacy name `jsonMatcherUpdateInPlace` is also accepted. | [same-json-as-approved](same-json-as-approved.md) |
-| `fileMatcherSkipCustomMatchersOnUpdate` | `fMSCMOUpdate` | `false` | Leave custom matchers (`.with`, `.withMatcher`, `.alsoCheck`, `.alsoCheckMatching`) unevaluated while `fileMatcherUpdateInPlace` is rewriting approved files, so one that fails no longer stops the rest of the run being regenerated. Inert unless an in-place update is running. | [file-control](file-control.md) |
-| `fileMatcherPassOnCreate` | `fMPOnCreate` | `false` | Pass the test (instead of failing) when no approved file exists yet. | [same-json-as-approved](same-json-as-approved.md) |
-| `useApprovedDirectory` | `uADirectory` | `false` | Store approved files in a dedicated `approved/` directory tree instead of alongside test sources. | [file-control](file-control.md) |
-| `fileMatcherSourceRoot` | `fmSourceRoot` | `src/test/java`, or `src/test/kotlin` for the Kotlin matchers | Base test source directory (relative to project root) that approved files are stored under. Set to e.g. `src/it/java` when tests live outside the standard directory. Only the default differs per framework; setting the property applies it everywhere. | [file-control](file-control.md) |
-| `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | Path (relative to project root) of the shared canonical files directory used by the pointer-file system. | [shared-approvals](shared-approvals.md) |
-| `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Activates write-side integration: new approved files and in-place updates check for matching canonicals and write pointer files instead of duplicate content. Accepts `true`/`all` for both file types, `json` or `content` for one, and `false`/`none` for neither. | [shared-approvals](shared-approvals.md) |
-| `fileMatcherSharedDirBucketDepth` | `fmSharedDirBucketDepth` | `2` | Number of leading hash characters used as the bucket subdirectory name inside the shared directory (1–6). | [shared-approvals](shared-approvals.md) |
-| `sortInputFile` | `sIFile` | `false` | Sort the input before writing it to the approved file. | [sorting](sorting.md) |
-| `fileMatcherStrictFileMatching` | `fMStrictMatching` | `true` | Ignore stripping applies to the actual side only; approved files must not contain the ignored field's value. Disable to restore two-sided ignore behaviour. | [ignoring-fields](ignoring-fields.md) |
-| `fileMatcherMachineReadable` | `fMMReadable`, `fmAI` | `false` | Replace human-readable failure messages with structured, machine-actionable output for AI agents and CI pipelines. | [file-control](file-control.md) |
-| `beanMatcherSkipClassComparison` | `bMSCComparison` | `false` | Skip the runtime-type check in `sameBeanAs`; allows comparing objects of different but structurally compatible classes. | [same-bean-as](same-bean-as.md) |
-| `approvalcrestSerializeNulls` | `aSerNulls` | `true` | Include null-valued fields in Gson serialization. Disabling reverts to the pre-1.0.2 behaviour where null fields were silently omitted. | [ignoring-fields](ignoring-fields.md) |
-| `approvalcrestLegacySetCollapse` | `aLSCollapse` | `false` | Restore the pre-1.4.3 behaviour where `Set` elements that serialise to the same JSON were collapsed into one. Only useful as a temporary escape hatch while re-approving affected files: while it is on, a set that loses or gains a duplicate element cannot fail a test. | [supported-types](supported-types.md) |
+| `approvalcrestReflection` | `aCReflection` | `safe` | Field access mode. `safe` opens modules automatically (on JDK 26+ only with the approvalcrest agent, otherwise getter-based for locked types). `force` needs --add-opens. `fallback` is getter-based. | [field-access-modes](field-access-modes.md) |
+| `fileMatcherUpdateInPlace` | `fMUInPlace` | `false` | When the output differs, rewrite the approved file in place from the actual output. Do not fail the test. Approvalcrest also accepts the legacy name `jsonMatcherUpdateInPlace`. | [same-json-as-approved](same-json-as-approved.md) |
+| `fileMatcherSkipCustomMatchersOnUpdate` | `fMSCMOUpdate` | `false` | Do not evaluate custom matchers (`.with`, `.withMatcher`, `.alsoCheck`, `.alsoCheckMatching`) while `fileMatcherUpdateInPlace` rewrites approved files. Then a custom matcher that fails does not stop the regeneration of the rest of the run. This property has no effect unless an in-place update runs. | [file-control](file-control.md) |
+| `fileMatcherPassOnCreate` | `fMPOnCreate` | `false` | Pass the test, and do not fail it, when there is no approved file yet. | [same-json-as-approved](same-json-as-approved.md) |
+| `useApprovedDirectory` | `uADirectory` | `false` | Store approved files in a separate `approved/` directory tree, not next to the test sources. | [file-control](file-control.md) |
+| `fileMatcherSourceRoot` | `fmSourceRoot` | `src/test/java`, or `src/test/kotlin` for the Kotlin matchers | The base directory of the test sources (relative to the project root) that contains the approved files. When tests are outside the standard directory, set it to a value such as `src/it/java`. Only the default is different for each framework. When you set the property, the value applies to all matchers. | [file-control](file-control.md) |
+| `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | The path (relative to the project root) of the directory for shared canonical files. Shared approvals use this directory. | [shared-approvals](shared-approvals.md) |
+| `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Turns on write-side integration. New approved files and in-place updates look for a canonical that matches, and write a pointer file instead of duplicate content. Accepts `true`/`all` for both file types, `json` or `content` for one type, and `false`/`none` for neither. | [shared-approvals](shared-approvals.md) |
+| `fileMatcherSharedDirBucketDepth` | `fmSharedDirBucketDepth` | `2` | The number of characters from the start of the hash that make the name of the bucket subdirectory in the shared directory (1–6). | [shared-approvals](shared-approvals.md) |
+| `sortInputFile` | `sIFile` | `false` | Sort the input before approvalcrest writes it to the approved file. | [sorting](sorting.md) |
+| `fileMatcherStrictFileMatching` | `fMStrictMatching` | `true` | The ignore rules remove fields only from the actual side. Approved files must not contain the value of an ignored field. Set to `false` to get the old two-sided ignore behaviour. | [ignoring-fields](ignoring-fields.md) |
+| `fileMatcherMachineReadable` | `fMMReadable`, `fmAI` | `false` | Replace the failure messages for people with structured output that AI agents and CI pipelines can process. | [file-control](file-control.md) |
+| `beanMatcherSkipClassComparison` | `bMSCComparison` | `false` | Skip the runtime-type check in `sameBeanAs`. Then you can compare objects of different classes that have a compatible structure. | [same-bean-as](same-bean-as.md) |
+| `approvalcrestSerializeNulls` | `aSerNulls` | `true` | Include fields with a null value in the Gson serialisation. Set to `false` to get the behaviour from before 1.0.2. That behaviour left out null fields without a warning. | [ignoring-fields](ignoring-fields.md) |
+| `approvalcrestLegacySetCollapse` | `aLSCollapse` | `false` | Get the behaviour from before 1.4.3, where `Set` elements that serialise to the same JSON became one element. Use it only for a short time, while you re-approve the affected files. While it is on, a set that loses or gets a duplicate element cannot fail a test. | [supported-types](supported-types.md) |
 
 ## Example usage
 

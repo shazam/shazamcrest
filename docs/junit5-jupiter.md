@@ -2,7 +2,7 @@
 
 # junit5-jupiter
 
-Using approvalcrest with JUnit 5 & 6 Jupiter (Java). The `approvalcrest-junit-jupiter` artifact works with both JUnit 5 and JUnit 6 (JUnit Platform) without any code changes.
+How to use approvalcrest with JUnit 5 & 6 Jupiter (Java). The `approvalcrest-junit-jupiter` artifact works with JUnit 5 and with JUnit 6 (JUnit Platform). You do not have to change your code.
 
 ## Dependency
 
@@ -27,7 +27,7 @@ import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameCont
 
 ## Basic Test
 
-No extra extension is needed for non-parameterized tests:
+A test that is not parameterized needs no extra extension:
 
 ```java
 @Test
@@ -39,7 +39,7 @@ public void myTest() {
 
 ## Parameterized Tests
 
-Add `TestInfo` as a parameter — JUnit 5 & 6 inject it automatically. Pass it to `sameJsonAsApproved(testInfo)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
+Add `TestInfo` as a parameter. JUnit 5 & 6 inject it automatically. Pass it to `sameJsonAsApproved(testInfo)`, so that the matcher can find the correct test method. Use `.withUniqueId(name)` to make a separate approved file for each case:
 
 ```java
 @ParameterizedTest
@@ -67,13 +67,12 @@ public void testContentParameterized(String name, String content, TestInfo testI
 ```
 
 Without `TestInfo`:
-- **Private** test methods cannot be resolved and throw a `NullPointerException` with a message explaining to add `TestInfo`.
-- **Public** test methods work — the stack trace is used to resolve method metadata.
+- **Private** test methods fail. The matcher cannot find the method, and throws a `NullPointerException` with a message that tells you to add `TestInfo`.
+- **Public** test methods work. The matcher finds the method metadata from the stack trace.
 
 ### Automatic per-case file names
 
-When `TestInfo` is passed, the index JUnit puts at the front of the default display name (`[1] ...`) is used
-as the unique id, so each case gets its own approved file without asking for one:
+When you pass `TestInfo`, the matcher uses the index at the front of the default display name (`[1] ...`) as the unique id. Thus each case gets its own approved file, and you do not have to set an id:
 
 ```java
 @ParameterizedTest
@@ -84,10 +83,7 @@ void valueSource(String value, TestInfo testInfo) {
 }
 ```
 
-This holds for every argument source (`@ValueSource`, `@CsvSource`, `@EnumSource`, `@NullSource`,
-`@EmptySource`, `@MethodSource`, `@ArgumentsSource`) and for `sameContentAsApproved`. A custom
-`@ParameterizedTest(name = ...)` pattern that does not start with the index switches it off — then use
-`withUniqueId` to keep one file per case, which is also the more readable option:
+This applies to each argument source (`@ValueSource`, `@CsvSource`, `@EnumSource`, `@NullSource`, `@EmptySource`, `@MethodSource`, `@ArgumentsSource`) and to `sameContentAsApproved`. A custom `@ParameterizedTest(name = ...)` pattern that does not start with the index stops this. Then use `withUniqueId` to keep one file for each case. `withUniqueId` also gives file names that are easier to read:
 
 ```java
 @ParameterizedTest(name = "case {0}")
@@ -99,9 +95,7 @@ void customName(String value, TestInfo testInfo) {
 
 ## Repeated Tests
 
-`@RepeatedTest` is meta-annotated with `@TestTemplate`, so the stack trace resolves it without `TestInfo`.
-The repetition number is not in the `[1] ...` shape, so it never reaches the matcher on its own — pass it
-in, otherwise every repetition compares against a single approved file:
+`@RepeatedTest` has the meta-annotation `@TestTemplate`, so the matcher finds the test method from the stack trace without `TestInfo`. The repetition number does not have the `[1] ...` shape, so the matcher does not get it automatically. Pass it in yourself. If you do not, all the repetitions compare with one approved file:
 
 ```java
 @RepeatedTest(3)
@@ -112,9 +106,7 @@ void repeated(RepetitionInfo repetitionInfo) {
 
 ## Dynamic Tests
 
-A `DynamicTest` executable is a lambda, not a test method: by the time it runs the factory has returned and
-there is nothing on the stack to resolve, so the no-argument matchers fail with the "pass `TestInfo`" error.
-Take `TestInfo` in the factory — it names the factory method — and give each case a unique id:
+A `DynamicTest` executable is a lambda, not a test method. When it runs, the factory has returned, and the stack has no test method to find. Thus the matchers without arguments fail with the "pass `TestInfo`" error. Add a `TestInfo` parameter to the factory. `TestInfo` names the factory method, so give each case a unique id:
 
 ```java
 @TestFactory
@@ -129,14 +121,11 @@ The same applies to tests nested in a `DynamicContainer`.
 
 ## Test Templates
 
-A `@TestTemplate` driven by a custom `TestTemplateInvocationContextProvider` is resolved by both routes.
-Its display name comes from the provider, so per-invocation files need `withUniqueId`.
+A custom `TestTemplateInvocationContextProvider` can supply the invocations of a `@TestTemplate`. The matcher can find such a test method with `TestInfo` or from the stack trace. The provider sets the display name of each invocation, so you need `withUniqueId` to get one file for each invocation.
 
 ## Lifecycle Methods
 
-A matcher created inside `@BeforeEach`, `@AfterEach` or `@BeforeAll` cannot resolve the running test —
-no test method is on the stack. Capture the injected `TestInfo` in a field instead; it names the test that
-is about to run, so a shared fixture still gets one approved file per test:
+A matcher that you create in `@BeforeEach`, `@AfterEach` or `@BeforeAll` cannot find the current test, because no test method is on the stack. Instead, keep the injected `TestInfo` in a field. It names the test that is about to run. Thus a shared fixture still gets one approved file for each test:
 
 ```java
 private TestInfo testInfo;
@@ -158,11 +147,10 @@ void verifyState() {
 
 None of these move an approved file:
 
-- `@DisplayName` and `@DisplayNameGeneration` — the method name identifies a test, not its display name
-  (the automatic index above is the one exception).
+- `@DisplayName` and `@DisplayNameGeneration`. The method name identifies a test, not its display name. The automatic index above is the only exception.
 - `@Nested` — a nested class is its own test class and gets its own directory.
-- extension-injected parameters, `@RegisterExtension` and an `InvocationInterceptor`.
-- an annotation composed on top of `@Test` or `@TestTemplate`, directly or through another annotation.
+- parameters that an extension injects, `@RegisterExtension` and an `InvocationInterceptor`.
+- an annotation that has `@Test` or `@TestTemplate` as a meta-annotation, directly or through another annotation.
 
 ## `assertThrows`
 
@@ -175,13 +163,9 @@ assertThrows(sameBeanAs(expectedException),
 
 ## Inherited test methods
 
-A test method declared in an abstract base class and run by several subclasses cannot be resolved by
-the default stack-trace detection: a stack frame names the class a method is *declared* in, not the
-subclass running it, so every subclass would resolve to the same approved file and overwrite the
-others. Approvalcrest fails with a clear error rather than doing that.
+Sometimes an abstract base class declares a test method, and several subclasses run it. The default stack-trace detection cannot identify the subclass that runs such a method. A stack frame names the class that *declares* the method, not the subclass that runs it. Thus all the subclasses would use the same approved file and overwrite each other. To prevent this, approvalcrest fails with an error message that lists the fixes.
 
-Pass `TestInfo` to get one approved file per subclass — JUnit provides it, and it knows the concrete
-class:
+Pass `TestInfo` to get one approved file for each subclass. JUnit supplies `TestInfo`, and it knows the concrete class:
 
 ```java
 public abstract class AbstractContractTest {
@@ -192,8 +176,7 @@ public abstract class AbstractContractTest {
 }
 ```
 
-A **concrete** base class with subclasses has the same ambiguity but is indistinguishable from an
-ordinary test class, so it cannot be detected — pass `TestInfo` there too.
+A **concrete** base class with subclasses has the same problem. Approvalcrest cannot tell it from a usual test class, so it cannot detect the problem. Pass `TestInfo` there also.
 
 ## Related
 

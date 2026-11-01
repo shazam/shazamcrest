@@ -2,17 +2,19 @@
 
 # aliasing
 
-Replace volatile runtime values with stable aliases in approved files.
+Replace raw values that change from run to run with stable aliases in approved files.
 
-Aliases let approved files contain human-readable placeholders (e.g. `<userId>`) instead of actual volatile values that change every run. The approved file documents the field clearly without being tied to a specific runtime value.
+With an alias, the approved file contains a placeholder that a person can read, for example `<userId>`. It does not contain the raw value, which changes on each run. The approved file then describes the field, and does not depend on one raw value.
 
-Works with `sameJsonAsApproved` and `sameBeanAs`.
+Aliases work with `sameJsonAsApproved` and `sameBeanAs`.
 
-**Applies to primitives only.** Aliases match against `String` and numeric values (numbers are coerced to their string form — `13` matches the rule for `"13"`). Boolean (`true`/`false`) and `null` values are never aliased. Custom types that are normally serialised as JSON objects are not aliasable by default — register a custom Gson adapter that serialises the type as a JSON string to make it aliasable (see [supported-types](supported-types.md#custom-types)).
+**Applies to strings and numbers only.** Aliases match `String` values and numeric values. For the match, the matcher uses the string form of a number, so `13` matches the rule for `"13"`. The matcher never replaces a Boolean value (`true`/`false`) or a `null` value with an alias.
+
+By default, you cannot alias a custom type that serialises as a JSON object. To alias such a type, register a custom Gson adapter that serialises the type as a JSON string (see [supported-types](supported-types.md#custom-types)).
 
 ## By Value (Global)
 
-Any occurrence of the runtime value across the entire serialised output is replaced with the alias:
+The matcher replaces each occurrence of the raw value in the full serialised output with the alias:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -27,11 +29,11 @@ In the approved file:
 }
 ```
 
-Because the alias is applied before writing the not-approved file on first run, you review and approve a file that already contains `<userId>` — you never see the raw runtime value in source control.
+On the first run, the matcher applies the alias before it writes the `-not-approved` file. Thus the file that you review and approve already contains `<userId>`. The raw value does not go into source control.
 
 ## By Field and Value (Scoped)
 
-Replace the value only when it appears in a specific named field. This is useful when the same raw value appears in multiple fields but you want to alias only one of them:
+Replace the value only when it is in a specific named field. This is useful when the same raw value is in several fields, and you want to alias only one of them:
 
 ```java
 // Replaces "volatile-uuid-123" only in the field named "userId";
@@ -42,7 +44,7 @@ assertThat(actual, sameJsonAsApproved()
 
 ## Multiple Aliases
 
-`withAlias` calls accumulate — each call adds a new rule, later rules win on conflict:
+`withAlias` calls accumulate. Each call adds a new rule. When two rules conflict, the later rule wins:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -52,7 +54,7 @@ assertThat(actual, sameJsonAsApproved()
 
 ## Batch Rules with `AliasMap`
 
-`AliasMap` collects multiple rules. Pass it to the matcher with `withAliasMap`. Multiple `withAliasMap` calls accumulate — they do not replace each other.
+`AliasMap` holds several rules. Pass it to the matcher with `withAliasMap`. Several `withAliasMap` calls accumulate, and they do not replace each other.
 
 ### Simple value replacement
 
@@ -79,7 +81,7 @@ AliasMap aliases = AliasMap.builder()
 
 ### Dynamic alias via resolver function
 
-Instead of a static alias string, provide a `Function<String, String>` that receives the raw value and returns the alias. This is useful when the alias should encode information from the value itself:
+Instead of a static alias string, supply a `Function<String, String>` that receives the raw value and returns the alias. This is useful when the alias needs information from the value:
 
 ```java
 AliasMap aliases = AliasMap.builder()
@@ -90,7 +92,7 @@ AliasMap aliases = AliasMap.builder()
 
 ### Regex-based field and value matching
 
-Use `addByPattern` to match field names and values against regular expressions:
+Use `addByPattern` to match field names and values with regular expressions:
 
 ```java
 import java.util.regex.Pattern;
@@ -104,7 +106,7 @@ AliasMap aliases = AliasMap.builder()
     .build();
 ```
 
-To alias every value in fields whose name matches a pattern (regardless of the value), use `addByPattern` with a resolver function:
+To alias all values in a field whose name matches a pattern, use `addByPattern` with a resolver function. The value can be anything:
 
 ```java
 AliasMap aliases = AliasMap.builder()
@@ -115,11 +117,11 @@ AliasMap aliases = AliasMap.builder()
     .build();
 ```
 
-For value-pattern-only matching (any field name), use the fluent `entry()` builder below.
+To match only a value pattern, in any field, use the fluent `entry()` builder below.
 
 ### Full predicate entry builder
 
-For the most complex rules, use the fluent `entry()` builder. Every constraint is optional — omit any you don't need:
+For the most complex rules, use the fluent `entry()` builder. All constraints are optional. Leave out the constraints that you do not need:
 
 ```java
 AliasMap aliases = AliasMap.builder()
@@ -135,19 +137,19 @@ AliasMap aliases = AliasMap.builder()
 Available predicates on `EntryBuilder`:
 - `.path(Predicate<String>)` — matches the full dot-path to the value (e.g. `"order.lineItems.productId"`)
 - `.field(String)` — exact field name
-- `.field(Predicate<String>)` — arbitrary field-name predicate
+- `.field(Predicate<String>)` — any predicate on the field name
 - `.fieldPattern(Pattern)` — field name regex
 - `.value(String)` — exact value
-- `.value(Predicate<String>)` — arbitrary value predicate
+- `.value(Predicate<String>)` — any predicate on the value
 - `.valuePattern(Pattern)` — value regex
 - `.alias(String)` — static alias
 - `.alias(Function<String, String>)` — dynamic resolver
 
 ## Behaviour with `sameBeanAs`
 
-With file-based matchers (`sameJsonAsApproved`), aliasing replaces values before writing and comparing the approved file — only the alias appears in source control.
+With file-based matchers (`sameJsonAsApproved`), the matcher applies the aliases before it writes the approved file or compares with it. Only the alias goes into source control.
 
-With `sameBeanAs`, both the **actual** and the **expected** object go through aliasing before comparison. This means two objects with different raw values for the same field can still match, as long as both values map to the same alias:
+With `sameBeanAs`, the matcher applies the aliases to the **actual** object and to the **expected** object before the comparison. Thus two objects with different raw values in the same field can match, if both values map to the same alias:
 
 ```java
 // actual.userId = "uuid-111", expected.userId = "uuid-999"
@@ -159,11 +161,11 @@ assertThat(actual, sameBeanAs(expected)
 
 ## Interaction with Sorting
 
-Aliases are applied **before** sorting. If two elements sort differently after aliasing than they would on their raw values, the aliased order is what the approved file must reflect. Keep this in mind when combining `withAlias` and `sortField`.
+The matcher applies aliases **before** it sorts. Aliases can change the sort order of two elements. Then the approved file must show the order of the aliased values. Remember this when you use `withAlias` together with `sortField`.
 
 ## Last-registered Wins
 
-When two rules match the same value, the **last registered** rule wins. This applies across both `withAlias` calls and `withAliasMap` calls:
+When two rules match the same value, the **last registered** rule wins. This applies to all `withAlias` and `withAliasMap` calls together:
 
 ```java
 // "<override>" wins because it was registered last
@@ -175,5 +177,5 @@ assertThat(actual, sameJsonAsApproved()
 
 ## Related
 
-- [dynamic-values](dynamic-values.md) — choosing between ignore, alias, and custom matching
-- [supported-types](supported-types.md) — how types are serialised; registering custom Gson adapters
+- [dynamic-values](dynamic-values.md) — how to select ignore, alias or custom matching
+- [supported-types](supported-types.md) — how approvalcrest serialises types; how to register custom Gson adapters
