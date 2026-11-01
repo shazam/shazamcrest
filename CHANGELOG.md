@@ -5,173 +5,173 @@ Changelog
 
 Version 1.6.0 - 2026/09/05
 -----
-- Added `-DfileMatcherSkipCustomMatchersOnUpdate=true` (alias `fMSCMOUpdate`), which defers custom matchers while `-DfileMatcherUpdateInPlace=true` is rewriting approved files. A failing custom matcher stops its own file being rewritten, so that file stayed stale however often the regeneration job was re-run, and any later assertion in the same test method was skipped with it. It applies to the whole run, so a test whose approved file is already current has its matchers skipped too and passes where it would otherwise have failed; the failure returns on the next verification run, which is what decides whether the regenerated files are right. The default is unchanged, and the flag does nothing unless an in-place update is running. `.with` and `.withMatcher` still remove their field, so the rewritten file is the one a passing run would have produced; `.alsoCheck` and `.alsoCheckMatching` keep theirs, so the rejected value is written and that test fails next time. JSON matchers only. See [file-control](docs/file-control.md).
-- An ordering matcher written with the wrong kind of number no longer kills the test with a `ClassCastException`. `.with("someLongField", greaterThan(0))` matches nothing, because a whole number reaches the matcher as a `Long` and Hamcrest compares only within one boxing — that is unchanged. What was broken is the message built for that mismatch, which died with a stack trace naming Hamcrest internals rather than the field; it now names the field, the value, the type it arrived as and the cast that failed. Wrapping the matcher in `allOf`, `both().and()`, `hasItem` or `everyItem` threw before any verdict existed, and over an `int` field that shape now passes — the one case where a result changes rather than a message. Watch out for one combination that still cannot fail: `not(greaterThan(...))` and its counterparts pass whatever the data holds when the boxings differ. See [custom-matching](docs/custom-matching.md).
-- Added `.alsoCheck(path, matcher)` and `.alsoCheckMatching(fieldNamePattern, matcher)`, which apply a custom matcher to a field *as well as* comparing it, where `.with(...)` and `.withMatcher(...)` apply one *instead of* comparing it. The existing pair removes the matched field, so it never reaches the approved file and a value that later drifts cannot fail — right for a generated id, wrong for a value you can pin down but want a stronger guarantee about. Both existing methods are unchanged and no approved file is affected. Switching an existing `.with(...)` call over does need that approved file regenerating, since it has never held the field: re-run with `-DfileMatcherUpdateInPlace=true`, which rewrites it as long as the new matcher passes. Anyone implementing `CustomisableMatcher` themselves must add the two methods. One side effect: with `.with(...)` and machine-readable output together, the order of the `ignoredFields` array can differ, though its entries are unchanged. See [custom-matching](docs/custom-matching.md).
-- A class that inherits fields from a locked JDK module — most commonly your own exception class, which extends `RuntimeException` and so carries `Throwable`'s private fields — no longer fails to serialise on a JDK where those fields cannot be reached. It threw `JsonIOException: Failed making field 'java.lang.Throwable#detailMessage' accessible` instead of falling back to getter-based output the way a locked type itself does, because the class's own module is not locked, so it was never sent to the getter-based path. This applies only where the inherited fields are ones that get serialised: a class extending, say, `java.util.EventObject`, whose only field is transient and was never read, keeps its existing output. Only affects runs where no module can be opened at all, which today means JDK 26 or `fallback` mode; every other run is unchanged.
-- **[breaking]** On JDK 26 and later, types from locked JDK modules (`java.time.*`, `java.lang.*`, `java.math.*`, etc.) no longer come out as an empty `{}`. JDK 26 disables `sun.misc.Unsafe` rather than removing it, so the default safe mode kept using it, read nothing, and produced an object with no fields — an approved file could match `{}` and report a pass having compared nothing. Safe mode now checks that Unsafe can still read a field before relying on it, and where it cannot, serialises those types from their public getters instead. JDK 8 to 25 are unaffected and their approved files are unchanged. **Migration:** on JDK 26, either attach the new agent described below to keep the old field-based output, or re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files for locked-module types.
-- Added `approvalcrest-agent`, an optional java agent that keeps output identical on JDK 26 with no `--add-opens` and no approved files to regenerate. Add it as a test dependency and pass one JVM argument. Output is unchanged on JDK 8 to 25 whether or not it is attached, so it can be adopted before JDK 26 arrives. Force mode still requires `--add-opens`. See [field-access-modes](docs/field-access-modes.md#the-agent).
-- A `*` segment no longer matches fields that are absent from the serialised output — `static`, `transient` and compiler-generated ones. It used to read the other constants off an enum, and follow a non-static inner class's hidden reference to its enclosing instance, so an assertion could pass on data outside the object being compared. It also failed beside an empty collection or an unreachable sibling, reporting a path the caller never wrote.
-- A collection matcher now behaves the same whether the field is named by a path or by a name pattern. `withMatcher(...)` handed the matcher the raw serialised form of a collection-valued field, so `.with("tags", hasSize(2))` passed while `.withMatcher(is("tags"), hasSize(2))` failed on the same field. `iterableWithSize` worked in both.
-- A `*` path segment now means "every named child at this position" — a map key, an object property or a bean field — so `.with("ordersByRef.*.trackingCode", notNullValue())` and `.ignoring("ordersByRef.*.generatedId")` apply to every entry of a map. Previously each key had to be named individually. As the *last* segment `*` keeps its old meaning of a key literally named `*`. Collections and arrays need no wildcard, since they are already traversed: `orders.trackingCode` already means "in every order". See [custom-matching](docs/custom-matching.md) and [ignoring-fields](docs/ignoring-fields.md).
-- Ignoring a wildcard path can remove the container itself. If the ignored field is the only one on each map value, every value empties, so each entry goes, then the array, then the map field — keys included. A named key scopes that to one entry, whereas `*` applies to every entry at once, so the whole field usually disappears. Check what the comparison still covers rather than reading a pass as proof the map was compared.
-- `sortField(...)` accepts the same `*` segment, so a sort path can reach the collection under every map entry instead of naming each key. A wildcard and a literal key at the same level both apply rather than one overriding the other, and a `SortField`'s ignored sub-paths accept `*` too, so a field can be kept out of the sort key under every child. Previously a `*` there was read as a literal key name, so nothing matched and the field silently stayed in the key, recording an order nobody asked for in the approved file. See [sorting](docs/sorting.md).
-- `ignoringElementsWhere(...)` accepts it too, which is what makes a `Map<String, List<T>>` filterable: `ordersByRef.*.system` filters the list under each entry, where the wildcard-free `ordersByRef.system` filters the outer entry array instead and matches nothing. Naming a key reaches the same list as the wildcard does, for that one entry.
-- A field path can now cross a `Set`- or `Map`-typed field, so `.with("ordersByRef.A-1.trackingCode", …)` and `.with("tagSet.name", …)` work. Both failed with `… does not exist` however well-formed they were, because such a field is written under a prefixed key that the path resolver did not recognise. `.ignoring(...)` and `.sortField(...)` already worked. Omitting a map key still does not reach the values — a map is traversed by key, not fanned out over. See [custom-matching](docs/custom-matching.md).
-- Ignoring a field inside a circular-reference graph now reaches every object in that graph, not only the first one carrying it. The two sides ended up filtered differently, so the assertion failed on unrelated data and the message pointed at the wrong field. Only graphs holding more than one object with the ignored field were affected.
-- A negated collection matcher can now fail. `.with("orders", not(empty()))` passed on an empty collection, as did `not(hasSize(n))`, `not(hasItem(x))`, `not(contains(...))` and `not(containsInAnyOrder(...))` — assertions that could never fail whatever the data held. They now report their mismatch. One combination is not fixed by this and cannot be — see the next entry.
-- Watch out for one combination that still cannot fail: `not(hasItem(x))`, `not(contains(...))` and `not(containsInAnyOrder(...))` where the input is a raw JSON string, the elements are objects rather than scalars, and the matcher is written against the element's own class. Compare the object rather than a JSON string, or write the matcher against the JSON shape. Over scalar elements all of them work on both input forms. See [custom-matching](docs/custom-matching.md).
-- Documented what `.with(path, matcher)` does when the path names a collection, map or array, and which Hamcrest matchers hold for each input form. `sameJsonAsApproved` accepts a raw JSON string as well as an object, and the two forms differ in what they can assert about a collection's elements. See [custom-matching](docs/custom-matching.md).
-- **[breaking]** A map holding two entries whose key and value both serialise identically now writes each entry as its own key/value pair. The two entries used to come out as two copies of one four-element array, misrepresenting the map. Only maps whose keys are not primitives, `String`s or enums are affected, and only where two entries collide; every other map is written byte-for-byte as before. An approved file recording the old shape will now fail. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the affected approved files.
-- **[breaking]** Ignoring everything under a `Set`- or `Map`-typed field now removes the field, instead of leaving `"ordersByRef": []` behind in the approved file. An ordinary field emptied the same way already disappeared. Only fields that ignoring empties completely are affected. Strict matching is on by default, so an existing approved file still holding the empty collection will now fail. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the affected approved files.
-- **[breaking]** Ignoring a field inside an object held in a collection no longer removes the other values in that collection. `.ignoring("list.a")` over `{"list":[{"a":1},"keep-me",42]}` used to leave the collection empty and then drop the field, taking two values the rule never mentioned — and because both sides were filtered alike, the assertion still passed. Watch out for one shape that is still emptied, because it cannot be told apart from a map entry: a collection of exactly two elements, itself held inside another collection, reduced to plain values. A collection held by a field is safe, whatever its length. An approved file generated while those values were dropped will now fail. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the affected approved files.
-- **[breaking]** `sortType(...)` now reaches a collection whose field is declared as a subclass, such as `class OrderList extends ArrayList<Order>`. Naming `Order` had no effect on such a field before — it was skipped and compared in whatever order it arrived in — so the order recorded for it changes. Sorting is still only applied to the types you name: a collection field is untouched unless `sortType` names its element type. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files holding one. See [sorting](docs/sorting.md).
-- `withMatcher(Matcher<String>, ...)` now reaches a `Set`- or `Map`-typed field. Such a field is held under an internal name, and the pattern was tested against that rather than the field's own, so it never matched — and a pattern matching no field passes, which made `.withMatcher(is("tagSet"), hasSize(2))` an assertion that could not fail whatever the data held. It now behaves as the path-based `.with("tagSet", ...)` always did. Fields of any other type were already reached. See [custom-matching](docs/custom-matching.md).
-- `.ignoring(Matcher<String>)` no longer takes away a `Set`- or `Map`-typed field for a pattern that matches only the internal name it is held under — `startsWith("!")` and the like — and a field removed or aliased inside one is now reported in machine-readable output under the name it was declared with, rather than with that internal name in its path. Patterns written against a field's own name are unaffected.
-- Machine-readable output now lists an ignore rule that took effect below the top of its path, and lists it once rather than twice. `.ignoring("a.b.c")` went unrecorded whenever `a.b` kept its other fields, and a rule matching both the actual value and the approved content was counted twice. Element indexes, and parents removed for becoming empty, are still listed per occurrence. This affects the report only; what gets compared is unchanged.
-- Documented that a map key spelled like a circular-reference wrapper key — `0x` followed by lowercase hex — is skipped during path navigation as if it were one, so a path that omits such a key still reaches through it, where omitting any other key matches nothing. See [ignoring-fields](docs/ignoring-fields.md).
-- **[breaking]** A map whose keys are not primitives, `String`s or enums now records which half of an entry was the key. Such a map is written as `[key, value]` pairs, and the pair used to be reordered by its content — so `{a: z}` and `{z: a}` wrote the same bytes and an approved file for one matched the other. The pair now keeps its order at every level the declared type describes — a map inside another map, inside a `Set`, or under a list of lists, subclasses such as `EnumMap` or your own included wherever the declaration names the value type, and at the root, where the object itself is inspected instead; entries and a collection-valued half are still sorted. Entry order can change as a result, so regenerate rather than hand-edit. With `sameBeanAs` this applies unconditionally — there is no setting to turn it off and no file to regenerate: an assertion that passed only because a map and its transpose compared equal now fails and has to be rewritten. For a file matcher it applies under strict file matching, which is the default. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files holding such a map. See [sorting](docs/sorting.md).
-- Corrected a wrong entry in the released 1.0.1 notes. It claimed that sorting an array-of-arrays preserves inner array order; inner arrays are sorted together with the outer one, and no release has behaved otherwise. The one exception is a complex-key map's `[key, value]` pair, which is two positions rather than a collection and keeps its order at any depth — see the entry above. The entry is annotated in place rather than rewritten, so anyone who followed its migration advice can see that it was never needed.
-- A map with a `null` key no longer aborts the comparison. It threw a `NullPointerException` before any file was written, and whether it threw at all depended on the map's other keys. The key is now recorded as the member name `"null"`, in a map whose other keys are primitives, `String`s or enums; where any other key forces the `[key, value]` form, it is written as a bare JSON null in the entry, as any key is there. A `null` key and a `String` key of `"null"` are then indistinguishable: both entries are recorded, but a comparison between one map and the other reports a match. See [sorting](docs/sorting.md).
+- Added `-DfileMatcherSkipCustomMatchersOnUpdate=true` (alias `fMSCMOUpdate`). It defers custom matchers while `-DfileMatcherUpdateInPlace=true` regenerates approved files. When a custom matcher fails, approvalcrest does not regenerate the approved file of that assertion. Without the flag, that file stays out of date, however often the regeneration job runs again. Also, later assertions in the same test method do not run. The flag applies to the full run. Thus approvalcrest also skips the matchers of a test whose approved file is already current. That test passes where it would fail without the flag. The failure comes back on the next verification run, and that run decides whether the regenerated files are correct. The default does not change, and the flag does nothing unless an in-place update runs. `.with` and `.withMatcher` still remove their field. Thus the regenerated file is the file that a run would give if all matchers passed. `.alsoCheck` and `.alsoCheckMatching` keep their field. Thus approvalcrest writes the rejected value, and that test fails on the next run. JSON matchers only. See [file-control](docs/file-control.md).
+- An ordering matcher with the wrong kind of number no longer stops the test with a `ClassCastException`. `.with("someLongField", greaterThan(0))` matches nothing, because a whole number gets to the matcher as a `Long`, and Hamcrest compares only values of the same boxed type. That does not change. The defect was in the code that builds the message for that mismatch. That code threw an exception, with a stack trace that named Hamcrest internals, not the field. The message now names the field, the value, the type that the value came as, and the cast that failed. The same ordering matcher in `allOf`, `both().and()`, `hasItem` or `everyItem` threw an exception before there was a verdict. Over an `int` field, that form now passes. This is the only case where a result changes, not only a message. Warning: one combination still cannot fail. `not(greaterThan(...))` and its counterparts pass, whatever the data is, when the boxed types are different. See [custom-matching](docs/custom-matching.md).
+- Added `.alsoCheck(path, matcher)` and `.alsoCheckMatching(fieldNamePattern, matcher)`. They apply a custom matcher to a field *in addition to* the comparison. `.with(...)` and `.withMatcher(...)` apply a custom matcher *instead of* the comparison. The older pair removes the matched field, so the field never gets into the approved file, and a later change to the value cannot fail. This is correct for a generated id. It is not correct for a value that you can predict, but want a stronger guarantee about. The two older methods do not change, and no approved file changes. The approved file of a `.with(...)` call never contained the field. If you change the call to `.alsoCheck(...)`, regenerate that file. Re-run with `-DfileMatcherUpdateInPlace=true`. Approvalcrest regenerates the file if the new matcher passes. If you implement `CustomisableMatcher` yourself, you must add the two methods. One side effect: with `.with(...)` and machine-readable output together, the order of the `ignoredFields` array can be different, but its entries do not change. See [custom-matching](docs/custom-matching.md).
+- A class that inherits fields from a locked JDK module now serialises on a JDK where approvalcrest cannot get to those fields. The most frequent example is your own exception class. It extends `RuntimeException`, and thus has the private fields of `Throwable`. Before, serialisation of such a class threw `JsonIOException: Failed making field 'java.lang.Throwable#detailMessage' accessible`. A locked type uses getter-based output, but that class did not. The reason was that the module of the class is not locked, so approvalcrest never sent the class to the getter-based path. This applies only where approvalcrest serialises the inherited fields. For example, a class that extends `java.util.EventObject` keeps its output, because the only field of `EventObject` is transient and approvalcrest never read it. This affects only runs where approvalcrest cannot open any module, which today means JDK 26 or `fallback` mode. All other runs do not change.
+- **[breaking]** On JDK 26 and later, types from locked JDK modules (`java.time.*`, `java.lang.*`, `java.math.*`, and others) no longer serialise as an empty `{}`. JDK 26 disables `sun.misc.Unsafe`, but does not remove it. Thus the default safe mode continued to use it, read nothing, and wrote an object with no fields. An approved file could match `{}` and report a pass, when the comparison compared nothing. Safe mode now checks that Unsafe can still read a field before it uses Unsafe. Where Unsafe cannot, safe mode serialises those types from their public getters. On JDK 8 to 25, the output does not change, and the approved files do not change. **Migration:** on JDK 26, attach the new agent below to keep the old field-based output. Alternatively, re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files for locked-module types.
+- Added `approvalcrest-agent`, an optional Java agent. It keeps the output identical on JDK 26, with no `--add-opens` and no approved files to regenerate. Add it as a test dependency. Then pass one JVM argument. On JDK 8 to 25, the output does not change, whether or not you attach the agent. Thus you can add it before JDK 26 arrives. Force mode still requires `--add-opens`. See [field-access-modes](docs/field-access-modes.md#the-agent).
+- A `*` segment no longer matches fields that are not in the serialised output: `static`, `transient` and compiler-generated fields. Before, it read the other constants of an enum. It also followed the hidden reference from a non-static inner class to its enclosing instance. Thus an assertion could pass on data outside the object under comparison. It also failed next to an empty collection or a sibling that it could not get to. Then it reported a path that the caller never wrote.
+- A collection matcher now behaves the same when a path names the field and when a name pattern names it. `withMatcher(...)` gave the matcher the raw serialised form of a collection-valued field. Thus `.with("tags", hasSize(2))` passed, but `.withMatcher(is("tags"), hasSize(2))` failed on the same field. `iterableWithSize` worked in both.
+- A `*` path segment now means "every named child at this position": a map key, an object property or a bean field. Thus `.with("ordersByRef.*.trackingCode", notNullValue())` and `.ignoring("ordersByRef.*.generatedId")` apply to every entry of a map. Before, you had to name each key. As the *last* segment, `*` keeps its old meaning: a key with the literal name `*`. Collections and arrays need no wildcard, because the path already goes through them: `orders.trackingCode` already means "in every order". See [custom-matching](docs/custom-matching.md) and [ignoring-fields](docs/ignoring-fields.md).
+- When you ignore a wildcard path, approvalcrest can remove the container too. Sometimes the ignored field is the only field of each map value. Then each value becomes empty, so each entry disappears, then the array, then the map field, keys included. A named key limits this to one entry. `*` applies to all entries at the same time, so usually the full field disappears. Check what the comparison still covers. Do not read a pass as proof that approvalcrest compared the map.
+- `sortField(...)` accepts the same `*` segment. Thus a sort path can get to the collection under every map entry, and you do not have to name each key. A wildcard and a literal key at the same level both apply, and one does not override the other. The ignored sub-paths of a `SortField` also accept `*`. Thus you can keep a field out of the sort key under every child. Before, approvalcrest read a `*` there as a literal key name. Nothing matched, and the field stayed in the key without a warning. The approved file then recorded an order that nobody asked for. See [sorting](docs/sorting.md).
+- `ignoringElementsWhere(...)` also accepts it, so you can filter a `Map<String, List<T>>`. `ordersByRef.*.system` filters the list under each entry. `ordersByRef.system`, without the wildcard, filters the outer entry array instead, and matches nothing. A named key gets to the same list as the wildcard, for that one entry.
+- A field path can now go through a `Set`-typed or `Map`-typed field. Thus `.with("ordersByRef.A-1.trackingCode", …)` and `.with("tagSet.name", …)` work. Before, both failed with `… does not exist`, even when they were well-formed. The reason was that approvalcrest writes such a field under a prefixed key, and the path resolver did not recognise that key. `.ignoring(...)` and `.sortField(...)` already worked. A path without the map key still does not get to the values. A path goes through a map by key, and does not fan out over it. See [custom-matching](docs/custom-matching.md).
+- An ignored field in a circular-reference graph now applies to all objects in that graph, not only to the first object with the field. Before, approvalcrest filtered the two sides differently. Thus the assertion failed on unrelated data, and the message pointed to the wrong field. This affected only graphs with more than one object that has the ignored field.
+- A negated collection matcher can now fail. Before, `.with("orders", not(empty()))` passed on an empty collection. The same was true for `not(hasSize(n))`, `not(hasItem(x))`, `not(contains(...))` and `not(containsInAnyOrder(...))`. These assertions could never fail, whatever the data was. They now report their mismatch. This change does not fix one combination, and no change can fix it. See the next entry.
+- Warning: one combination still cannot fail: `not(hasItem(x))`, `not(contains(...))` and `not(containsInAnyOrder(...))`, when all three conditions apply. The input is a raw JSON string. The elements are objects, not scalars. The matcher is for the class of the element. Compare the object, not a JSON string. Alternatively, write the matcher for the JSON shape. Over scalar elements, all of them work on both input forms. See [custom-matching](docs/custom-matching.md).
+- Documented what `.with(path, matcher)` does when the path names a collection, map or array, and which Hamcrest matchers work for each input form. `sameJsonAsApproved` accepts a raw JSON string as well as an object. The two forms differ in what they can assert about the elements of a collection. See [custom-matching](docs/custom-matching.md).
+- **[breaking]** Sometimes a map holds two entries whose key and value both serialise identically. Approvalcrest now writes each such entry as its own key/value pair. Before, the two entries came out as two copies of one four-element array, which did not show the map correctly. This affects only maps whose keys are not primitives, `String`s or enums, and only where two entries collide. Approvalcrest writes every other map byte-for-byte as before. An approved file that records the old shape now fails. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the affected approved files.
+- **[breaking]** When you ignore everything under a `Set`-typed or `Map`-typed field, approvalcrest now removes the field. Before, it left `"ordersByRef": []` in the approved file. A usual field that became empty in the same way already disappeared. This affects only fields that the ignore rules make completely empty. Strict mode is on by default. Thus an approved file that still holds the empty collection now fails. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the affected approved files.
+- **[breaking]** When you ignore a field in an object in a collection, approvalcrest no longer removes the other values in that collection. Before, `.ignoring("list.a")` over `{"list":[{"a":1},"keep-me",42]}` made the collection empty and then removed the field. Thus it removed two values that the rule did not name. Approvalcrest filtered both sides in the same way, so the assertion still passed. Warning: one shape still becomes empty, because approvalcrest cannot tell it from a map entry. That shape is a collection of exactly two elements, in another collection, reduced to plain values. A collection that a field holds is safe, whatever its length. An approved file that approvalcrest generated while it removed those values now fails. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the affected approved files.
+- **[breaking]** `sortType(...)` now gets to a collection field whose declared type is a subclass, such as `class OrderList extends ArrayList<Order>`. Before, `Order` in `sortType` had no effect on such a field. The sort skipped the field, so approvalcrest compared it in the order in which it came. Thus the recorded order of such a field changes. Approvalcrest still sorts only the types that you name. `sortType` does not sort a collection field unless it names the element type. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files that hold such a field. See [sorting](docs/sorting.md).
+- `withMatcher(Matcher<String>, ...)` now gets to a `Set`-typed or `Map`-typed field. Approvalcrest holds such a field under an internal name. Before, it tested the pattern against that internal name and not the name of the field, so the pattern never matched. A pattern that matches no field passes. Thus `.withMatcher(is("tagSet"), hasSize(2))` was an assertion that could not fail, whatever the data was. It now behaves as the path-based `.with("tagSet", ...)` always did. Fields of all other types already worked. See [custom-matching](docs/custom-matching.md).
+- `.ignoring(Matcher<String>)` no longer removes a `Set`-typed or `Map`-typed field for a pattern that matches only its internal name, such as `startsWith("!")`. Also, machine-readable output now reports a field that approvalcrest removed or aliased in such a field under its declared name. Before, the path contained the internal name. A pattern that matches the declared name of a field works as before.
+- Machine-readable output now lists an ignore rule that took effect below the top of its path. It also lists it one time, not two times. Before, it did not record `.ignoring("a.b.c")` when `a.b` kept its other fields. Also, it counted two times a rule that matched both the actual value and the approved JSON. It still lists element indexes, and parents that approvalcrest removed because they became empty, for each occurrence. This affects only the report. What approvalcrest compares does not change.
+- Documented a map key that looks like a circular-reference wrapper key (`0x` followed by lowercase hex). Path navigation skips such a key, as if it were a wrapper key. Thus a path that leaves out such a key still goes through it. A path that leaves out any other key matches nothing. See [ignoring-fields](docs/ignoring-fields.md).
+- **[breaking]** A map whose keys are not primitives, `String`s or enums now records which half of an entry was the key. Approvalcrest writes such a map as `[key, value]` pairs. Before, it reordered the pair by its content. Thus `{a: z}` and `{z: a}` wrote the same bytes, and an approved file for one matched the other. The pair now keeps its order at every level that the declared type describes. This includes a map in another map, in a `Set`, or under a list of lists. It also includes subclasses such as `EnumMap` or your own subclasses, wherever the declaration names the value type. The pair also keeps its order at the root. There, approvalcrest examines the object itself, not a declared type. Approvalcrest still sorts the entries and a collection-valued half. As a result, the entry order can change. Regenerate the files. Do not edit them by hand. With `sameBeanAs`, this applies in all cases. No property turns it off, and there is no file to regenerate. An assertion that passed only because the comparison treated a map and its transpose as equal now fails. Rewrite that assertion. For a file matcher, it applies in strict mode, which is the default. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files that hold such a map. See [sorting](docs/sorting.md).
+- Corrected a wrong entry in the released 1.0.1 notes. It said that a sort of an array of arrays keeps the order of the elements in each inner array. In fact, approvalcrest sorts the inner arrays together with the outer array, and no release behaved differently. The only exception is the `[key, value]` pair of a complex-key map. That pair is two positions, not a collection, and it keeps its order at any depth (see the entry above). The 1.0.1 entry keeps its wrong claim, with a correction note after it. Thus anyone who followed its migration advice can see that the advice was never necessary.
+- A map with a `null` key no longer stops the comparison. Before, it threw a `NullPointerException` before approvalcrest wrote any file, and the other keys of the map decided whether it threw. In a map whose other keys are primitives, `String`s or enums, approvalcrest now records the key as the member name `"null"`. Where any other key causes the `[key, value]` form, approvalcrest writes each key as a value in the entry. Thus it writes a `null` key as a bare JSON null. Then a `null` key and a `String` key of `"null"` look the same. Approvalcrest records both entries, but a comparison of one map with the other reports a match. See [sorting](docs/sorting.md).
 
 Version 1.5.0 - 2026/07/29
 -----
 
-- `SortField.ignoring(...)` now returns a new `SortField` instead of mutating the receiver. Deriving two configurations from one base previously produced a single object carrying both sets of ignores, so a `SortField` held in shared configuration accumulated every caller's paths, order-dependently, and was unsafe under parallel execution. Chaining (`SortField.of("x").ignoring("a").ignoring("b")`) is unaffected; code that called `ignoring(...)` for its side effect and discarded the result must now use the returned instance.
-- `assertThrows` no longer treats a skipped test or a JVM-level error as the exception under test. An assumption failure (`TestAbortedException`, `AssumptionViolatedException`, TestNG's `SkipException`) is now rethrown so the test is reported as skipped rather than compared against the expected exception, and a `VirtualMachineError` is rethrown as-is instead of being matched or wrapped. Asserting that a matcher fails still works: `AssertionError` is deliberately still matched.
-- The error reported when an in-place approved-file overwrite fails now names the file it could not write. It previously interpolated the object under comparison instead, so the message identified no file and put the whole serialised content into the exception, the log and the CI output.
-- `ignoringElementsWhere` now rejects a null value or matcher where the rule is declared, naming the path, instead of failing with an unattributed `NullPointerException` later during comparison.
-- Reflection failures now keep their underlying cause. An `IllegalAccessException`, `InvocationTargetException` or `SecurityException` previously collapsed into the same "Cannot access field" message, which made the accompanying `--add-opens` guidance impossible to check.
-- The Kotlin matchers now honour `fileMatcherSourceRoot` (alias `fmSourceRoot`), so a Kotlin project whose tests live outside `src/test/kotlin` can configure where approved files are stored. The property was previously ignored there, leaving no way to change it. Only the default differs per framework — `src/test/kotlin` for the Kotlin matchers, `src/test/java` elsewhere — so projects that do not set the property are unaffected. Note that setting it in a project containing both Java and Kotlin tests now moves both. See [file-control](docs/file-control.md).
-- Fixed a `StackOverflowError` when comparing a graph of `Throwable`s that reference each other in a cycle. Only throwables were affected; cyclic ordinary beans were already handled correctly.
-- `fileMatcherSharedEnabled` (alias `fmSharedEnabled`) now accepts a file type as well as a boolean, so the write-side shared-approval integration can be limited to `json` or `content` rather than always covering both. `true` and `false` keep their existing meanings — `true` is equivalent to `all` — so no existing configuration changes behaviour. This pairs with the matching `--types` option on the dedup tool. See [shared-approvals](docs/shared-approvals.md).
-- `approvalcrest:dedup` and `approvalcrest:reinstate` can now be limited to one approved file type with `-DfileMatcherSharedTypes=json|content` (or `--types` on the standalone CLI), so a project can consolidate its JSON approvals without touching its `.content` ones. The default is both types, so existing runs are unchanged. Only conversion and canonical deletion are restricted; whether a canonical is still referenced is always decided across every type, so a single-type run cannot strand the other type's pointers. See [shared-approvals](docs/shared-approvals.md).
-- Test methods inherited from an **abstract** base class now fail with a clear error instead of silently sharing one approved file. Every subclass resolved to the same file and overwrote the others, because the class a method is declared in is all that the stack trace — or TestNG's injected `Method` — can report. Pass `TestInfo` (JUnit 5), use `Junit4DesciptionWatcher` (JUnit 4), or supply a custom `TestMetaInformation` to get one approved file per subclass. Concrete test classes are unaffected.
-- **Behaviour change.** `Set` elements that serialise to the same JSON are no longer collapsed into a single entry. Sets are sorted by JSON representation to keep output stable, and that sort was previously also deduplicating, so elements that are not `equals()` but serialise identically were dropped — which happens with classes that do not override `equals()`, or whose distinguishing field is not serialised. A set that lost or gained such an element therefore serialised identically either way and the difference could not fail a test. Approved files containing such a set will now differ and need re-approving; the previously recorded content was incomplete. Set `-DapprovalcrestLegacySetCollapse=true` (alias `aLSCollapse`) to restore the old behaviour while migrating. See [supported-types](docs/supported-types.md).
-- Object-graph reference ids containing hexadecimal letters are now recognised everywhere they are parsed. From the tenth object in a graph onwards an id contains the letters `a`-`f`, which the throwable adapter did not accept.
-- `mvn approvalcrest:dedup` no longer deletes shared canonical files that pointer files outside the scanned directory still reference. Which files get converted is still controlled by the scan directory, but whether a canonical is still in use is now determined across the whole project. Previously, narrowing the scan (or running the goal per module against a shared directory covering several) deleted those canonicals and left the pointers resolving to content that existed nowhere on disk.
-- `mvn approvalcrest:reinstate` and `--reinstate` now support `--dry-run` / `-DdryRun=true`. The flag was accepted on the command line but ignored, so a run intended as a preview rewrote every pointer and deleted every canonical.
-- `approvalcrest:reinstate` now only deletes canonicals that nothing references any more, instead of clearing the shared directory unconditionally.
-- Both dedup goals now refuse to run when the shared approvals directory contains the scan directory, rather than treating every approved file as a canonical and deleting it. This was reachable by a single mistyped `--shared-dir`, because the default shared directory sits inside the default scan directory.
-- Tests declared with package-private methods are now supported. JUnit Jupiter and TestNG both allow non-public test methods, but approvalcrest looked the running test up among public methods only, so such a test failed with "Cannot determine test method" instead of resolving its approved file. A test method that shares its name with an overload is now also identified reliably.
-- Approved files are now read correctly when their comment header ends with a CRLF rather than a LF. Headers are written with a LF, so a Windows checkout with `core.autocrlf=true` previously failed to strip the header (the comment ended up compared as part of the content) and pointer files were not recognised as pointers at all.
-- `fileMatcherSharedDirBucketDepth` (alias `fmSharedDirBucketDepth`) is now validated against its documented 1–6 range and reports a configuration error naming the property. Out-of-range values previously failed with an unrelated `StringIndexOutOfBoundsException` from inside the matcher. See [shared-approvals](docs/shared-approvals.md).
+- `SortField.ignoring(...)` now returns a new `SortField`, and does not change the receiver. Before, if you derived two configurations from one base, you got one object with both sets of ignores. Thus a `SortField` in a shared configuration collected the paths of all callers. The paths that a caller got depended on the order of the calls. It was also not safe in parallel execution. Chains (`SortField.of("x").ignoring("a").ignoring("b")`) do not change. Code that called `ignoring(...)` for its side effect, and did not use the result, must now use the returned instance.
+- `assertThrows` no longer treats a skipped test or a JVM-level error as the exception under test. It now rethrows an assumption failure (`TestAbortedException`, `AssumptionViolatedException`, or the `SkipException` of TestNG). Thus the test framework reports the test as skipped, and approvalcrest does not compare it with the expected exception. It rethrows a `VirtualMachineError` as it is, and does not match or wrap it. You can still assert that a matcher fails: `assertThrows` still matches `AssertionError` intentionally.
+- When approvalcrest cannot write an approved file during an in-place update, the error now names that file. Before, the message contained the object under comparison instead. Thus the message identified no file, and put the full serialised content into the exception, the log and the CI output.
+- `ignoringElementsWhere` now rejects a null value or a null matcher where you declare the rule, and names the path. Before, it failed later in the comparison with a `NullPointerException` that did not name the rule or the path.
+- Reflection failures now keep their original cause. Before, an `IllegalAccessException`, `InvocationTargetException` or `SecurityException` all gave the same "Cannot access field" message. Thus you could not check the `--add-opens` guidance in the message.
+- The Kotlin matchers now use `fileMatcherSourceRoot` (alias `fmSourceRoot`). Thus a Kotlin project whose tests are outside `src/test/kotlin` can configure the directory of the approved files. Before, the Kotlin matchers ignored the property, and there was no way to change the directory. Only the default is different for each framework: `src/test/kotlin` for the Kotlin matchers, `src/test/java` for the others. Thus projects that do not set the property do not change. If you set the property in a project with Java and Kotlin tests, it now moves both. See [file-control](docs/file-control.md).
+- Fixed a `StackOverflowError` in the comparison of a graph of `Throwable`s that refer to each other in a cycle. This affected only throwables. Approvalcrest already handled cyclic beans that are not throwables correctly.
+- `fileMatcherSharedEnabled` (alias `fmSharedEnabled`) now accepts a file type as well as a boolean. Thus you can limit the write-side shared-approval integration to `json` or `content`. Before, it always covered both. `true` and `false` keep their meanings, and `true` is the same as `all`. Thus no current configuration changes its behaviour. The dedup tool has a `--types` option for the same selection. See [shared-approvals](docs/shared-approvals.md).
+- You can now limit `approvalcrest:dedup` and `approvalcrest:reinstate` to one approved file type with `-DfileMatcherSharedTypes=json|content` (or `--types` on the standalone CLI). Thus a project can consolidate its JSON approvals and not touch its `.content` approvals. The default is both types, so current runs do not change. The selection limits only the conversion and the deletion of canonicals. To decide whether any pointer still refers to a canonical, the tool always examines the pointers of all types. Thus a run for one type cannot leave the pointers of the other type without their canonicals. See [shared-approvals](docs/shared-approvals.md).
+- A test method that a class inherits from an **abstract** base class now fails with an error message. Before, all the subclasses used one approved file without a warning. Each subclass resolved to the same file and overwrote the others. The reason is that the stack trace, and the `Method` that TestNG injects, can report only the class that declares the method. To get one approved file for each subclass, pass `TestInfo` (JUnit 5). With JUnit 4, use `Junit4DesciptionWatcher`. Alternatively, supply a custom `TestMetaInformation`. Concrete test classes do not change.
+- **Behaviour change.** Approvalcrest no longer merges `Set` elements that serialise to the same JSON into one entry. It sorts sets by their JSON representation to keep the output stable. Before, that sort also removed duplicates. Thus it removed elements that are not `equals()`, but serialise identically. This occurs with classes that do not override `equals()`, or when approvalcrest does not serialise the field that makes two instances different. A set that lost or got such an element then serialised the same as the original set, so the difference could not fail a test. Approved files that contain such a set now differ. You must re-approve them. The content that approvalcrest recorded before was incomplete. To get the old behaviour while you migrate, set `-DapprovalcrestLegacySetCollapse=true` (alias `aLSCollapse`). See [supported-types](docs/supported-types.md).
+- Approvalcrest now recognises object-graph reference ids with hexadecimal letters in all places where it parses them. From the tenth object in a graph, an id contains the letters `a`-`f`. The throwable adapter did not accept these letters.
+- `mvn approvalcrest:dedup` no longer deletes shared canonical files that pointer files outside the scan directory still refer to. The scan directory still controls which files the tool converts. But the tool now examines the full project to decide whether a canonical is still in use. Before, a narrower scan deleted those canonicals. This also occurred when you ran the goal for each module against a shared directory for several modules. The pointers then resolved to content that did not exist on disk.
+- `mvn approvalcrest:reinstate` and `--reinstate` now support `--dry-run` / `-DdryRun=true`. Before, the command line accepted the flag, but the tool ignored it. Thus a run that you intended as a preview rewrote every pointer and deleted every canonical.
+- `approvalcrest:reinstate` now deletes only the canonicals that nothing refers to any more. Before, it always cleared the shared directory.
+- Both dedup goals now refuse to run when the shared directory contains the scan directory. Before, they treated every approved file as a canonical and deleted it. One typo in `--shared-dir` was sufficient for this, because the default shared directory is in the default scan directory.
+- Approvalcrest now supports package-private test methods. JUnit Jupiter and TestNG both allow test methods that are not public. But approvalcrest looked for the current test only in the public methods. Thus such a test failed with "Cannot determine test method", and did not resolve its approved file. Approvalcrest now also identifies a test method reliably when an overload has the same name.
+- Approvalcrest now reads approved files correctly when their comment header ends with a CRLF, not a LF. Approvalcrest writes headers with a LF. Thus, before this fix, on a Windows checkout with `core.autocrlf=true`, it did not remove the header, and compared the comment as part of the content. On such a checkout, it also did not recognise pointer files as pointers.
+- Approvalcrest now validates `fileMatcherSharedDirBucketDepth` (alias `fmSharedDirBucketDepth`) against its documented range of 1–6, and reports a configuration error that names the property. Before, a value out of the range failed with an unrelated `StringIndexOutOfBoundsException` from inside the matcher. See [shared-approvals](docs/shared-approvals.md).
 
 Version 1.4.2 - 2026/07/28
 -----
 
-- Added the `fileMatcherSourceRoot` property (alias `fmSourceRoot`) to configure the test source directory approved files are stored in. Defaults to `src/test/java`; set it to e.g. `src/it/java` or `src/test/kotlin` when tests live outside the standard directory.
+- Added the `fileMatcherSourceRoot` property (alias `fmSourceRoot`) to configure the test source directory for approved files. The default is `src/test/java`. When tests are outside the standard directory, set it to a value such as `src/it/java` or `src/test/kotlin`.
 
 Version 1.4.1 - 2026/07/12
 -----
 
-- Added `ignoringElementsWhere` to remove array elements from the comparison based on the value of a nested field. The path points at a field within each element; the innermost array on the path is filtered, and every element whose leaf field value satisfies the given matcher (or equals the given String) is removed before comparison. Intermediate collections are traversed transparently, so a path such as `entry.resource.meta.tag.system` filters the `tag` array of every `entry`. Works with `sameBeanAs` and `sameJsonAsApproved`. See [ignoring-fields](docs/ignoring-fields.md).
+- Added `ignoringElementsWhere` to remove array elements from the comparison by the value of a nested field. The path points to a field in each element. `ignoringElementsWhere` filters the innermost array on the path. Before the comparison, it removes each element whose leaf field value satisfies the given matcher, or equals the given String. The path goes through the collections before the innermost array automatically. Thus a path such as `entry.resource.meta.tag.system` filters the `tag` array of every `entry`. This works with `sameBeanAs` and `sameJsonAsApproved`. See [ignoring-fields](docs/ignoring-fields.md).
 
 Version 1.4.0 - 2026/06/29
 -----
 
-- Added pointer-file support for approved files and a new `approvalcrest-dedup` module. An approved file whose post-header content is `/*pointer:relative/path*/` is transparently followed at read time with no configuration required; the test comment header is preserved. In-place updates (`-DfMUInPlace=true`) on a pointer file detach the test from the shared canonical rather than modifying it. Enabling `-DfmSharedEnabled=true` activates write-side integration: new files whose content matches an existing canonical get a pointer `-not-approved` for the developer to approve, and in-place updates re-point to a matching canonical when one exists. The configurable shared directory (`-DfmSharedDir=`, default `src/test/java/shared-approvals`) is the authoritative location for canonical files. The `approvalcrest-dedup` module provides `mvn approvalcrest:dedup` (group duplicates → create canonicals → write pointers, GC orphans) and `mvn approvalcrest:reinstate` (replace all pointers with standalone approved files and clear the shared directory). See [shared-approvals](docs/shared-approvals.md).
-- Removed the previously declared but unused `buildIndex` / `bFIndex` flags from `FileMatcherConfig`.
-- Fixed `JsonMatcher` silently passing in update-in-place mode when a custom matcher (`.with(fieldPath, matcher)`) fails. The approved file was rewritten and the assertion passed, so the same custom matcher failed again on the next normal run, apparently out of nowhere. The file is now left untouched and the assertion fails.
+- Added pointer-file support for approved files, and a new `approvalcrest-dedup` module. When the content of an approved file after the header is `/*pointer:relative/path*/`, approvalcrest follows the pointer automatically. It does this when it reads the file, with no configuration. The test comment header stays. An in-place update (`-DfMUInPlace=true`) on a pointer file detaches the test from the shared canonical, and does not change the canonical. `-DfmSharedEnabled=true` turns on write-side integration. When it is on, a new file whose content matches a canonical gets a pointer `-not-approved` file for the developer to approve. An in-place update then writes a pointer to a canonical that matches, when one exists. The configurable shared directory (`-DfmSharedDir=`, default `src/test/java/shared-approvals`) is the authoritative location for canonical files. The `approvalcrest-dedup` module has `mvn approvalcrest:dedup` (group duplicates → create canonicals → write pointers, GC orphans). It also has `mvn approvalcrest:reinstate` (replace all pointers with standalone approved files and clear the shared directory). See [shared-approvals](docs/shared-approvals.md).
+- Removed the `buildIndex` / `bFIndex` flags from `FileMatcherConfig`. `FileMatcherConfig` declared them, but nothing used them.
+- Fixed `JsonMatcher`, which passed without a warning during an in-place update when a custom matcher (`.with(fieldPath, matcher)`) failed. Approvalcrest regenerated the approved file, and the assertion passed. Thus the same custom matcher failed again on the next usual run, with no visible cause. Approvalcrest now does not change the file, and the assertion fails.
 
 Version 1.3.4 - 2026/06/24
 -----
 
-- Fixed path-based custom matchers (`.with("fieldPath", matcher)`) failing with `IllegalArgumentException: <field> does not exist` on a `Map<String, Object>`, a `List<Map<String, Object>>` or a JSON string input. A path through a collection now collects values from the elements that carry the field, and fails only when none of them does; previously a single element without it failed the whole path, which is the normal case for a map, where each key lives in its own element. Heterogeneous collections behave the same way.
+- Fixed path-based custom matchers (`.with("fieldPath", matcher)`), which failed with `IllegalArgumentException: <field> does not exist` on a `Map<String, Object>`, a `List<Map<String, Object>>` or a JSON string input. A path through a collection now collects values from the elements that have the field. It fails only when no element has the field. Before, one element without the field made the full path fail. For a map, an element without the field is the usual case, because each key is in its own element. Heterogeneous collections behave in the same way.
 
 Version 1.3.3 - 2026/06/17
 -----
 
-- Fixed `withAlias` / `withAliasMap` being applied to the approved-file content in strict mode (`fileMatcherStrictFileMatching=true`, the default). All other transformations — `.ignoring()`, `.with()`, pattern-based sorting — were already correctly skipped on the approved side in strict mode; aliases were the only exception. After this fix, aliases are applied to the actual side only in strict mode, consistent with the strict-mode contract that the approved file is used as-is. An approved file that still contains the raw (non-aliased) value is now correctly detected as stale and causes the assertion to fail, prompting regeneration. Approved files that already contain the aliased form (the normal case) are unaffected — no re-generation needed.
-- Added AI tip to the "not approved file created" failure message: the human-readable message now ends with `[AI tip] Re-run with fmAI=true for the absolute path of the file that needs to be renamed.` Previously only content-mismatch failures carried the tip. Also fixed the machine-readable `action` field for `NEW_FILE` failures: it previously incorrectly suggested `fMUInPlace=true`, which throws when no approved file exists yet; the correct action is to rename/copy the generated file.
-- Added AI tip to the type-mismatch failure message (`sameBeanAs` with incompatible types): the non-machine-readable branch now ends with the standard `[AI tip] Re-run with fmAI=true for structured, machine-readable output.` tip, consistent with content-mismatch failures.
-- Fixed `JsonMatcher.describeTo()` applying transformations (aliases, ignored-field removal, custom sorting) to the approved-file content in strict mode, inconsistently with `doMatches()`. In strict mode the approved file is used as-is on the expected side of the comparison, but `describeTo()` was silently aliasing/stripping the same content, causing the "Expected:" section of the Hamcrest failure message to show different values than the diff. For normal (up-to-date) approved files this was a no-op difference; for stale approved files the failure message was contradictory.
+- Fixed `withAlias` / `withAliasMap`, which approvalcrest applied to the approved JSON in strict mode (`fileMatcherStrictFileMatching=true`, the default). Approvalcrest already skipped all other transformations on the approved side in strict mode: `.ignoring()`, `.with()` and pattern-based sorts. Aliases were the only exception. Now, in strict mode, approvalcrest applies aliases only to the actual side. This agrees with the strict-mode contract, which uses the approved file as it is. Approvalcrest now detects an approved file that still contains the raw (non-aliased) value as stale. The assertion fails. Regenerate the file. Approved files that already contain the aliased form (the usual case) do not change, and need no regeneration.
+- Added the AI tip to the "not approved file created" failure message. The message that is not machine-readable now ends with `[AI tip] Re-run with fmAI=true for the absolute path of the file that needs to be renamed.` Before, only content-mismatch failures had the tip. Also fixed the machine-readable `action` field for `NEW_FILE` failures. Before, it suggested `fMUInPlace=true`. That is incorrect: an in-place update throws when there is no approved file yet. The correct action is to rename or copy the generated file.
+- Added the AI tip to the type-mismatch failure message (`sameBeanAs` with incompatible types). The message that is not machine-readable now ends with the standard `[AI tip] Re-run with fmAI=true for structured, machine-readable output.` tip, as content-mismatch failures do.
+- Fixed `JsonMatcher.describeTo()`, which applied transformations (aliases, removal of ignored fields, custom sorts) to the approved JSON in strict mode. This did not agree with `doMatches()`. In strict mode, approvalcrest uses the approved file as it is on the expected side of the comparison. But `describeTo()` applied aliases to the same content and removed fields from it, without a warning. Thus the "Expected:" section of the Hamcrest failure message showed different values from the diff. For usual (up-to-date) approved files, this difference had no effect. For stale approved files, the failure message contradicted itself.
 
 Version 1.3.2 - 2026/06/03
 -----
 
-- Machine-readable JSON output is now emitted in compact form (no pretty-printing) to minimise token usage for AI consumers. The `expected` and `actual` field values, as well as the outer JSON wrapper, are all serialised without whitespace across all failure types (`MISMATCH`, `NEW_FILE`, `TYPE_MISMATCH`).
-- Fixed path-based operations (`.ignoring("path")`, `.with("path", matcher)`, `.sortField("path")`, `SortField.ignoring("path")`) failing when the path traverses through a type detected as having a circular reference. Such types are written wrapped in synthetic `0xN` envelope keys, which broke path resolution. These envelope keys are now transparently skipped during path navigation — the user-specified path works identically whether the target type has circular references or not.
+- Approvalcrest now writes machine-readable JSON output in compact form (no pretty-printing), so that AI consumers use fewer tokens. For all failure types (`MISMATCH`, `NEW_FILE`, `TYPE_MISMATCH`), approvalcrest serialises the `expected` and `actual` field values and the outer JSON wrapper without whitespace.
+- Fixed path-based operations (`.ignoring("path")`, `.with("path", matcher)`, `.sortField("path")`, `SortField.ignoring("path")`), which failed when the path went through a type in which approvalcrest detected a circular reference. Approvalcrest writes such types in synthetic `0xN` wrapper keys, and these keys stopped the path resolution. Path navigation now skips these wrapper keys automatically. Thus your path works identically, whether or not the target type has circular references.
 
 Version 1.3.1 - 2026/06/01
 -----
 
-- Fixed `Optional<Interface>` and `Optional<AbstractClass>` being written as an empty `{}`. Where the declared type parameter is an interface or abstract class, the runtime type is used instead. See [supported-types](docs/supported-types.md).
-- Fixed polymorphic base class handling in `Optional`: `Optional<Animal>` holding a `Dog` instance now serializes all `Dog`-specific fields. See [supported-types](docs/supported-types.md).
-- Added custom serializers for `OptionalInt`, `OptionalLong`, and `OptionalDouble`. These primitive-specialized Optional types are now serialized with the same `{"value": N}` / `{}` format as `java.util.Optional`. See [supported-types](docs/supported-types.md).
-- Added `GsonConfiguration.addTypeToSkipInFallbackFactories(Class<?>)`: allows users to prevent `UnsafeFieldTypeAdapterFactory` and `GetterBasedTypeAdapterFactory` from claiming specific types, so that custom `TypeAdapter`/`TypeAdapterFactory` registrations (e.g. for Vavr's `Option`, `Either`) take precedence. See [supported-types](docs/supported-types.md).
-- Added documentation: migration guide for path handling ([file-control](docs/file-control.md)) and IDE run template best practices ([best-practices](docs/best-practices.md)).
+- Fixed `Optional<Interface>` and `Optional<AbstractClass>`, which approvalcrest wrote as an empty `{}`. Where the declared type parameter is an interface or an abstract class, approvalcrest now uses the runtime type. See [supported-types](docs/supported-types.md).
+- Fixed the serialisation of polymorphic base classes in `Optional`. An `Optional<Animal>` that holds a `Dog` instance now serialises all the fields of `Dog`. See [supported-types](docs/supported-types.md).
+- Added custom serialisers for `OptionalInt`, `OptionalLong` and `OptionalDouble`. Approvalcrest now serialises these primitive-specialised Optional types in the same `{"value": N}` / `{}` format as `java.util.Optional`. See [supported-types](docs/supported-types.md).
+- Added `GsonConfiguration.addTypeToSkipInFallbackFactories(Class<?>)`. With it, you can tell `UnsafeFieldTypeAdapterFactory` and `GetterBasedTypeAdapterFactory` not to claim specific types. Then custom `TypeAdapter`/`TypeAdapterFactory` registrations have priority, for example for the Vavr types `Option` and `Either`. See [supported-types](docs/supported-types.md).
+- Added documentation: a migration guide for paths ([file-control](docs/file-control.md)), and best practices for IDE run templates ([best-practices](docs/best-practices.md)).
 
 Version 1.3.0 - 2026/06/01
 -----
 
-- Machine-readable output is now structured JSON. Failure messages emitted with `-DfileMatcherMachineReadable=true` (or `withMachineReadableOutput()`) are valid JSON objects containing `failureType`, `test`, `approvedFile`/`approveTo`, `expected`, `actual`, plus metadata arrays `ignoredFields`, `aliasedFields`, and `sortedFields` that document what transformations were applied. See [file-control](docs/file-control.md).
-- Added `fmAI` as an additional short alias for the machine-readable output system property (`-DfmAI=true`). The passive AI discovery tip appended to non-machine-readable failures now references `fmAI` for brevity. The original alias `fMMReadable` remains valid. See [system-properties](docs/system-properties.md).
-- Records and sealed classes confirmed working on JDK 17 and above.
-- Fixed generic type serialization bug with Immutables `@Gson.TypeAdapters`: types registered via `GsonBuilder.registerTypeAdapterFactory` no longer cause `IllegalStateException` during recursive adapter resolution.
-- `LenientTypeAdapterFactory` now logs the full exception (including stack trace) when catching `IllegalStateException`, and deduplicates repeated warnings for the same type to reduce log noise.
+- Machine-readable output is now structured JSON. With `-DfileMatcherMachineReadable=true` (or `withMachineReadableOutput()`), failure messages are valid JSON objects. They contain `failureType`, `test`, `approvedFile`/`approveTo`, `expected` and `actual`. They also contain the metadata arrays `ignoredFields`, `aliasedFields` and `sortedFields`, which record the transformations that approvalcrest applied. See [file-control](docs/file-control.md).
+- Added `fmAI` as one more short alias for the machine-readable output system property (`-DfmAI=true`). The passive AI discovery tip at the end of failures that are not machine-readable now names `fmAI`, because it is shorter. The original alias `fMMReadable` stays valid. See [system-properties](docs/system-properties.md).
+- Confirmed that records and sealed classes work on JDK 17 and above.
+- Fixed a serialisation defect for generic types with Immutables `@Gson.TypeAdapters`. Types that you register with `GsonBuilder.registerTypeAdapterFactory` no longer cause an `IllegalStateException` during recursive adapter resolution.
+- When `LenientTypeAdapterFactory` catches an `IllegalStateException`, it now logs the full exception, with the stack trace. It also logs repeated warnings for the same type only one time, to keep the log short.
 
 Version 1.2.0 - 2026/05/30
 -----
 
-- Eliminated the `--add-opens` JVM flag requirement. The library now opens modules programmatically at runtime using a three-tier field access strategy: force-open the module → getter-based fallback → direct field reflection. No JVM flags are needed on JDK 9+. See [field-access-modes](docs/field-access-modes.md).
-- Added `approvalcrest-testng` module: TestNG 6+ adapter with full feature parity — `sameBeanAs`, `sameJsonAsApproved`, `sameContentAsApproved`, DataProvider support, and optional `Method` injection (TestNG 6.14.2+). See [testng](docs/testng.md).
+- Removed the need for the `--add-opens` JVM flag. Approvalcrest now opens modules from code at runtime. It uses a field access strategy with three levels: force-open the module → getter-based fallback → direct field reflection. On JDK 9+, you do not need JVM flags. See [field-access-modes](docs/field-access-modes.md).
+- Added the `approvalcrest-testng` module. It is a TestNG 6+ adapter with all the features of the other adapters: `sameBeanAs`, `sameJsonAsApproved`, `sameContentAsApproved`, DataProvider support, and optional `Method` injection (TestNG 6.14.2+). See [testng](docs/testng.md).
 
 Version 1.1.0 - 2026/05/29
 -----
 
-- **[breaking]** Gson now serializes null fields by default. Previously, null-valued fields were silently omitted from JSON serialization, which caused `.ignoring("field")` to silently fail when the field value was null inside a collection element — the field was stripped before ignore logic ran, so the ignored element was never removed from the collection. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files that now include null fields. To restore the old behaviour globally set `-DapprovalcrestSerializeNulls=false`. To restore it per-matcher call `.withoutSerializingNulls()` on the matcher. See [ignoring-fields](docs/ignoring-fields.md).
-- Added short alias names for all boolean system properties. Each property can now also be set using a compact alias, e.g. `-DfMUInPlace=true` instead of `-DfileMatcherUpdateInPlace=true`. Setting both the canonical name and an alias to the same value is allowed; setting them to conflicting values throws `IllegalStateException` at startup. See [system-properties](docs/system-properties.md) for the full alias table.
-- Improved machine-readable output mode (`-DfileMatcherMachineReadable=true` / `withMachineReadableOutput()`). Failure messages now include structured headers: `FAILURE_TYPE: MISMATCH|NEW_FILE|TYPE_MISMATCH`, `TEST: ClassName#methodName`, `APPROVED_FILE:` or `APPROVE_TO:` (absolute path), and `ACTION:` with the exact property to set. In non-machine-readable mode a passive discovery tip is appended at the end of every failure message so AI agents can discover the mode even in default output. See [file-control](docs/file-control.md).
-- Fixed missing Kotlin extension functions on `DiagnosingCustomisableMatcher`: `withMachineReadableOutput()`, `withoutSerializingNulls()`, and `sortType()` (added in 1.0.1) were absent from the Kotlin extension functions file, preventing their use in arbitrarily chained Kotlin expressions. Same extensions added for `JsonMatcher`; `withMachineReadableOutput()` added for `ContentMatcher`.
-- Added `Matchers.sameBeanAsType<T>(expected: Any)` Kotlin-only factory: creates a `DiagnosingCustomisableMatcher<T>` from any object without requiring an `as Any` cast. Intended for cross-type structural comparisons where the actual and expected have different class types; pair with `.skipClassComparison()`: `sameBeanAsType<Any>(expected).skipClassComparison()` instead of `sameBeanAs(expected as Any).skipClassComparison()`.
+- **[breaking]** Gson now serialises null fields by default. Before, the JSON serialisation left out fields with a null value, and nothing told you. Thus `.ignoring("field")` failed without a warning when the field value was null in a collection element. The serialisation removed the field before the ignore logic ran, so the ignore logic never removed the ignored element from the collection. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files that now include null fields. To get the old behaviour for all tests, set `-DapprovalcrestSerializeNulls=false`. To get it for one matcher, call `.withoutSerializingNulls()` on the matcher. See [ignoring-fields](docs/ignoring-fields.md).
+- Added short alias names for all boolean system properties. You can now also set each property with a short alias, for example `-DfMUInPlace=true` instead of `-DfileMatcherUpdateInPlace=true`. You can set the full property name and an alias to the same value. If you set them to different values, approvalcrest throws `IllegalStateException` at startup. See [system-properties](docs/system-properties.md) for the full alias table.
+- Extended the machine-readable output mode (`-DfileMatcherMachineReadable=true` / `withMachineReadableOutput()`). Failure messages now include structured headers: `FAILURE_TYPE: MISMATCH|NEW_FILE|TYPE_MISMATCH`, `TEST: ClassName#methodName`, `APPROVED_FILE:` or `APPROVE_TO:` (absolute path), and `ACTION:` with the exact property to set. In the mode that is not machine-readable, each failure message ends with the passive AI discovery tip. Thus AI agents can find the mode also in the default output. See [file-control](docs/file-control.md).
+- Fixed the Kotlin extension functions of `DiagnosingCustomisableMatcher`. The Kotlin extension functions file did not have `withMachineReadableOutput()`, `withoutSerializingNulls()` and `sortType()` (added in 1.0.1). Thus you could not use them freely in Kotlin chains. Added the same extensions for `JsonMatcher`, and `withMachineReadableOutput()` for `ContentMatcher`.
+- Added the Kotlin-only factory `Matchers.sameBeanAsType<T>(expected: Any)`. It creates a `DiagnosingCustomisableMatcher<T>` from any object, without an `as Any` cast. Use it for structural comparisons where the actual and expected objects have different classes. Use it together with `.skipClassComparison()`: `sameBeanAsType<Any>(expected).skipClassComparison()` instead of `sameBeanAs(expected as Any).skipClassComparison()`.
 
 Version 1.0.1 - 2026/05/28
 -----
 
-- Added `approvalcrest-junit-jupiter-kotlin` module: Kotlin-friendly wrappers and matchers for JUnit Jupiter. Updated Kotlin to 2.1.21 and Dokka to 1.9.20. See [kotlin](docs/kotlin.md).
-- Added Kotlin extension functions for `DiagnosingCustomisableMatcher`, `JsonMatcher`, and `ContentMatcher` in the `approvalcrest-junit-jupiter-kotlin` module. These work around Kotlin's type-inference limitation with F-bounded (recursive) generics ([KT-5464](https://youtrack.jetbrains.com/issue/KT-5464)): chained calls such as `sameBeanAs(expected).with("field", myMatcher)`, `sameJsonAsApproved<T>().ignoring("field").withUniqueId("id")`, and `sameContentAsApproved<T>().withUniqueId("id")` all now compile cleanly in Kotlin.
-- Added `sortType(Class<?>...)` fluent method on `sameBeanAs` and `sameJsonAsApproved`. Collections and arrays whose element type matches one of the specified classes are sorted automatically during comparison and file creation — no `sortField` path needed. Works the same way as automatic Set sorting already did for unordered collections. See [sorting](docs/sorting.md).
-- Added `withMachineReadableOutput()` fluent API and `-DfileMatcherMachineReadable=true` system property. When active, assertion failure messages are replaced with structured, machine-actionable text intended for AI agents and CI pipelines. File matchers emit the absolute path to the approved file plus a full `=== ACTUAL (full) === / === END ACTUAL ===` block. Bean matchers emit both expected and actual inline in `=== EXPECTED (full) === / === ACTUAL (full) ===` blocks. IDE diff view is preserved — `getExpected()`/`getActual()` on the thrown exception remain populated. See [file-control](docs/file-control.md).
-- Fixed JUnit 4 `ComparisonFailure.getMessage()` being polluted by `ComparisonCompactor` when `withMachineReadableOutput()` is active. The structured text is now preserved, and `getExpected()`/`getActual()` — and therefore IDE diff view — still work.
+- Added the `approvalcrest-junit-jupiter-kotlin` module: wrappers and matchers for JUnit Jupiter, for use from Kotlin. Updated Kotlin to 2.1.21 and Dokka to 1.9.20. See [kotlin](docs/kotlin.md).
+- Added Kotlin extension functions for `DiagnosingCustomisableMatcher`, `JsonMatcher` and `ContentMatcher` in the `approvalcrest-junit-jupiter-kotlin` module. They avoid a limitation of the Kotlin type inference with F-bounded (recursive) generics ([KT-5464](https://youtrack.jetbrains.com/issue/KT-5464)). Chained calls such as `sameBeanAs(expected).with("field", myMatcher)`, `sameJsonAsApproved<T>().ignoring("field").withUniqueId("id")` and `sameContentAsApproved<T>().withUniqueId("id")` now compile in Kotlin without errors.
+- Added the fluent method `sortType(Class<?>...)` to `sameBeanAs` and `sameJsonAsApproved`. Approvalcrest sorts collections and arrays whose element type matches one of the specified classes automatically, during the comparison and when it creates the file. You do not need a `sortField` path. It works in the same way as the automatic sort of sets, which already applied to unordered collections. See [sorting](docs/sorting.md).
+- Added the `withMachineReadableOutput()` fluent API and the `-DfileMatcherMachineReadable=true` system property. When one of them is on, approvalcrest replaces assertion failure messages with structured text that AI agents and CI pipelines can act on. File matchers write the absolute path to the approved file and a full `=== ACTUAL (full) === / === END ACTUAL ===` block. Bean matchers write the expected and actual content inline, in `=== EXPECTED (full) === / === ACTUAL (full) ===` blocks. The IDE diff view still works, because `getExpected()`/`getActual()` on the thrown exception still return values. See [file-control](docs/file-control.md).
+- Fixed JUnit 4 `ComparisonFailure.getMessage()`, which `ComparisonCompactor` changed when `withMachineReadableOutput()` was on. The structured text now stays as it is. `getExpected()`/`getActual()`, and thus the IDE diff view, still work.
 - `approvalcrest-junit-jupiter` is compatible with JUnit Platform 6 (verified against 6.0.3) on Java 17, 21 and 25. See [junit5-jupiter](docs/junit5-jupiter.md).
-- **[breaking]** Added strict matching mode (`fileMatcherStrictFileMatching` system property, on by default): `ignoring()` strips fields from the actual side only, so approved files that contain the value of an ignored field will now fail. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files without the ignored fields. To restore the old two-sided behaviour globally set `-DfileMatcherStrictFileMatching=false`. In tests the config object uses the last boolean: `new FileMatcherConfig(false, false, false, false, false, /*strict=*/false)`. See [ignoring-fields](docs/ignoring-fields.md).
-- **[breaking]** Added type comparison to `sameBeanAs`: fails with a clear message when actual and expected have incompatible runtime types. **Migration:** add `.skipClassComparison()` to the matcher: `assertThat(actual, sameBeanAs(expected).skipClassComparison())`, or set `-DbeanMatcherSkipClassComparison=true` to suppress globally. See [same-bean-as](docs/same-bean-as.md).
-- Added `withAliasMap(AliasMap)` / `withAlias(value, alias)` / `withAlias(field, value, alias)`: replaces volatile values (UUIDs, timestamps) with stable aliases before comparison and file creation. Aliases are applied after ignores and before sorting. See [aliasing](docs/aliasing.md).
-- Added `withMatcher(Matcher<String>, Matcher<V>)`: pattern-based custom matcher that applies to all fields at any depth whose name matches the supplied `Matcher<String>`. Supported by both `sameBeanAs` and `sameJsonAsApproved`. See [custom-matching](docs/custom-matching.md).
-- Custom matchers now fall back to the JSON-serialised form when the Java-bean reflection path is unavailable (e.g. JSON string input to `sameJsonAsApproved`).
-- Fixed sorting of root-level `List` / array inputs via `sortField("")`.
-- Fixed sort order to be bottom-up: nested arrays sorted before their parent's key is computed.
-- **[breaking]** Fixed sorting of arrays-of-arrays: only the outer array is reordered; inner array element order is preserved. Previously `sortField("groups")` on a `groups: [[Z,B],[A,C]]` also sorted the inner arrays into `[[A,C],[B,Z]]`; now the inner arrays stay as-is and only the outer order changes. **Migration:** if inner array order matters, switch the inner collection type to `Set` (auto-sorted by type) or add an explicit `sortField("innerFieldName")` for the inner field. See [sorting](docs/sorting.md). **[Correction, 1.5.1]** this entry is wrong, and no release has behaved as it describes. Inner arrays are sorted together with the outer one whenever the outer array's sort is configured. The migration advice above was therefore unnecessary, though harmless — switching to a `Set` or adding an inner `sortField` both still sort.
-- Fixed three bugs in sort-key filtering: complex fields not stripped, multi-level paths (e.g. `addr.city`) broken, `SortField<Matcher<String>>.ignoring()` had no effect.
-- Fixed `withMatcher` pattern ignores being applied after sorting in `sameBeanAs` instead of before.
+- **[breaking]** Added strict mode (`fileMatcherStrictFileMatching` system property, on by default). In strict mode, `ignoring()` removes fields only from the actual side. Thus approved files that contain the value of an ignored field now fail. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files without the ignored fields. To get the old two-sided behaviour for all tests, set `-DfileMatcherStrictFileMatching=false`. In tests, the config object uses the last boolean: `new FileMatcherConfig(false, false, false, false, false, /*strict=*/false)`. See [ignoring-fields](docs/ignoring-fields.md).
+- **[breaking]** Added a type comparison to `sameBeanAs`. It fails with a message when the actual and expected objects have incompatible runtime types. **Migration:** add `.skipClassComparison()` to the matcher: `assertThat(actual, sameBeanAs(expected).skipClassComparison())`. Alternatively, set `-DbeanMatcherSkipClassComparison=true` to turn off the check for all tests. See [same-bean-as](docs/same-bean-as.md).
+- Added `withAliasMap(AliasMap)` / `withAlias(value, alias)` / `withAlias(field, value, alias)`. They replace values that change from run to run (UUIDs, timestamps) with stable aliases, before the comparison and before approvalcrest creates the file. Approvalcrest applies aliases after the ignore rules and before the sort. See [aliasing](docs/aliasing.md).
+- Added `withMatcher(Matcher<String>, Matcher<V>)`: a pattern-based custom matcher. It applies to all fields, at any depth, whose name matches the supplied `Matcher<String>`. `sameBeanAs` and `sameJsonAsApproved` both support it. See [custom-matching](docs/custom-matching.md).
+- When the Java-bean reflection path is not available, custom matchers now use the JSON-serialised form. An example is a JSON string input to `sameJsonAsApproved`.
+- Fixed the sort of root-level `List` / array inputs with `sortField("")`.
+- Fixed the sort order to be bottom-up: approvalcrest sorts nested arrays before it calculates the key of their parent.
+- **[breaking]** Fixed the sort of arrays of arrays: approvalcrest reorders only the outer array, and keeps the element order of the inner arrays. Before, `sortField("groups")` on a `groups: [[Z,B],[A,C]]` also sorted the inner arrays into `[[A,C],[B,Z]]`. Now the inner arrays stay as they are, and only the outer order changes. **Migration:** if the element order of the inner arrays is important, change the inner collection type to `Set`. Approvalcrest sorts a `Set` automatically. Alternatively, add an explicit `sortField("innerFieldName")` for the inner field. See [sorting](docs/sorting.md). **[Correction, 1.5.1]** this entry is wrong, and no release behaved as it describes. When you configure the sort of the outer array, approvalcrest sorts the inner arrays together with the outer array. Thus the migration advice above was not necessary, but it did no harm. A `Set` and an inner `sortField` both still sort.
+- Fixed three defects in the filter of the sort key. The filter did not remove complex fields from the sort key. Multi-level paths (for example `addr.city`) did not work. `SortField<Matcher<String>>.ignoring()` had no effect.
+- Fixed `withMatcher` pattern ignores in `sameBeanAs`, which approvalcrest applied after the sort, not before.
 - Fixed an error when an ignore path fanned out through an array of primitives.
-- Fixed ignoring all fields of a bean `Map` key: the whole entry is now removed cleanly.
-- Fixed ignoring a field inside a `Map` value leaving an orphaned empty array.
-- **[breaking]** `withPathName(relativeStr)` approved file location changed: was `{relativeStr}/{file}` (working-directory relative), now `{testClassPath}/{relativeStr}/{file}`. Example: `.withPathName("mydir")` previously wrote to `mydir/cd3006-approved.json`; now writes to `{testClassPath}/mydir/cd3006-approved.json`. **Migration:** move existing approved files into the `{testClassPath}` subtree. Absolute paths (e.g. `/abs/path`) are unaffected. See [file-control](docs/file-control.md).
-- **[breaking]** `withRelativePathName(relStr)` approved file location changed: was `{testClassPath}/{relStr}/{file}`, now `{workingDir}/{relStr}/{classHash}/{file}` (base changed to working directory, class name hash inserted). Example: `.withRelativePathName("snapshots")` previously wrote to `{testClassPath}/snapshots/cd3006-approved.json`; now writes to `{workingDir}/snapshots/87668f/cd3006-approved.json`. **Migration:** move existing approved files to the new location. See [file-control](docs/file-control.md).
-- **[breaking]** `withUniqueId(id)` when `id` starts with `-`: previously generated a double separator (`hash--myid-approved.json`), now produces `hash-myid-approved.json`. Example: `.withUniqueId("-scenario1")` previously wrote `cd3006--scenario1-approved.json`; now writes `cd3006-scenario1-approved.json`. **Migration:** rename affected approved files to remove the extra `-`. See [file-control](docs/file-control.md).
-- Improved `--add-opens` missing error: reports the exact flag and shows ready-to-paste Maven/Gradle snippets.
+- Fixed the ignore of all fields of a bean `Map` key: approvalcrest now removes the full entry.
+- Fixed an ignored field in a `Map` value, which left an orphaned empty array.
+- **[breaking]** Changed the approved file location of `withPathName(relativeStr)`. It was `{relativeStr}/{file}` (relative to the working directory), and is now `{testClassPath}/{relativeStr}/{file}`. Example: `.withPathName("mydir")` wrote to `mydir/cd3006-approved.json`, and now writes to `{testClassPath}/mydir/cd3006-approved.json`. **Migration:** move the approved files into the `{testClassPath}` subtree. Absolute paths (for example `/abs/path`) do not change. See [file-control](docs/file-control.md).
+- **[breaking]** Changed the approved file location of `withRelativePathName(relStr)`. It was `{testClassPath}/{relStr}/{file}`, and is now `{workingDir}/{relStr}/{classHash}/{file}`. The base is now the working directory, and approvalcrest adds the hash of the class name. Example: `.withRelativePathName("snapshots")` wrote to `{testClassPath}/snapshots/cd3006-approved.json`, and now writes to `{workingDir}/snapshots/87668f/cd3006-approved.json`. **Migration:** move the approved files to the new location. See [file-control](docs/file-control.md).
+- **[breaking]** `withUniqueId(id)` when `id` starts with `-`: before, it gave a double separator (`hash--myid-approved.json`). Now it gives `hash-myid-approved.json`. Example: `.withUniqueId("-scenario1")` wrote `cd3006--scenario1-approved.json`, and now writes `cd3006-scenario1-approved.json`. **Migration:** rename the affected approved files to remove the extra `-`. See [file-control](docs/file-control.md).
+- Changed the error for an absent `--add-opens` flag. It now gives the exact flag, and shows Maven/Gradle snippets that you can paste.
 - Added `toString()` to `Junit4TestMetaBase` and `Junit5TestMetaBase` (`TestMeta[cn=…,mn=…,cp=…,ad=…,wd=…]`).
 
 Version 1.0.0 - 2026/05/28
 -----
 
-Broken release — artefacts published to Maven Central were incomplete. Do not use. All features are available in 1.0.1.
+Broken release: the artifacts on Maven Central were incomplete. Do not use it. All features are available in 1.0.1.
 
 Version 0.62.3 - 2024/05/27
 -----
 
-- Fix to work with JDK 17 & 21
+- Fixed approvalcrest to work with JDK 17 & 21
 - Updated dependencies to Guava 33.2.0-jre, Gson 2.11.0, Commons-lang3 3.14.0
-- Testing with newer JUnit5 5.10.2
+- The approvalcrest tests now run with the newer JUnit5 5.10.2
 
 Version 0.61.6 - 2023/08/28
 -----
 
 - Added support for directory name override
 - Updated dependencies to Guava 32.1.1
-- Testing with newer JUnit5 5.4.0
+- The approvalcrest tests now run with the newer JUnit5 5.4.0
 
 Version 0.61.2 - 2022/11/17
 -----
@@ -181,48 +181,40 @@ Version 0.61.2 - 2022/11/17
 Version 0.61.1 - 2022/07/07
 -----
 
-- Update Gson to 2.9.0
+- Updated Gson to 2.9.0
 
 Version 0.60.3 - 2021/04/20
 -----
 
-- Fixed handling of empty approved json file
+- Fixed a defect with an empty approved JSON file
 
 Version 0.60.2 - 2021/04/19
 -----
 
-- Fixed bug with exception serialization
-- Fixed handling of empty approved json file
+- Fixed a defect in the serialisation of exceptions
+- Fixed a defect with an empty approved JSON file
 
 Version 0.60.0 - 2021/04/18
 -----
 
-- Upgrade JUnit to latest versions and make them provided dependencies, so it is easier to use with different versions
-- JUnit 5 modules require JUnit 5.7.0+ now
-- **Non-backward compatible change!** Added automatic sorting of field names, so the approved files and diff view will display fields in natural order.
-Without this there were changes on pull requests without any reason. Only the serialization order have changed.
-Doesn't affect constructs where order matters (example: Lists). This sorting is enabled by default and will fail assertions when approved file isn't sorted. 
-  Anyone wants to revert to **old behaviour**, use **"-DsortInputFile=true"**
-  This was done in order to avoid above mentioned noise on pull requests, and extending the migration and adding this noise to many pull request.
-  
-- Added support for sorting parts of json files, so collections which aren't sorted by default, and could have caused flaky tests due to non-deterministic ordering, can now be sorted to stabilize tests. When in use the approved file also have to be sorted, but can be switched with **"-DsortInputFile=true"**
-- Fixed many bugs related to not working ignores, jsonMatcher not working for String containing json correctly, same matcher for different inputs working differently, assert failures sometimes missing description and actual / expected content.
-- **Non-backward compatible change!** Ignored values should no longer be visible in approved files. It is backward compatible for some of the ignores, but not all, so approved files have to updated.
-- Unified how assertions for JUnit 4 and 5 work, so there shouldn't be any difference between the two.
-  This means JUnit 5 assertion errors won't contain the whole actual / expected content in the descriptions, those are already in the exception supported by major IDEs.
-  Description will contain the difference only.
-- Added additional convenience method for some ignores
-- **Non-backward compatible change!** Up until now, asserting exceptions ignored the exception type, it is now added to the serialized format and asserted. 
-Stacktrace in exceptions are automatically ignored from now on, as that caused frequent test failures without ignores, forcing everyone to add ignore in many places.
+- Upgraded JUnit to the latest versions and made them provided dependencies. Thus your project supplies the JUnit version, and approvalcrest is easier to use with different JUnit versions.
+- The JUnit 5 modules now require JUnit 5.7.0+
+- **Non-backward compatible change!** Added an automatic sort of field names, so the approved files and the diff view show the fields in natural order. Without this sort, pull requests had changes with no reason. Only the serialisation order changed. Constructs where the order is important (for example Lists) do not change. This sort is on by default, and assertions fail when the approved file is not sorted. To get the **old behaviour**, use **"-DsortInputFile=true"**. The aim of this change was to stop these changes in pull requests. A longer migration would add such changes to many pull requests.
+- Added support to sort parts of JSON files. Approvalcrest does not sort some collections by default, and their order is not deterministic. These can cause flaky tests. You can now sort them to make the tests stable. When you use this, approvalcrest also requires a sorted approved file. You can change this with **"-DsortInputFile=true"**.
+- Fixed many defects. Some ignores did not work. `JsonMatcher` did not work correctly for a String that contains JSON. The same matcher worked differently for different inputs. Assert failures sometimes had no description and no actual / expected content.
+- **Non-backward compatible change!** Ignored values should no longer be visible in approved files. This is backward compatible for some ignores, but not for all. Update the approved files.
+- Made assertions for JUnit 4 and 5 work in the same way, so there should be no difference between the two. Thus JUnit 5 assertion errors do not contain the full actual / expected content in the descriptions. That content is already in the exception, which the major IDEs support. The description contains only the difference.
+- Added one more convenience method for some ignores
+- **Non-backward compatible change!** Until now, an assertion on an exception ignored the exception type. The type is now in the serialised format, and approvalcrest asserts it. Approvalcrest now ignores the stack trace of exceptions automatically. Without an ignore, the stack trace caused frequent test failures, and everyone had to add an ignore in many places.
 - Extended support for floating point numbers.
-- Fixed a bug where files and directories could have wrong permissions in some cases
+- Fixed a defect where files and directories could have wrong permissions in some cases
 - Preliminary Kotlin support.
 
 Version 0.56.3 - 2020/09/13
 -----
 
- - Fixed permissions on created directories and files as it had a bug which caused permission problems in some cases
- - Fixed bugs around pass on create flag 
+ - Fixed the permissions of created directories and files. A defect caused permission problems in some cases.
+ - Fixed defects in the pass-on-create flag
  
 Version 0.56.2 - 2020/05/30
 -----
@@ -232,13 +224,13 @@ Version 0.56.2 - 2020/05/30
 Version 0.56.1 - 2020/05/24
 -----
 
- - Fixed OffsetTime serialization issue
+ - Fixed a serialisation problem with OffsetTime
  - Upgraded Guava and Gson versions
 
 Version 0.56 - 2020/05/18
 -----
 
- - New package for JUnit5 Jupiter matcher, so gradual migration of existing JUnit 4 projects are possible
+ - Added a new package for the JUnit5 Jupiter matcher. Thus you can migrate JUnit 4 projects gradually.
 
 Version 0.55.4 - 2020/05/18
 -----
@@ -248,82 +240,81 @@ Version 0.55.4 - 2020/05/18
 Version 0.55.3 - 2020/05/12
 -----
 
- - pom file was still missing from release
+ - The pom file was still not in the release
 
 Version 0.55.2 - 2020/05/09
 -----
 
- - fileMatcherUpdateInPlace alias for jsonMatcherUpdateInPlace
- - fixed partial previous release
+ - Added fileMatcherUpdateInPlace as an alias for jsonMatcherUpdateInPlace
+ - Fixed the partial previous release
 
 Version 0.55 - 2020/05/03
 -----
 
- - Fixed dependencies in released pom file
+ - Fixed the dependencies in the released pom file
  - Added support for custom TestMetaInformation
- - Parameterized Junit 5 support
- - Added nio.Path serialization support
+ - Added support for parameterized Junit 5 tests
+ - Added serialisation support for nio.Path
 
 Version 0.54 - 2020/04/28
 -----
 
- - Dropped Java 6 support, requires Java 8 now
- - Dependency upgrades
- - Junit 5 support
- - Being a popular request, added new Gson serializers for util.Date, java.time.*, java.lang.Class
- - Preliminary assertThrows implementation (serialization format will change shortly)
- - NPE fix
+ - Removed Java 6 support. Approvalcrest now requires Java 8
+ - Upgraded dependencies
+ - Added Junit 5 support
+ - Added new Gson serialisers for util.Date, java.time.* and java.lang.Class, because many users asked for them
+ - Added a preliminary assertThrows implementation (the serialisation format will change soon)
+ - Fixed an NPE
 
 Version 0.21 - 2019/02/21
 -----
 
- - Added support to skip circle detection for a field
- - Upgraded GSON to the latest version
+ - Added support to skip circular-reference detection for a field
+ - Upgraded Gson to the latest version
 
 Version 0.19 - 2018/09/06
 -----
 
- - Fixed cycle check to skip ignored fields
- - Enabled custom fields matchers in JsonMatcher
- - Added convenience method for setting field ignores
+ - Fixed the circular-reference detection to skip ignored fields
+ - Enabled custom matchers in JsonMatcher
+ - Added a convenience method to set field ignores
 
 Version 0.18 - 2018/08/09
 -----
 
- - Fixed NPE with sameJsonAs while using it with data driven tests.
+ - Fixed an NPE in sameJsonAs with data-driven tests.
 
 Version 0.17 - 2018/01/29
 -----
 
- - Added flag for in place update of existing approved files.
-   This helps to change existing files in a test library for every test affected by a change simply adding a command line property. (jsonMatcherUpdateInPlace=true)
- - Fixed custom matching for inherited fields
+ - Added a flag for the in-place update of approved files. With one command-line property (jsonMatcherUpdateInPlace=true), you can regenerate the approved files of all tests that a change affects.
+ - Fixed custom matchers for inherited fields
 
 Version 0.16 - 2017/08/20
 -----
 
  - Fixed an NPE in path ignore
- - Minor error message wording changes
+ - Changed the words of some error messages
 
 Version 0.15 - 2017/04/22
 -----
 
- - First release of ApprovalCrest
+ - First release of Approvalcrest
  - Added new matchers sameJsonAsApproved and sameContentAsApproved
  - Updated dependencies
- - Added possibility to configure custom type adapters
+ - Added the option to configure custom type adapters
 
 Version 0.11 - 2015/03/04
 -----
 
-It's now possible to ignore all the fields which name matches a given Hamcrest matcher.
-Fixed diagnostic in case actual value is null.
+You can now ignore all the fields whose name matches a given Hamcrest matcher.
+Fixed the diagnostic when the actual value is null.
 
 Version 0.10 - 2015/02/16
 -----
 
-Automatic detection of circular references.
-Fixed comparison of Guava Optional.
+Added automatic detection of circular references.
+Fixed the comparison of Guava Optional.
 
 Version 0.9 - 2014/09/17
 -----
@@ -333,33 +324,33 @@ Fixed random comparison failures for sets and maps.
 Version 0.8 - 2014/07/16
 -----
 
-Handled circular references.
+Approvalcrest now handles circular references.
 
 Version 0.7 - 2013/10/20
 -----
 
-Fixed NullPointerException thrown when custom matching is applied to a null object.
+Fixed a NullPointerException when you apply a custom matcher to a null object.
 
 Version 0.6 - 2013/10/16
 -----
 
-The matcher is now using IsEqual Hamcrest matcher when Enums are compared.
+Approvalcrest now uses the IsEqual Hamcrest matcher to compare Enums.
 
 Version 0.5 - 2013/10/14
 -----
 
-Description given to assertThat is now preserved in ComparisonFailure.
+The ComparisonFailure now keeps the description that you give to assertThat.
 
 Version 0.4 - 2013/10/10
 -----
 
-Added option to match specific fields with custom matchers.
-The matcher is now using IsEqual Hamcrest matcher when Strings or primitives are compared.
+Added the option to match specific fields with custom matchers.
+Approvalcrest now uses the IsEqual Hamcrest matcher to compare Strings and primitives.
 
 Version 0.3 - 2013/08/16
 -----
 
-Added option to ignore specific fields or Java types from the comparison.
+Added the option to ignore specific fields or Java types in the comparison.
 
 Version 0.2 - 2013/05/15
 -----
