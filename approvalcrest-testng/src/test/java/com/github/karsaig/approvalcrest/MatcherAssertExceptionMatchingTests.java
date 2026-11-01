@@ -42,8 +42,7 @@ public class MatcherAssertExceptionMatchingTests {
         TestMetaInformation testMeta = new TestNgTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest"),
                 "com.github.karsaig.approvalcrest.MatcherAssertExceptionMatchingTests",
-                "assertThrowsWithSameJsonAsShouldPassWhenExpectationIsMet",
-                Paths.get("src/test/resources/approvalcrest"));
+                "assertThrowsWithSameJsonAsShouldPassWhenExpectationIsMet");
         MatcherAssert.assertThrows(sameJsonAsApproved(testMeta), () -> {
             throw new IllegalStateException("Test excpetion message...");
         });
@@ -54,8 +53,7 @@ public class MatcherAssertExceptionMatchingTests {
         TestMetaInformation testMeta = new TestNgTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest"),
                 "com.github.karsaig.approvalcrest.MatcherAssertExceptionMatchingTests",
-                "assertThrowsWithSameJsonAsShouldFailWhenNoExceptionThrown",
-                Paths.get("src/test/resources/approvalcrest"));
+                "assertThrowsWithSameJsonAsShouldFailWhenNoExceptionThrown");
         MatcherAssert.assertThrows(sameJsonAsApproved(testMeta), () -> {
         });
     }

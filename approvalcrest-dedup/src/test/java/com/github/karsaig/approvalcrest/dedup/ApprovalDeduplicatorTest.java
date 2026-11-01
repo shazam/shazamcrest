@@ -55,7 +55,7 @@ public class ApprovalDeduplicatorTest {
 
     private String computeKey(String content) {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
         return utils.computeContentKey(content);
     }
 
@@ -195,7 +195,7 @@ public class ApprovalDeduplicatorTest {
             String content = "{\"existing\":true}";
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
             utils.writeCanonical(content, "shared", workDir, SHARED_DIR, BUCKET_DEPTH);
 
             Path newFile = writeApprovedFile(workDir, "src/test/java/a/new-approved.json", "a.new", content);
@@ -233,7 +233,7 @@ public class ApprovalDeduplicatorTest {
             String content = "{\"orphan\":true}";
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
             utils.writeCanonical(content, "shared", workDir, SHARED_DIR, BUCKET_DEPTH);
             Path canonical = expectedCanonicalPath(workDir, content);
             assertTrue(Files.exists(canonical), "Canonical must exist before GC");
@@ -267,7 +267,7 @@ public class ApprovalDeduplicatorTest {
             String content = "{\"pointed\":true}";
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
             String canonicalRelative = utils.writeCanonical(content, "shared", workDir, SHARED_DIR, BUCKET_DEPTH);
 
             // Raw Files.write gives the pointer DEFAULT permissions
@@ -357,7 +357,7 @@ public class ApprovalDeduplicatorTest {
             assertEquals(1, result.getCanonicalsCreated());
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("content",
-                    new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
             String key = utils.computeContentKey(content);
             String bucket = key.substring(0, BUCKET_DEPTH);
             Path canonical = workDir.resolve(SHARED_DIR).resolve(bucket).resolve(key + "-approved.content");
@@ -404,7 +404,7 @@ public class ApprovalDeduplicatorTest {
 
             // Both json and content use the same hash key (same text); they land in the same bucket dir.
             FileStoreMatcherUtils jsonUtils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
             String key = jsonUtils.computeContentKey(sameText);
             String bucket = key.substring(0, BUCKET_DEPTH);
 
@@ -438,7 +438,7 @@ public class ApprovalDeduplicatorTest {
             String content = "{\"seam\":\"verified\"}";
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, BUCKET_DEPTH));
 
             // Write two approved files using the library's own writer — same bytes the library produces at test time
             Path approvedFile1 = workDir.resolve("src/test/java/a/seam1-approved.json");

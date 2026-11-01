@@ -17,14 +17,12 @@ public class MetaInfoTest {
         TestNgTestMeta underTest = new TestNgTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest/testng"),
                 "com.github.karsaig.approvalcrest.testng.MetaInfoTest",
-                "testTestNgMetaWithSameBeanAsMatcher",
-                Paths.get("src/test/resources/approvalcrest"));
+                "testTestNgMetaWithSameBeanAsMatcher");
 
         TestNgTestMeta expected = new TestNgTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest/testng"),
                 "com.github.karsaig.approvalcrest.testng.MetaInfoTest",
-                "testTestNgMetaWithSameBeanAsMatcher",
-                Paths.get("src/test/resources/approvalcrest"));
+                "testTestNgMetaWithSameBeanAsMatcher");
 
         assertThat(underTest, sameBeanAs(expected));
     }
@@ -37,8 +35,7 @@ public class MetaInfoTest {
         TestNgMethodBasedTestMeta expected = new TestNgMethodBasedTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest/testng"),
                 TestNgAnnotatedTestHelper.class.getName(),
-                "annotatedTestMethod",
-                Paths.get("src/test/resources/approvalcrest"));
+                "annotatedTestMethod");
 
         DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(expected);
         matcher.skipClassComparison();
@@ -52,8 +49,7 @@ public class MetaInfoTest {
         TestNgTestMeta expected = new TestNgTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest/testng"),
                 "com.github.karsaig.approvalcrest.testng.MetaInfoTest",
-                "testStackTraceBasedMetaAutoDetectsCurrentTest",
-                Paths.get("src/test/resources/approvalcrest"));
+                "testStackTraceBasedMetaAutoDetectsCurrentTest");
 
         assertThat(underTest, sameBeanAs(expected));
     }
@@ -73,13 +69,11 @@ public class MetaInfoTest {
         TestNgTestMeta underTest = new TestNgTestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest/testng"),
                 "com.github.karsaig.approvalcrest.testng.MetaInfoTest",
-                "toStringContainsAllFields",
-                Paths.get("src/test/resources/approvalcrest"));
+                "toStringContainsAllFields");
         String result = underTest.toString();
         assertTrue(result.contains("cn=com.github.karsaig.approvalcrest.testng.MetaInfoTest"));
         assertTrue(result.contains("mn=toStringContainsAllFields"));
         assertTrue(result.contains("cp="));
-        assertTrue(result.contains("ad="));
         assertTrue(result.contains("wd="));
     }
 }

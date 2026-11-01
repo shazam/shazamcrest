@@ -202,22 +202,20 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         private final Path path;
         private final String testClassName;
         private final String testMethodName;
-        private final Path approvedDirectory;
         private final Path workingDirectory;
 
         public DummyInformation(InMemoryFsInfo imfsi) {
-            this(imfsi.getTestPath(), imfsi.getResourcePath(),imfsi.getWorkingDirectory());
+            this(imfsi.getTestPath(), imfsi.getWorkingDirectory());
         }
 
-        public DummyInformation(Path path, Path approvedDirectory, Path workingDirectory) {
-            this(path, "dummyTestClassName", "dummyTestMethodName", approvedDirectory,workingDirectory);
+        public DummyInformation(Path path, Path workingDirectory) {
+            this(path, "dummyTestClassName", "dummyTestMethodName", workingDirectory);
         }
 
-        public DummyInformation(Path path, String testClassName, String testMethodName, Path approvedDirectory,Path workingDirectory) {
+        public DummyInformation(Path path, String testClassName, String testMethodName, Path workingDirectory) {
             this.path = path;
             this.testClassName = testClassName;
             this.testMethodName = testMethodName;
-            this.approvedDirectory = approvedDirectory;
             this.workingDirectory = workingDirectory;
         }
 
@@ -238,11 +236,6 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         }
 
         @Override
-        public Path getApprovedDirectory() {
-            return approvedDirectory;
-        }
-
-        @Override
         public Path workingDirectory() {
             return workingDirectory;
         }
@@ -256,7 +249,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected DummyInformation dummyInformation(InMemoryFsInfo imfsi, String testClassName, String testMethodName) {
-        return new DummyInformation(imfsi.getTestPath(), testClassName, testMethodName, imfsi.getResourcePath(),imfsi.getWorkingDirectory());
+        return new DummyInformation(imfsi.getTestPath(), testClassName, testMethodName, imfsi.getWorkingDirectory());
     }
 
     protected List<InMemoryFiles> getFiles(InMemoryFsInfo imfsi) {
@@ -311,15 +304,15 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfig() {
-        return new FileMatcherConfig(false, false, false, false, true);
+        return new FileMatcherConfig(false, false, false, true);
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfigWithLenientMatching() {
-        return new FileMatcherConfig(false, false, false, false, false);
+        return new FileMatcherConfig(false, false, false, false);
     }
 
     public static FileMatcherConfig enableInPlaceOverwrite() {
-        return new FileMatcherConfig(true, false, false, false, true);
+        return new FileMatcherConfig(true, false, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteSkippingCustomMatchers() {
@@ -332,27 +325,27 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteNonStrict() {
-        return new FileMatcherConfig(true, false, false, false, false);
+        return new FileMatcherConfig(true, false, false, false);
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
-        return new FileMatcherConfig(false, true, false, false, true);
+        return new FileMatcherConfig(false, true, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
-        return new FileMatcherConfig(true, true, false, false, true);
+        return new FileMatcherConfig(true, true, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteNonStrictAndPassOnCreate() {
-        return new FileMatcherConfig(true, true, false, false, false);
+        return new FileMatcherConfig(true, true, false, false);
     }
 
     public static FileMatcherConfig enableExpectedFileSorting() {
-        return new FileMatcherConfig(false, false, false, true, true);
+        return new FileMatcherConfig(false, false, true, true);
     }
 
     public static FileMatcherConfig enableExpectedFileSortingWithLenientMatching() {
-        return new FileMatcherConfig(false, false, false, true, false);
+        return new FileMatcherConfig(false, false, true, false);
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {

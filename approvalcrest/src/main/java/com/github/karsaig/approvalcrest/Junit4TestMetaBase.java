@@ -10,11 +10,11 @@ abstract class Junit4TestMetaBase extends AbstractTestMetaBase {
         super(testClassName, testMethodName);
     }
 
-    public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory);
+    public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName) {
+        super(testClassPath, testClassName, testMethodName);
     }
 
-    public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory, Path workingDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory, workingDirectory);
+    public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path workingDirectory) {
+        super(workingDirectory, testClassPath, testClassName, testMethodName);
     }
 }

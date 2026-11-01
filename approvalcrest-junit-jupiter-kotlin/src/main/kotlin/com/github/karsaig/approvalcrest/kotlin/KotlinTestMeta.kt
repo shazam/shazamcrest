@@ -8,8 +8,8 @@ class KotlinTestMeta : JunitJupiterTestMeta {
 
     constructor() : super(SRC_TEST_KOTLIN_PATH)
 
-    internal constructor(testClassPath: Path, testClassName: String, testMethodName: String, approvedDirectory: Path) :
-            super(testClassPath, testClassName, testMethodName, approvedDirectory)
+    internal constructor(testClassPath: Path, testClassName: String, testMethodName: String) :
+            super(testClassPath, testClassName, testMethodName)
 
     companion object {
         internal val SRC_TEST_KOTLIN_PATH = "src${File.separator}test${File.separator}kotlin${File.separator}"

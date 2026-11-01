@@ -23,8 +23,6 @@ public class FileMatcherConfigPropertyAliasTest {
         System.clearProperty("fMUInPlace");
         System.clearProperty("fileMatcherPassOnCreate");
         System.clearProperty("fMPOnCreate");
-        System.clearProperty("useApprovedDirectory");
-        System.clearProperty("uADirectory");
         System.clearProperty("sortInputFile");
         System.clearProperty("sIFile");
         System.clearProperty("fileMatcherSkipCustomMatchersOnUpdate");
@@ -54,12 +52,6 @@ public class FileMatcherConfigPropertyAliasTest {
     public void fMPOnCreateAliasEnablesPassOnCreate() {
         System.setProperty("fMPOnCreate", "true");
         assertTrue(new FileMatcherConfig().isPassOnCreateEnabled());
-    }
-
-    @Test
-    public void uADirectoryAliasEnablesApprovedDirectory() {
-        System.setProperty("uADirectory", "true");
-        assertTrue(new FileMatcherConfig().isApprovedDirectory());
     }
 
     @Test

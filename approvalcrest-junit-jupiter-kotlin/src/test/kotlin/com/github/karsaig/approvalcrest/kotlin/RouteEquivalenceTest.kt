@@ -25,7 +25,6 @@ class RouteEquivalenceTest {
         assertEquals(stackRoute.testClassName(), infoRoute.testClassName(), "testClassName")
         assertEquals(stackRoute.testMethodName(), infoRoute.testMethodName(), "testMethodName")
         assertEquals(stackRoute.testClassPath, infoRoute.testClassPath, "testClassPath")
-        assertEquals(stackRoute.approvedDirectory, infoRoute.approvedDirectory, "approvedDirectory")
         assertEquals(stackRoute.workingDirectory(), infoRoute.workingDirectory(), "workingDirectory")
     }
 

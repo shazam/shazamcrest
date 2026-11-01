@@ -22,7 +22,7 @@ public class MetaInfoTest {
     public void testJunit4MetaWithSameBeanAsMatcher() {
         Junit4TestMeta underTest = new Junit4TestMeta();
 
-        Junit4TestMeta expected = new Junit4TestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest"), "com.github.karsaig.approvalcrest.MetaInfoTest", "testJunit4MetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"));
+        Junit4TestMeta expected = new Junit4TestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest"), "com.github.karsaig.approvalcrest.MetaInfoTest", "testJunit4MetaWithSameBeanAsMatcher");
         assertThat(underTest, sameBeanAs(expected));
     }
 
@@ -30,7 +30,7 @@ public class MetaInfoTest {
     public void testJunit4DescriptionMetaWithSameBeanAsMatcher() {
         Junit4DescriptionBasedTestMeta underTest = new Junit4DescriptionBasedTestMeta(testWatcher.getDescription());
 
-        Junit4DescriptionBasedTestMeta expected = new Junit4DescriptionBasedTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest"), "com.github.karsaig.approvalcrest.MetaInfoTest", "testJunit4DescriptionMetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"), underTest.workingDirectory());
+        Junit4DescriptionBasedTestMeta expected = new Junit4DescriptionBasedTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest"), "com.github.karsaig.approvalcrest.MetaInfoTest", "testJunit4DescriptionMetaWithSameBeanAsMatcher", underTest.workingDirectory());
         assertThat(underTest, sameBeanAs(expected));
     }
 
@@ -49,13 +49,11 @@ public class MetaInfoTest {
         Junit4TestMeta underTest = new Junit4TestMeta(
                 Paths.get("src/test/java/com/github/karsaig/approvalcrest"),
                 "com.github.karsaig.approvalcrest.MetaInfoTest",
-                "toStringContainsAllFields",
-                Paths.get("src/test/resources/approvalcrest"));
+                "toStringContainsAllFields");
         String result = underTest.toString();
         assertTrue(result.contains("cn=com.github.karsaig.approvalcrest.MetaInfoTest"));
         assertTrue(result.contains("mn=toStringContainsAllFields"));
         assertTrue(result.contains("cp="));
-        assertTrue(result.contains("ad="));
         assertTrue(result.contains("wd="));
     }
 

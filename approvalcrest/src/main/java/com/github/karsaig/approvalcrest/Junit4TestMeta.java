@@ -23,8 +23,8 @@ public class Junit4TestMeta extends Junit4TestMetaBase {
         return className;
     }
 
-    public Junit4TestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory);
+    public Junit4TestMeta(Path testClassPath, String testClassName, String testMethodName) {
+        super(testClassPath, testClassName, testMethodName);
     }
 
     static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {

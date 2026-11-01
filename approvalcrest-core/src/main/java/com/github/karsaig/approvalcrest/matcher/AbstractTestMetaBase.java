@@ -19,16 +19,14 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
     private static final String SOURCE_ROOT_NAME = "fileMatcherSourceRoot";
     private static final String SOURCE_ROOT_ALIAS = "fmSourceRoot";
     protected static final Pattern DOT_LITERAL_PATTERN = Pattern.compile(".", Pattern.LITERAL);
-    protected static final Path APPROVED_DIRECTORY = Paths.get("src" + File.separator + "test" + File.separator + "resources" + File.separator + "approvalcrest");
 
     private final Path testClassPath;
     private final String testClassName;
     private final String testMethodName;
-    private final Path approvedDirectory;
     private final Path workingDirectory;
 
     protected AbstractTestMetaBase(String testClassName, String testMethodName) {
-        this(buildClassPath(testClassName), testClassName, testMethodName, APPROVED_DIRECTORY);
+        this(buildClassPath(testClassName), testClassName, testMethodName);
     }
 
     /**
@@ -38,18 +36,21 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
      *                          default here; the property still overrides it when present.
      */
     protected AbstractTestMetaBase(String testClassName, String testMethodName, String defaultSourceRoot) {
-        this(buildClassPath(testClassName, getSourceRoutePathString(defaultSourceRoot)), testClassName, testMethodName, APPROVED_DIRECTORY);
+        this(buildClassPath(testClassName, getSourceRoutePathString(defaultSourceRoot)), testClassName, testMethodName);
     }
 
-    protected AbstractTestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        this(testClassPath, testClassName, testMethodName, approvedDirectory, detectWorkingDirectory());
+    protected AbstractTestMetaBase(Path testClassPath, String testClassName, String testMethodName) {
+        this(detectWorkingDirectory(), testClassPath, testClassName, testMethodName);
     }
 
-    protected AbstractTestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory, Path workingDirectory) {
+    /**
+     * The working directory comes first: a {@code (Path, String, String, Path)} call written for the removed
+     * approved-directory constructor must fail to compile, not pass that path on as the working directory.
+     */
+    protected AbstractTestMetaBase(Path workingDirectory, Path testClassPath, String testClassName, String testMethodName) {
         this.testClassPath = testClassPath;
         this.testClassName = testClassName;
         this.testMethodName = testMethodName;
-        this.approvedDirectory = approvedDirectory;
         this.workingDirectory = workingDirectory;
     }
 
@@ -168,11 +169,6 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
     }
 
     @Override
-    public Path getApprovedDirectory() {
-        return approvedDirectory;
-    }
-
-    @Override
     public Path workingDirectory() {
         return workingDirectory;
     }
@@ -182,7 +178,6 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
         return "TestMeta[cn=" + testClassName +
                 ",mn=" + testMethodName +
                 ",cp=" + testClassPath +
-                ",ad=" + approvedDirectory +
                 ",wd=" + workingDirectory + "]";
     }
 }

@@ -235,7 +235,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             }
             Path workingDir = fs.getPath("/home/ci/builds/workspace");
 
-            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
+            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, workingDir);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
             underTest.withMachineReadableOutput();
 
@@ -268,7 +268,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             }
             Path workingDir = fs.getPath("/home/ci/builds/workspace");
 
-            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
+            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, workingDir);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
             underTest.withMachineReadableOutput();
 
@@ -299,7 +299,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             }
             Path workingDir = fs.getPath("/deep/project");
 
-            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
+            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, workingDir);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
             underTest.withMachineReadableOutput();
 

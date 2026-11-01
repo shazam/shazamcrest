@@ -30,7 +30,6 @@ public class RouteEquivalenceTest {
         assertEquals(stackRoute.testClassName(), infoRoute.testClassName(), "testClassName");
         assertEquals(stackRoute.testMethodName(), infoRoute.testMethodName(), "testMethodName");
         assertEquals(stackRoute.getTestClassPath(), infoRoute.getTestClassPath(), "testClassPath");
-        assertEquals(stackRoute.getApprovedDirectory(), infoRoute.getApprovedDirectory(), "approvedDirectory");
         assertEquals(stackRoute.workingDirectory(), infoRoute.workingDirectory(), "workingDirectory");
     }
 

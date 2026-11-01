@@ -40,7 +40,7 @@ class ApprovedFileScanner {
 
     ApprovedFileScanner(String sharedApprovalDir, int bucketDepth, Set<ApprovedFileType> selectedTypes) {
         FileMatcherConfig config =
-                new FileMatcherConfig(false, false, false, false, true, sharedApprovalDir, true, bucketDepth);
+                new FileMatcherConfig(false, false, false, true, sharedApprovalDir, true, bucketDepth);
         for (ApprovedFileType type : ApprovedFileType.values()) {
             utilsByType.put(type, new FileStoreMatcherUtils(type.extension(), config));
         }

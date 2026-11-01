@@ -38,8 +38,8 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
         return className;
     }
 
-    public JunitJupiterTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory);
+    public JunitJupiterTestMeta(Path testClassPath, String testClassName, String testMethodName) {
+        super(testClassPath, testClassName, testMethodName);
     }
 
 

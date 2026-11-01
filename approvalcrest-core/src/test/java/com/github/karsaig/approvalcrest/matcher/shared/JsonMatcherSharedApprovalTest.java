@@ -165,7 +165,7 @@ public class JsonMatcherSharedApprovalTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi);
-            FileMatcherConfig config = new FileMatcherConfig(true, false, false, false, true, DEFAULT_SHARED_DIR, true, 2);
+            FileMatcherConfig config = new FileMatcherConfig(true, false, false, true, DEFAULT_SHARED_DIR, true, 2);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, config);
 
             String beanJson = getBeanWithPrimitivesAsJsonString();
@@ -191,7 +191,7 @@ public class JsonMatcherSharedApprovalTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi);
-            FileMatcherConfig config = new FileMatcherConfig(true, false, false, false, true, DEFAULT_SHARED_DIR, true, 2);
+            FileMatcherConfig config = new FileMatcherConfig(true, false, false, true, DEFAULT_SHARED_DIR, true, 2);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, config);
 
             // Old canonical with different content
@@ -218,7 +218,7 @@ public class JsonMatcherSharedApprovalTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi);
-            FileMatcherConfig config = new FileMatcherConfig(false, false, false, false, true, DEFAULT_SHARED_DIR, true, 2);
+            FileMatcherConfig config = new FileMatcherConfig(false, false, false, true, DEFAULT_SHARED_DIR, true, 2);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, config);
 
             String beanJson = getBeanWithPrimitivesAsJsonString();
@@ -246,7 +246,7 @@ public class JsonMatcherSharedApprovalTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi);
-            FileMatcherConfig config = new FileMatcherConfig(false, false, false, false, true, DEFAULT_SHARED_DIR, true, 2);
+            FileMatcherConfig config = new FileMatcherConfig(false, false, false, true, DEFAULT_SHARED_DIR, true, 2);
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, config);
 
             AssertionError error = assertThrows(AssertionError.class,

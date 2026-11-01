@@ -45,7 +45,7 @@ public class OverwriteFailureMessageTest extends AbstractFileMatcherTest {
         Files.setPosixFilePermissions(approved, PosixFilePermissions.fromString("r--r--r--"));
 
         DummyInformation testInfo = new DummyInformation(tempDir, "OverwriteFailureMessageTest",
-                "overwriteFailureNamesTheFileAndNotTheContent", tempDir, tempDir);
+                "overwriteFailureNamesTheFileAndNotTheContent", tempDir);
         JsonMatcher<BeanWithPrimitives> underTest =
                 MATCHER_FACTORY.jsonMatcher(testInfo, enableInPlaceOverwriteAndPassOnCreate());
 

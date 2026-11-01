@@ -162,7 +162,7 @@ public class SerialisationAndFileFormatTest {
             String shared = "shared";
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, shared, true, 2));
+                    new FileMatcherConfig(false, false, false, true, shared, true, 2));
 
             for (int invalid : new int[]{-1, 0, 7, 99}) {
                 IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
@@ -185,9 +185,9 @@ public class SerialisationAndFileFormatTest {
     @Test
     public void outOfRangeBucketDepthIsRejectedByTheConfig() {
         assertThrows(IllegalStateException.class,
-                () -> new FileMatcherConfig(false, false, false, false, true, "shared", true, 0));
+                () -> new FileMatcherConfig(false, false, false, true, "shared", true, 0));
         assertThrows(IllegalStateException.class,
-                () -> new FileMatcherConfig(false, false, false, false, true, "shared", true, 7));
+                () -> new FileMatcherConfig(false, false, false, true, "shared", true, 7));
     }
 
     /**
@@ -200,7 +200,7 @@ public class SerialisationAndFileFormatTest {
             Path workDir = fs.getPath("/work");
             Files.createDirectories(workDir);
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, "shared", true, 2));
+                    new FileMatcherConfig(false, false, false, true, "shared", true, 2));
 
             Path lf = workDir.resolve("lf-approved.json");
             Files.write(lf, "/*comment*/\n{\"v\":1}".getBytes(StandardCharsets.UTF_8));
@@ -223,7 +223,7 @@ public class SerialisationAndFileFormatTest {
             Path workDir = fs.getPath("/work");
             Files.createDirectories(workDir);
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, "shared", true, 2));
+                    new FileMatcherConfig(false, false, false, true, "shared", true, 2));
 
             Path lf = workDir.resolve("lf-approved.json");
             Files.write(lf, "/*c*/\n/*pointer:shared/ab/x-approved.json*/".getBytes(StandardCharsets.UTF_8));

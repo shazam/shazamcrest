@@ -120,6 +120,24 @@ All frameworks use the same property. Only the value **when you do not set it** 
 >
 > For a mixed project that needs two different roots, do not set the property. Instead, use the per-matcher overrides for the set of tests that is not standard. If you set the wrong root, the test fails, because approvalcrest cannot find the approved file. It never compares with the wrong file.
 
+### Keeping approved files under test resources
+
+The approved files do not have to be next to the test sources. To keep them in a separate tree, set the root to a directory under `src/test/resources`. Approvalcrest still adds the package path and a directory for each test class, so the layout under the root stays the same:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <systemPropertyVariables>
+            <fileMatcherSourceRoot>src/test/resources/approvalcrest</fileMatcherSourceRoot>
+        </systemPropertyVariables>
+    </configuration>
+</plugin>
+```
+
+Thus the approved files of `com.example.MyTest` go to `src/test/resources/approvalcrest/com/example/<classHash>/`. Set the root in the build file, not only on the command line, because each run must find the same files. When you change the root, move the existing approved files yourself. Approvalcrest does not move them.
+
 ## Migration from pre-1.0.0 Without Moving Files
 
 Before 1.0.0, `withPathName(str)` resolved relative to the **working directory**. From 1.0.0, it resolves relative to **testClassPath**. If your tests used `withPathName` with a path from the project root, approvalcrest now looks for the approved files in the wrong directory.

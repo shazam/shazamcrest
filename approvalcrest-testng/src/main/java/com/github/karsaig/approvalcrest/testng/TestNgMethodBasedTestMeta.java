@@ -22,7 +22,7 @@ public class TestNgMethodBasedTestMeta extends AbstractTestMetaBase {
         return className;
     }
 
-    public TestNgMethodBasedTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory);
+    public TestNgMethodBasedTestMeta(Path testClassPath, String testClassName, String testMethodName) {
+        super(testClassPath, testClassName, testMethodName);
     }
 }

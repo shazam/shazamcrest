@@ -13,8 +13,7 @@ class MetaInfoTest {
         val expected = KotlinTestMeta(
                 Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin"),
                 "com.github.karsaig.approvalcrest.kotlin.MetaInfoTest",
-                "testKotlinMetaWithSameBeanAsMatcher",
-                Paths.get("src/test/resources/approvalcrest")
+                "testKotlinMetaWithSameBeanAsMatcher"
         )
         MatcherAssert.assertThat(underTest, Matchers.sameBeanAs(expected))
     }
@@ -25,8 +24,7 @@ class MetaInfoTest {
         val expected = KotlinInfoBasedTestMeta(
                 Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin"),
                 "com.github.karsaig.approvalcrest.kotlin.MetaInfoTest",
-                "testKotlinInfoBasedMetaWithSameBeanAsMatcher",
-                Paths.get("src/test/resources/approvalcrest")
+                "testKotlinInfoBasedMetaWithSameBeanAsMatcher"
         )
         MatcherAssert.assertThat(underTest, Matchers.sameBeanAs(expected))
     }

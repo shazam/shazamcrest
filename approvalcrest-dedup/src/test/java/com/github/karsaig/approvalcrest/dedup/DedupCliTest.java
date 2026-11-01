@@ -48,7 +48,7 @@ public class DedupCliTest {
 
     private String writeCanonicalAndGetRelative(Path workDir, String content, String sharedDir) throws IOException {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                new FileMatcherConfig(false, false, false, false, true, sharedDir, true, DEFAULT_BUCKET_DEPTH));
+                new FileMatcherConfig(false, false, false, true, sharedDir, true, DEFAULT_BUCKET_DEPTH));
         return utils.writeCanonical(content, "shared", workDir, sharedDir, DEFAULT_BUCKET_DEPTH);
     }
 
@@ -61,7 +61,7 @@ public class DedupCliTest {
 
     private String computeKey(String content) {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                new FileMatcherConfig(false, false, false, false, true, DEFAULT_SHARED_DIR, true, DEFAULT_BUCKET_DEPTH));
+                new FileMatcherConfig(false, false, false, true, DEFAULT_SHARED_DIR, true, DEFAULT_BUCKET_DEPTH));
         return utils.computeContentKey(content);
     }
 
@@ -164,7 +164,7 @@ public class DedupCliTest {
                     "Default shared dir must not be created when --shared-dir overrides it");
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, "my/shared", true, DEFAULT_BUCKET_DEPTH));
+                    new FileMatcherConfig(false, false, false, true, "my/shared", true, DEFAULT_BUCKET_DEPTH));
             String key = utils.computeContentKey(content);
             String bucket = key.substring(0, DEFAULT_BUCKET_DEPTH);
             assertTrue(Files.exists(workDir.resolve("my/shared").resolve(bucket).resolve(key + "-approved.json")),
@@ -201,7 +201,7 @@ public class DedupCliTest {
             assertTrue(output.contains("Deduplication complete:"));
 
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
-                    new FileMatcherConfig(false, false, false, false, true, DEFAULT_SHARED_DIR, true, 3));
+                    new FileMatcherConfig(false, false, false, true, DEFAULT_SHARED_DIR, true, 3));
             String key = utils.computeContentKey(content);
             String bucket = key.substring(0, 3);
 

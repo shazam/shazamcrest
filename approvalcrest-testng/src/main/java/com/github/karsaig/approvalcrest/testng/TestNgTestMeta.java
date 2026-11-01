@@ -26,8 +26,8 @@ public class TestNgTestMeta extends AbstractTestMetaBase {
         return className;
     }
 
-    public TestNgTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory);
+    public TestNgTestMeta(Path testClassPath, String testClassName, String testMethodName) {
+        super(testClassPath, testClassName, testMethodName);
     }
 
     static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {

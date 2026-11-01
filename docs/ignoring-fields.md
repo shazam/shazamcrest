@@ -227,8 +227,8 @@ mvn test -DfileMatcherStrictFileMatching=false
 **Turn off strict mode for one test** (with the last parameter of the `FileMatcherConfig` constructor):
 
 ```java
-// new FileMatcherConfig(overwriteInPlace, passOnCreate, buildIndex, approvedDir, sortInputFile, strictMatching)
-FileMatcherConfig config = new FileMatcherConfig(false, false, false, false, false, false);
+// new FileMatcherConfig(overwriteInPlace, passOnCreate, sortInputFile, strictMatching)
+FileMatcherConfig config = new FileMatcherConfig(false, false, false, false);
 ```
 
 ## Chaining

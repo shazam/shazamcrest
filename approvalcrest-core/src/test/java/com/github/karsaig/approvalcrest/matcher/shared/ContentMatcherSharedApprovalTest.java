@@ -50,7 +50,7 @@ public class ContentMatcherSharedApprovalTest extends AbstractFileMatcherTest {
     }
 
     private FileMatcherConfig sharedFor(ApprovedFileType... types) {
-        return new FileMatcherConfig(false, true, false, false, true, DEFAULT_SHARED_DIR,
+        return new FileMatcherConfig(false, true, false, true, DEFAULT_SHARED_DIR,
                 types.length == 0 ? ApprovedFileType.none() : EnumSet.copyOf(java.util.Arrays.asList(types)), 2);
     }
 

@@ -42,7 +42,7 @@ public class ApprovalReinstateTest {
 
     private String writeCanonicalAndGetRelative(Path workDir, String content, String extension) throws IOException {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils(extension,
-                new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, 2));
+                new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, 2));
         return utils.writeCanonical(content, "shared", workDir, SHARED_DIR, 2);
     }
 
@@ -55,7 +55,7 @@ public class ApprovalReinstateTest {
 
     private String computeKey(String content, String extension) {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils(extension,
-                new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, 2));
+                new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, 2));
         return utils.computeContentKey(content);
     }
 

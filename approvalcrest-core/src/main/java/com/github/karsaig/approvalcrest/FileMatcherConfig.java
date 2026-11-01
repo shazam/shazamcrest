@@ -13,8 +13,6 @@ public class FileMatcherConfig {
     private static final String UPDATE_IN_PLACE_ALIAS = "fMUInPlace";
     private static final String PASS_ON_CREATE = "fileMatcherPassOnCreate";
     private static final String PASS_ON_CREATE_ALIAS = "fMPOnCreate";
-    private static final String APPROVED_DIRECTORY_NAME = "useApprovedDirectory";
-    private static final String APPROVED_DIRECTORY_ALIAS = "uADirectory";
     private static final String SORT_INPUT_FILE = "sortInputFile";
     private static final String SORT_INPUT_FILE_ALIAS = "sIFile";
     private static final String SKIP_CUSTOM_MATCHERS_ON_UPDATE = "fileMatcherSkipCustomMatchersOnUpdate";
@@ -42,7 +40,6 @@ public class FileMatcherConfig {
 
     private final boolean overwriteInPlaceEnabled;
     private final boolean passOnCreateEnabled;
-    private final boolean approvedDirectory;
     private final boolean sortInputFile;
     private final boolean strictFileMatching;
     private final boolean skipCustomMatchersOnUpdate;
@@ -53,7 +50,6 @@ public class FileMatcherConfig {
     public FileMatcherConfig() {
         overwriteInPlaceEnabled = getBooleanProperties(null, UPDATE_IN_PLACE_OLD_NAME, UPDATE_IN_PLACE_NAME, UPDATE_IN_PLACE_ALIAS);
         passOnCreateEnabled = getBooleanProperties(null, PASS_ON_CREATE, PASS_ON_CREATE_ALIAS);
-        approvedDirectory = getBooleanProperties(null, APPROVED_DIRECTORY_NAME, APPROVED_DIRECTORY_ALIAS);
         sortInputFile = getBooleanProperties(null, SORT_INPUT_FILE, SORT_INPUT_FILE_ALIAS);
         strictFileMatching = getBooleanProperties("true", STRICT_FILE_MATCHING, STRICT_FILE_MATCHING_ALIAS);
         skipCustomMatchersOnUpdate = getBooleanProperties(null, SKIP_CUSTOM_MATCHERS_ON_UPDATE, SKIP_CUSTOM_MATCHERS_ON_UPDATE_ALIAS);
@@ -71,40 +67,39 @@ public class FileMatcherConfig {
         return bucketDepth;
     }
 
-    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean approvedDirectory, boolean sortInputFile, boolean strictMatching) {
-        this(overwriteInPlaceEnabled, passOnCreateEnabled, approvedDirectory, sortInputFile, strictMatching, DEFAULT_SHARED_DIR, false, DEFAULT_SHARED_BUCKET_DEPTH);
+    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean sortInputFile, boolean strictMatching) {
+        this(overwriteInPlaceEnabled, passOnCreateEnabled, sortInputFile, strictMatching, DEFAULT_SHARED_DIR, false, DEFAULT_SHARED_BUCKET_DEPTH);
     }
 
     /**
      * @param sharedEnabled true enables the shared-approval integration for every file type; use
-     *                      {@link #FileMatcherConfig(boolean, boolean, boolean, boolean, boolean, String, Set, int)}
+     *                      {@link #FileMatcherConfig(boolean, boolean, boolean, boolean, String, Set, int)}
      *                      to enable it for a subset
      */
-    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean approvedDirectory, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, boolean sharedEnabled, int sharedBucketDepth) {
-        this(overwriteInPlaceEnabled, passOnCreateEnabled, approvedDirectory, sortInputFile, strictMatching,
+    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, boolean sharedEnabled, int sharedBucketDepth) {
+        this(overwriteInPlaceEnabled, passOnCreateEnabled, sortInputFile, strictMatching,
                 sharedApprovalDirectory, sharedEnabled ? ApprovedFileType.all() : ApprovedFileType.none(), sharedBucketDepth, false);
     }
 
     /**
      * @param sharedTypes the file types the shared-approval integration applies to; empty disables it
      */
-    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean approvedDirectory, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, Set<ApprovedFileType> sharedTypes, int sharedBucketDepth) {
-        this(overwriteInPlaceEnabled, passOnCreateEnabled, approvedDirectory, sortInputFile, strictMatching,
+    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, Set<ApprovedFileType> sharedTypes, int sharedBucketDepth) {
+        this(overwriteInPlaceEnabled, passOnCreateEnabled, sortInputFile, strictMatching,
                 sharedApprovalDirectory, sharedTypes, sharedBucketDepth, false);
     }
 
     /**
      * Private, so that the only public route to the new flag is {@link #withSkipCustomMatchersOnUpdate(boolean)}.
-     * Every constructor here is positional and already five booleans wide; adding a sixth to the published set
+     * Every constructor here is positional and already four booleans wide; adding a fifth to the published set
      * would make the next one worse again.
      *
      * @param skipCustomMatchersOnUpdate true defers custom matchers while an in-place update is rewriting
      *                                   approved files; inert unless {@code overwriteInPlaceEnabled}
      */
-    private FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean approvedDirectory, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, Set<ApprovedFileType> sharedTypes, int sharedBucketDepth, boolean skipCustomMatchersOnUpdate) {
+    private FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, Set<ApprovedFileType> sharedTypes, int sharedBucketDepth, boolean skipCustomMatchersOnUpdate) {
         this.overwriteInPlaceEnabled = overwriteInPlaceEnabled;
         this.passOnCreateEnabled = passOnCreateEnabled;
-        this.approvedDirectory = approvedDirectory;
         this.sortInputFile = sortInputFile;
         this.strictFileMatching = strictMatching;
         this.sharedApprovalDirectory = sharedApprovalDirectory;
@@ -117,7 +112,7 @@ public class FileMatcherConfig {
      * A copy of this configuration with the custom-matcher skip set as given. Everything else is carried over.
      */
     public FileMatcherConfig withSkipCustomMatchersOnUpdate(boolean skipCustomMatchersOnUpdate) {
-        return new FileMatcherConfig(overwriteInPlaceEnabled, passOnCreateEnabled, approvedDirectory, sortInputFile,
+        return new FileMatcherConfig(overwriteInPlaceEnabled, passOnCreateEnabled, sortInputFile,
                 strictFileMatching, sharedApprovalDirectory, sharedTypes, sharedBucketDepth, skipCustomMatchersOnUpdate);
     }
 
@@ -127,10 +122,6 @@ public class FileMatcherConfig {
 
     public boolean isPassOnCreateEnabled() {
         return passOnCreateEnabled;
-    }
-
-    public boolean isApprovedDirectory() {
-        return approvedDirectory;
     }
 
     public boolean isSortInputFile() {

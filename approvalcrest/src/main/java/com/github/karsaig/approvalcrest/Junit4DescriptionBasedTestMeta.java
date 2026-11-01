@@ -10,8 +10,8 @@ public class Junit4DescriptionBasedTestMeta extends Junit4TestMetaBase {
         super(description.getClassName(), description.getMethodName());
     }
 
-    public Junit4DescriptionBasedTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory,Path workingDirectory) {
-        super(testClassPath, testClassName, testMethodName, approvedDirectory,workingDirectory);
+    public Junit4DescriptionBasedTestMeta(Path testClassPath, String testClassName, String testMethodName, Path workingDirectory) {
+        super(testClassPath, testClassName, testMethodName, workingDirectory);
     }
 
 }
