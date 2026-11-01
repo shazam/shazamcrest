@@ -84,7 +84,7 @@ public class ApprovalReinstate {
 
         int canonicalsDeleted = deleteUnreferencedCanonicals(sharedDirPath);
 
-        return new ReinstateResult(pointersReinstated, canonicalsDeleted);
+        return new ReinstateResult(pointersReinstated, canonicalsDeleted, dryRun);
     }
 
     private int deleteUnreferencedCanonicals(Path sharedDirPath) throws IOException {
@@ -145,10 +145,16 @@ public class ApprovalReinstate {
     public static class ReinstateResult {
         private final int pointersReinstated;
         private final int canonicalsDeleted;
+        private final boolean dryRun;
 
         public ReinstateResult(int pointersReinstated, int canonicalsDeleted) {
+            this(pointersReinstated, canonicalsDeleted, false);
+        }
+
+        public ReinstateResult(int pointersReinstated, int canonicalsDeleted, boolean dryRun) {
             this.pointersReinstated = pointersReinstated;
             this.canonicalsDeleted = canonicalsDeleted;
+            this.dryRun = dryRun;
         }
 
         public int getPointersReinstated() {
@@ -161,7 +167,8 @@ public class ApprovalReinstate {
 
         @Override
         public String toString() {
-            return "Reinstate complete: " + pointersReinstated + " pointer(s) replaced with standalone content, "
+            return (dryRun ? ApprovalDeduplicator.DeduplicatorResult.DRY_RUN_PREFIX : "")
+                    + "Reinstate complete: " + pointersReinstated + " pointer(s) replaced with standalone content, "
                     + canonicalsDeleted + " canonical(s) deleted.";
         }
     }

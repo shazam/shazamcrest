@@ -131,7 +131,7 @@ public class ApprovalDeduplicator {
         int orphansRemoved = collectGarbage(sharedDirPath, canonicalsUsedThisRun);
 
         return new DeduplicatorResult(pointersWritten, canonicalsCreated, orphansRemoved,
-                isGarbageCollectionSkipped());
+                isGarbageCollectionSkipped(), dryRun);
     }
 
     /**
@@ -198,6 +198,9 @@ public class ApprovalDeduplicator {
         private final int canonicalsCreated;
         private final int orphansRemoved;
         private final boolean garbageCollectionSkipped;
+        private final boolean dryRun;
+
+        static final String DRY_RUN_PREFIX = "Dry run, no files changed. ";
 
         public DeduplicatorResult(int pointersWritten, int canonicalsCreated, int orphansRemoved) {
             this(pointersWritten, canonicalsCreated, orphansRemoved, false);
@@ -205,10 +208,16 @@ public class ApprovalDeduplicator {
 
         public DeduplicatorResult(int pointersWritten, int canonicalsCreated, int orphansRemoved,
                                   boolean garbageCollectionSkipped) {
+            this(pointersWritten, canonicalsCreated, orphansRemoved, garbageCollectionSkipped, false);
+        }
+
+        public DeduplicatorResult(int pointersWritten, int canonicalsCreated, int orphansRemoved,
+                                  boolean garbageCollectionSkipped, boolean dryRun) {
             this.pointersWritten = pointersWritten;
             this.canonicalsCreated = canonicalsCreated;
             this.orphansRemoved = orphansRemoved;
             this.garbageCollectionSkipped = garbageCollectionSkipped;
+            this.dryRun = dryRun;
         }
 
         public int getPointersWritten() {
@@ -229,7 +238,8 @@ public class ApprovalDeduplicator {
 
         @Override
         public String toString() {
-            String result = "Deduplication complete: " + canonicalsCreated + " canonical(s) created, "
+            String result = (dryRun ? DRY_RUN_PREFIX : "")
+                    + "Deduplication complete: " + canonicalsCreated + " canonical(s) created, "
                     + pointersWritten + " pointer(s) written, "
                     + orphansRemoved + " orphaned canonical(s) removed.";
             if (garbageCollectionSkipped) {

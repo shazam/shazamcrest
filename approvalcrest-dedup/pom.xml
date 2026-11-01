@@ -145,6 +145,9 @@
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <settingsFile>src/it/settings.xml</settingsFile>
                     <postBuildHookScript>verify</postBuildHookScript>
+                    <scriptVariables>
+                        <verifyLib>${project.basedir}/src/it/verify-lib.bsh</verifyLib>
+                    </scriptVariables>
                 </configuration>
                 <executions>
                     <execution>

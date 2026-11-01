@@ -35,7 +35,7 @@ public class ReinstateMojo extends AbstractMojo {
     private String dir;
 
     /** When true, print what would be done without writing or deleting any files. */
-    @Parameter(defaultValue = "false")
+    @Parameter(property = "dryRun", defaultValue = "false")
     private boolean dryRun;
 
     /**

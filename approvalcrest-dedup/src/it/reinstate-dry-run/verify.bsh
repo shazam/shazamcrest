@@ -1,0 +1,16 @@
+source(verifyLib);
+
+expectFiles(new String[] {
+        "billing/a7b8c9/0d1e2f-approved.json",
+        "orders/c1a2b3/9f8e7d-approved.json",
+        "orders/c1a2b3/d4e5f6-approved.json",
+        "shared-approvals/75/752a56a58607-38-approved.json",
+        "shipping/b3c4d5/e6f7a8-approved.json"});
+
+String pointer = "/*pointer:src/test/java/shared-approvals/75/752a56a58607-38-approved.json*/";
+expectContent("orders/c1a2b3/d4e5f6-approved.json", "/*orders.OrderTest.c*/\n" + pointer);
+expectContent("billing/a7b8c9/0d1e2f-approved.json", "/*billing.InvoiceTest.a*/\n" + pointer);
+expectContent("shipping/b3c4d5/e6f7a8-approved.json", "/*shipping.ParcelTest.b*/\n" + pointer);
+expectContent("shared-approvals/75/752a56a58607-38-approved.json", "/*shared*/\n{\n  \"total\": 42,\n  \"currency\": \"GBP\"\n}");
+expectContent("orders/c1a2b3/9f8e7d-approved.json", "/*orders.OrderTest.unique*/\n{\n  \"total\": 7\n}");
+expectLogLine("Dry run, no files changed. Reinstate complete: 3 pointer(s) replaced with standalone content, 1 canonical(s) deleted.");
