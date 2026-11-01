@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -65,6 +66,7 @@ public class ApprovalReinstate {
         List<Path> allApprovedFiles = scanner.collectApprovedFiles(scanDir, sharedDirPath);
 
         int pointersReinstated = 0;
+        Set<Path> reinstated = new HashSet<>();
         for (Path file : allApprovedFiles) {
             ApprovedFileType ext = scanner.getType(file);
             if (ext == null || !scanner.isSelectedType(file)) {
@@ -78,27 +80,24 @@ public class ApprovalReinstate {
                 if (!dryRun) {
                     utils.writeStandaloneFile(file, content, comment);
                 }
+                reinstated.add(file.toAbsolutePath().normalize());
                 pointersReinstated++;
             }
         }
 
-        int canonicalsDeleted = deleteUnreferencedCanonicals(sharedDirPath);
+        int canonicalsDeleted = deleteUnreferencedCanonicals(sharedDirPath, reinstated);
 
         return new ReinstateResult(pointersReinstated, canonicalsDeleted, dryRun);
     }
 
-    private int deleteUnreferencedCanonicals(Path sharedDirPath) throws IOException {
+    private int deleteUnreferencedCanonicals(Path sharedDirPath, Set<Path> reinstated) throws IOException {
         if (!Files.exists(sharedDirPath)) {
             return 0;
         }
 
-        // In dry-run nothing was rewritten, so the pointers this run would have reinstated still
-        // look live on disk. Exclude the scan directory from the reference lookup to describe the
-        // state a real run would leave behind.
-        Set<String> referenced = DedupPaths.collectReferencedCanonicals(scanner, workingDirectory, sharedDirPath);
-        if (dryRun) {
-            referenced.removeAll(DedupPaths.collectReferencedCanonicalsUnder(scanner, workingDirectory, scanDir, sharedDirPath));
-        }
+        // In a dry run the reinstated pointers are still on disk; excluding them describes the state
+        // that a real run leaves behind.
+        Set<String> referenced = DedupPaths.collectReferencedCanonicals(scanner, workingDirectory, sharedDirPath, reinstated);
 
         int canonicalsDeleted = 0;
         for (Path canonical : scanner.collectApprovedFiles(sharedDirPath, null)) {

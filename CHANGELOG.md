@@ -7,6 +7,7 @@ Version 1.6.1 - Unreleased
 -----
 - `approvalcrest-dedup` is now on Maven Central. No earlier release published it. To run `mvn approvalcrest:dedup` and `mvn approvalcrest:reinstate`, declare the plugin in your POM, as [shared-approvals](docs/shared-approvals.md#adding-the-dedup-tool) shows. The goals need Maven 3.9.6 or later. The standalone JAR is the same artifact with the `standalone` classifier.
 - `mvn approvalcrest:dedup` and `mvn approvalcrest:reinstate` read `-DdryRun=true`. A dry run then changes no files. The summary of a dry run starts with `Dry run, no files changed.`, on the goals and on the standalone JAR with `--dry-run`. Before, the summary of a dry run read the same as the summary of a run that changed the files.
+- A dry run of reinstate with a narrowed scan directory now counts only the canonicals that a real run deletes. Before, it also counted a canonical that a pointer outside the scan directory still used. The real run kept that canonical.
 
 Version 1.6.0 - 2026/09/05
 -----

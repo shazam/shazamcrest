@@ -2,7 +2,10 @@ package com.github.karsaig.approvalcrest.dedup;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -56,20 +59,26 @@ final class DedupPaths {
      */
     static Set<String> collectReferencedCanonicals(ApprovedFileScanner scanner, Path workingDirectory, Path sharedDirPath)
             throws IOException {
-        return collectReferencesIn(scanner, workingDirectory,
-                scanner.collectApprovedFilesForReferenceLookup(workingDirectory), sharedDirPath);
+        return collectReferencedCanonicals(scanner, workingDirectory, sharedDirPath, Collections.emptySet());
     }
 
     /**
-     * Returns the canonicals referenced by pointer files under a single directory.
+     * Same as {@link #collectReferencedCanonicals(ApprovedFileScanner, Path, Path)}, but ignores the
+     * pointer files in {@code excludedFiles} (absolute, normalised paths).
      *
-     * <p>Used by reinstate's dry run: the pointers it would rewrite are still on disk, so they have
-     * to be discounted to describe the state a real run would leave behind.
+     * <p>Used by reinstate: the pointers it rewrites no longer keep a canonical alive, but in a dry run
+     * they are still on disk. Excluding them by name, rather than subtracting their targets, keeps a
+     * canonical that another pointer still uses.
      */
-    static Set<String> collectReferencedCanonicalsUnder(ApprovedFileScanner scanner, Path workingDirectory,
-                                                        Path dir, Path sharedDirPath) throws IOException {
-        return collectReferencesIn(scanner, workingDirectory,
-                scanner.collectApprovedFiles(dir, sharedDirPath), sharedDirPath);
+    static Set<String> collectReferencedCanonicals(ApprovedFileScanner scanner, Path workingDirectory, Path sharedDirPath,
+                                                   Set<Path> excludedFiles) throws IOException {
+        List<Path> files = new ArrayList<>();
+        for (Path file : scanner.collectApprovedFilesForReferenceLookup(workingDirectory)) {
+            if (!excludedFiles.contains(file.toAbsolutePath().normalize())) {
+                files.add(file);
+            }
+        }
+        return collectReferencesIn(scanner, workingDirectory, files, sharedDirPath);
     }
 
     private static Set<String> collectReferencesIn(ApprovedFileScanner scanner, Path workingDirectory,
