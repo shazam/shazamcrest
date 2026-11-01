@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.jdk26;
+package com.github.karsaig.approvalcrest.unsafedenied;
 
 import com.github.karsaig.approvalcrest.jupiter.matcher.Matchers;
 import org.hamcrest.Matcher;
@@ -13,9 +13,9 @@ import org.hamcrest.StringDescription;
  * so these tests go through the same public API a user does.
  * </p>
  */
-final class Jdk26Fixtures {
+final class UnsafeDeniedFixtures {
 
-    private Jdk26Fixtures() {
+    private UnsafeDeniedFixtures() {
     }
 
     /**

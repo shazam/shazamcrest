@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.karsaig.integration.tests</groupId>
-    <artifactId>approvalcrest-jdk26-simulation-integration-tests</artifactId>
+    <artifactId>approvalcrest-unsafe-denied-integration-tests</artifactId>
 
     <!-- Runs on a real JDK 27, with and without the agent attached. JDK 27 only warns when code uses
          the Unsafe memory-access methods. The sun-misc-unsafe-memory-access=deny flag below denies

@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.jdk26;
+package com.github.karsaig.approvalcrest.unsafedenied;
 
 import com.github.karsaig.approvalcrest.ReflectUtil;
 import org.junit.jupiter.api.Test;

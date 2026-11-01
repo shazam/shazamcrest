@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.jdk26;
+package com.github.karsaig.approvalcrest.unsafedenied;
 
 import com.github.karsaig.approvalcrest.ReflectUtil;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,8 @@ class UnsafeDeniedWithoutAgentTest {
 
     @Test
     void jdkExceptionFallsBackToGetters() {
-        String mismatch = Jdk26Fixtures.describeMismatch(
-                Jdk26Fixtures.jdkException("one"), Jdk26Fixtures.jdkException("two"));
+        String mismatch = UnsafeDeniedFixtures.describeMismatch(
+                UnsafeDeniedFixtures.jdkException("one"), UnsafeDeniedFixtures.jdkException("two"));
 
         assertThat(mismatch, containsString("localizedMessage"));
         assertThat(mismatch, not(containsString("detailMessage")));
@@ -39,8 +39,8 @@ class UnsafeDeniedWithoutAgentTest {
     void userDefinedExceptionFallsBackToGettersRatherThanThrowing() {
         // Vary the message, because a mismatch description names only the fields that differ — so
         // this is what makes the property carrying the message visible in the first place.
-        String mismatch = Jdk26Fixtures.describeMismatch(
-                Jdk26Fixtures.userException("boom", "T-1"), Jdk26Fixtures.userException("bang", "T-1"));
+        String mismatch = UnsafeDeniedFixtures.describeMismatch(
+                UnsafeDeniedFixtures.userException("boom", "T-1"), UnsafeDeniedFixtures.userException("bang", "T-1"));
 
         assertThat(mismatch, containsString("localizedMessage"));
         assertThat(mismatch, not(containsString("detailMessage")));
@@ -48,8 +48,8 @@ class UnsafeDeniedWithoutAgentTest {
 
     @Test
     void userDefinedExceptionStillCoversItsOwnFields() {
-        String mismatch = Jdk26Fixtures.describeMismatch(
-                Jdk26Fixtures.userException("boom", "T-1"), Jdk26Fixtures.userException("boom", "T-2"));
+        String mismatch = UnsafeDeniedFixtures.describeMismatch(
+                UnsafeDeniedFixtures.userException("boom", "T-1"), UnsafeDeniedFixtures.userException("boom", "T-2"));
 
         assertThat(mismatch, containsString("ticket"));
     }
@@ -61,8 +61,8 @@ class UnsafeDeniedWithoutAgentTest {
      */
     @Test
     void aSubclassOfALockedClassWithNoReadableFieldsKeepsFieldBasedOutput() {
-        String mismatch = Jdk26Fixtures.describeMismatch(
-                Jdk26Fixtures.eventSubclass("one"), Jdk26Fixtures.eventSubclass("two"));
+        String mismatch = UnsafeDeniedFixtures.describeMismatch(
+                UnsafeDeniedFixtures.eventSubclass("one"), UnsafeDeniedFixtures.eventSubclass("two"));
 
         assertThat(mismatch, containsString("label"));
         assertThat("the transient superclass field is not serialised in any mode",
@@ -71,7 +71,7 @@ class UnsafeDeniedWithoutAgentTest {
 
     @Test
     void equalExceptionsStillCompareEqual() {
-        assertThat(Jdk26Fixtures.matches(
-                Jdk26Fixtures.userException("boom", "T-1"), Jdk26Fixtures.userException("boom", "T-1")), is(true));
+        assertThat(UnsafeDeniedFixtures.matches(
+                UnsafeDeniedFixtures.userException("boom", "T-1"), UnsafeDeniedFixtures.userException("boom", "T-1")), is(true));
     }
 }

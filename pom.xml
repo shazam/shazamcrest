@@ -306,7 +306,7 @@
                 </property>
             </activation>
             <modules>
-                <module>approvalcrest-jdk26-simulation-integration-tests</module>
+                <module>approvalcrest-unsafe-denied-integration-tests</module>
             </modules>
         </profile>
         <profile>
