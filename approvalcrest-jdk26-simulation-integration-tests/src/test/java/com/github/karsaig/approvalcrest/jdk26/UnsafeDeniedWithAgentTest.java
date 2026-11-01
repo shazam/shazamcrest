@@ -10,8 +10,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Runs with the sun-misc-unsafe-memory-access=deny flag — JDK 26's default — and the approvalcrest
- * agent attached. Asserts that field-based output survives, which is the whole point of the agent.
+ * Runs with the sun-misc-unsafe-memory-access=deny flag and the approvalcrest agent attached.
+ * Asserts that field-based output survives, which is the whole point of the agent.
  */
 class UnsafeDeniedWithAgentTest {
 

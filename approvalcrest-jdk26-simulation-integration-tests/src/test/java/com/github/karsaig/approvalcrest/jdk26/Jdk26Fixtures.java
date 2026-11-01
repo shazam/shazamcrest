@@ -6,8 +6,8 @@ import org.hamcrest.StringDescription;
 
 /**
  * Shared fixtures for the two executions of this module. Both serialise the same objects with the
- * sun-misc-unsafe-memory-access=deny flag, which is JDK 26's default; they differ only in whether
- * the approvalcrest agent is attached, and therefore in the JSON they expect.
+ * sun-misc-unsafe-memory-access=deny flag. They differ only in whether the approvalcrest agent is
+ * attached, and therefore in the JSON they expect.
  * <p>
  * The serialised form is read out of a mismatch description rather than by calling the serialiser,
  * so these tests go through the same public API a user does.

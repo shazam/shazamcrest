@@ -9,9 +9,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Runs with the sun-misc-unsafe-memory-access=deny flag — JDK 26's default — and no agent, which is
- * what a project that has not opted in gets. Locks in the documented degradation: getter-based
- * output, and no exception.
+ * Runs with the sun-misc-unsafe-memory-access=deny flag and no agent. This is what a project that
+ * has not opted in gets when the Unsafe memory-access methods are denied. Locks in the documented
+ * degradation: getter-based output, and no exception.
  */
 class UnsafeDeniedWithoutAgentTest {
 

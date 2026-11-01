@@ -50,7 +50,7 @@ In this mode, a failure message is a JSON object. It contains the expected conte
 
 | Dimension | Supported | Tested on |
 |---|---|---|
-| JDK | 8+ | 8, 11, 17, 21, 25 (26 simulated: `--sun-misc-unsafe-memory-access=deny`) |
+| JDK | 8+ | 8, 11, 17, 21, 25, 26 (26 with and without the agent) |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
 | TestNG | 6+ | 6.14.3, 7.10.2 |
 | Kotlin | 2.1+ | 2.2.21 |

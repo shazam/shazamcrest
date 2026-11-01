@@ -46,6 +46,10 @@
         <!-- Empty default so surefire's @{argLine} resolves cleanly when the coverage profile is inactive.
              The coverage profile's jacoco:prepare-agent overrides this with the agent argument. -->
         <argLine></argLine>
+        <!-- Empty default. The jdk26-agent profile sets it, so that the java.version.to.run=26 build
+             attaches approvalcrest-agent. It is not argLine: executions that replace argLine must not
+             get it. -->
+        <approvalcrest.test.agent></approvalcrest.test.agent>
     </properties>
 
     <licenses>
@@ -170,7 +174,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.plugin.version}</version>
                     <configuration>
-                        <argLine>@{argLine} -Dfile.encoding=UTF-8</argLine>
+                        <argLine>@{argLine} -Dfile.encoding=UTF-8 ${approvalcrest.test.agent}</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -262,23 +266,6 @@
             </modules>
         </profile>
         <profile>
-            <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, JDK 26's default, so
-                 these tests run JDK 26's behaviour on today's runners. Kept separate from
-                 junit6-25, whose modules are a different concern.
-                 The flag is accepted from JDK 24 onwards, so widen this activation when a real
-                 JDK 26 job is added, or these tests stop running. -->
-            <id>jdk26-simulation</id>
-            <activation>
-                <property>
-                    <name>java.version.to.run</name>
-                    <value>25</value>
-                </property>
-            </activation>
-            <modules>
-                <module>approvalcrest-jdk26-simulation-integration-tests</module>
-            </modules>
-        </profile>
-        <profile>
             <id>junit6-25</id>
             <activation>
                 <property>
@@ -291,6 +278,55 @@
                 <module>approvalcrest-junit-vintage-integration-tests-junit6</module>
                 <module>approvalcrest-jdk17-integration-tests</module>
             </modules>
+        </profile>
+        <profile>
+            <id>junit6-26</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>26</value>
+                </property>
+            </activation>
+            <modules>
+                <module>approvalcrest-junit-jupiter-integration-tests-junit6</module>
+                <module>approvalcrest-junit-vintage-integration-tests-junit6</module>
+                <module>approvalcrest-jdk17-integration-tests</module>
+            </modules>
+        </profile>
+        <profile>
+            <!-- These tests run on a real JDK 26. The module pom denies the Unsafe memory-access
+                 methods with a flag, because JDK 26 only warns by default. Only java.version.to.run=26
+                 adds the module, so no other build needs JDK 26.
+                 Kept separate from junit6-26, whose modules are a different concern. -->
+            <id>jdk26</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>26</value>
+                </property>
+            </activation>
+            <modules>
+                <module>approvalcrest-jdk26-simulation-integration-tests</module>
+            </modules>
+        </profile>
+        <profile>
+            <!-- The java.version.to.run=26 build attaches approvalcrest-agent to the tests. Thus CI
+                 tests the agent route on a real JDK 26, and the other entries of the JDK 26 job test
+                 the JDK default. Only java.version.to.run=26 activates it, so no other build needs
+                 JDK 26.
+                 The agent jar must exist before the tests of a module start. A full sequential build,
+                 as in CI, makes it first. A parallel -T build, mvn test, or -pl without -am can start
+                 tests before the jar exists. -->
+            <id>jdk26-agent</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>26</value>
+                </property>
+            </activation>
+            <properties>
+                <approvalcrest.test.agent>-javaagent:${project.basedir}/../approvalcrest-agent/target/approvalcrest-agent-${project.version}.jar</approvalcrest.test.agent>
+            </properties>
         </profile>
     </profiles>
 </project>
