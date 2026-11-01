@@ -92,7 +92,8 @@ Run two separate CI jobs:
 **Job 1 — Verify (runs on every push, must pass before merge):**
 
 ```bash
-mvn test
+mvn test        # Maven
+./gradlew test  # Gradle
 ```
 
 This job fails immediately if an approved file is absent or differs from the actual output.
@@ -100,7 +101,8 @@ This job fails immediately if an approved file is absent or differs from the act
 **Job 2 — Patch Generation (you start it manually or on request):**
 
 ```bash
-mvn test -DfileMatcherUpdateInPlace=true
+mvn test -DfileMatcherUpdateInPlace=true        # Maven
+./gradlew test -DfileMatcherUpdateInPlace=true  # Gradle
 git diff > approved-files.patch
 ```
 

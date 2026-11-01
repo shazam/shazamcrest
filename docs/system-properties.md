@@ -2,6 +2,8 @@
 
 You can set each boolean system property of approvalcrest with `-Dproperty=value` on the command line, or with `System.setProperty(...)` in the test setup.
 
+Maven Surefire passes each `-D` property of the command line to the test JVM. On Gradle, the approvalcrest plugin does this. See [getting-started](getting-started.md#gradle).
+
 These values mean true (case-insensitive): `true`, `t`, `1`, `yes`, `y`.  
 All other values mean `false`.
 
@@ -32,12 +34,15 @@ If you set them to **different values**, approvalcrest throws `IllegalStateExcep
 ## Example usage
 
 ```shell
-# Update approved files in-place using the short alias
-mvn test -DfMUInPlace=true
+# Update approved files in place, with the short alias
+mvn test -DfMUInPlace=true        # Maven
+./gradlew test -DfMUInPlace=true  # Gradle
 
-# Disable null serialization globally using the short alias
-mvn test -DaSerNulls=false
+# Disable null serialisation for all tests, with the short alias
+mvn test -DaSerNulls=false        # Maven
+./gradlew test -DaSerNulls=false  # Gradle
 
 # Enable machine-readable output for AI agents
-mvn test -DfmAI=true
+mvn test -DfmAI=true        # Maven
+./gradlew test -DfmAI=true  # Gradle
 ```

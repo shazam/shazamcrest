@@ -58,7 +58,8 @@ Force mode uses `field.setAccessible(true)` directly, and does not open modules.
 ### Configuration
 
 ```shell
-mvn test -DapprovalcrestReflection=force
+mvn test -DapprovalcrestReflection=force        # Maven
+./gradlew test -DapprovalcrestReflection=force  # Gradle
 ```
 
 ### Required `--add-opens` Flags
@@ -79,7 +80,9 @@ The exact flags depend on the types that your tests serialise. These are the fla
 
 If a flag is absent, approvalcrest detects the `InaccessibleObjectException`, and shows you the exact flag that you must add.
 
-### Maven Surefire Configuration
+### Build Tool Configuration
+
+<details><summary>Maven</summary>
 
 ```xml
 <plugin>
@@ -101,12 +104,36 @@ If a flag is absent, approvalcrest detects the `InaccessibleObjectException`, an
 </plugin>
 ```
 
-### Gradle Configuration
+</details>
 
+<details><summary>Gradle (Kotlin DSL)</summary>
+
+<!-- snippet: force-mode.kts -->
+```kotlin
+tasks.test {
+    systemProperty("approvalcrestReflection", "force")
+    jvmArgs(
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.base/java.time=ALL-UNNAMED",
+        "--add-opens", "java.base/java.time.zone=ALL-UNNAMED",
+        "--add-opens", "java.base/java.math=ALL-UNNAMED",
+        "--add-opens", "java.base/java.io=ALL-UNNAMED",
+        "--add-opens", "java.base/java.security=ALL-UNNAMED",
+        "--add-opens", "java.base/java.util=ALL-UNNAMED",
+        "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED"
+    )
+}
+```
+
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+<!-- snippet: force-mode.gradle -->
 ```groovy
-test {
-    jvmArgs '-DapprovalcrestReflection=force',
-            '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+tasks.named('test') {
+    systemProperty 'approvalcrestReflection', 'force'
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
             '--add-opens', 'java.base/java.time=ALL-UNNAMED',
             '--add-opens', 'java.base/java.time.zone=ALL-UNNAMED',
             '--add-opens', 'java.base/java.math=ALL-UNNAMED',
@@ -117,6 +144,8 @@ test {
 }
 ```
 
+</details>
+
 ### IntelliJ IDEA Configuration
 
 In **Run/Debug Configuration** → **VM options**, add:
@@ -126,6 +155,8 @@ In **Run/Debug Configuration** → **VM options**, add:
 ```
 
 Or set it for all test runs: **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → VM Options**.
+
+In a Gradle project, IntelliJ runs the tests through Gradle by default. Then the configuration of the `test` task applies, and you need no VM options.
 
 ### Example output
 
@@ -152,7 +183,8 @@ Fallback mode does not use Unsafe at all. It serialises locked-module types with
 ### Configuration
 
 ```shell
-mvn test -DapprovalcrestReflection=fallback
+mvn test -DapprovalcrestReflection=fallback        # Maven
+./gradlew test -DapprovalcrestReflection=fallback  # Gradle
 ```
 
 ### How it works
@@ -195,7 +227,8 @@ When you change a project from safe/force to fallback mode, **regenerate the app
 
 To regenerate:
 ```shell
-mvn test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true
+mvn test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true        # Maven
+./gradlew test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true  # Gradle
 ```
 
 ## Setting the Mode
@@ -205,13 +238,21 @@ mvn test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true
 The `approvalcrestReflection` system property (alias: `aCReflection`) controls the mode:
 
 ```shell
-# Command line
-mvn test -DapprovalcrestReflection=safe      # explicit default
-mvn test -DapprovalcrestReflection=force     # requires --add-opens
-mvn test -DapprovalcrestReflection=fallback  # getter-based
+# Safe mode, the default
+mvn test -DapprovalcrestReflection=safe        # Maven
+./gradlew test -DapprovalcrestReflection=safe  # Gradle
+
+# Force mode, needs --add-opens
+mvn test -DapprovalcrestReflection=force        # Maven
+./gradlew test -DapprovalcrestReflection=force  # Gradle
+
+# Fallback mode, getter-based output
+mvn test -DapprovalcrestReflection=fallback        # Maven
+./gradlew test -DapprovalcrestReflection=fallback  # Gradle
 
 # Short alias
-mvn test -DaCReflection=fallback
+mvn test -DaCReflection=fallback        # Maven
+./gradlew test -DaCReflection=fallback  # Gradle
 ```
 
 ### Programmatic (before any assertion)
@@ -222,7 +263,9 @@ System.setProperty("approvalcrestReflection", "fallback");
 
 Approvalcrest reads the mode one time, when it loads the `ReflectUtil` class. Set the mode before any code creates an approvalcrest matcher.
 
-### Maven Surefire
+### Build tool
+
+<details><summary>Maven</summary>
 
 ```xml
 <plugin>
@@ -234,13 +277,29 @@ Approvalcrest reads the mode one time, when it loads the `ReflectUtil` class. Se
 </plugin>
 ```
 
-### Gradle
+</details>
 
+<details><summary>Gradle (Kotlin DSL)</summary>
+
+<!-- snippet: fallback-mode.kts -->
+```kotlin
+tasks.test {
+    systemProperty("approvalcrestReflection", "fallback")
+}
+```
+
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+<!-- snippet: fallback-mode.gradle -->
 ```groovy
-test {
+tasks.named('test') {
     systemProperty 'approvalcrestReflection', 'fallback'
 }
 ```
+
+</details>
 
 ## The agent
 
@@ -254,7 +313,9 @@ The agent does one thing: it gives approvalcrest a `java.lang.instrument.Instrum
 
 The jar declares only `Premain-Class`, and not `Can-Redefine-Classes` or `Can-Retransform-Classes`. Thus the `Instrumentation` that it gives cannot redefine or retransform classes. Because the jar declares only `Premain-Class`, you also cannot attach the agent to a JVM that already runs. The agent replaces the `sun.misc.Unsafe` route, which a JDK can deny. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at start-up continues to work.
 
-### Maven
+### Build tool setup
+
+<details><summary>Maven</summary>
 
 Add the artifact. Then put the agent on the command line of Surefire:
 
@@ -287,21 +348,72 @@ If nothing else in your build defines `argLine`, also declare an empty `argLine`
 
 **Keep the `@{argLine}`.** The `prepare-agent` goal of JaCoCo publishes its own agent argument through the `argLine` *property*. A plain `<argLine>` replaces that property, and your coverage disappears without a warning. The same applies to the inline-mock agent of Mockito and to APM agents.
 
-You can use several `-javaagent` options. The JVM runs each `premain` in the given order. The `premain` of approvalcrest only stores the `Instrumentation` and transforms nothing, so it and an agent that instruments classes do not affect each other.
+</details>
 
-### Gradle
+<details><summary>Gradle (Kotlin DSL)</summary>
 
-```groovy
-dependencies {
-    testImplementation 'com.github.karsaig:approvalcrest-agent:1.6.0'
-}
+With the approvalcrest plugin (see [getting-started](getting-started.md#gradle)), set `attachAgent`. The plugin then attaches the `approvalcrest-agent` of the plugin version to each `Test` task. You do not declare the dependency:
 
-test {
-    jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.startsWith('approvalcrest-agent') }}"
+<!-- snippet: agent-plugin.kts -->
+```kotlin
+approvalcrest {
+    attachAgent = true
 }
 ```
 
-Without the dependency, there is nothing on `testRuntimeClasspath` to find. Then `find` returns null, and Gradle starts the JVM with `-javaagent:null`.
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+With the approvalcrest plugin (see [getting-started](getting-started.md#gradle)), set `attachAgent`. The plugin then attaches the `approvalcrest-agent` of the plugin version to each `Test` task. You do not declare the dependency:
+
+<!-- snippet: agent-plugin.gradle -->
+```groovy
+approvalcrest {
+    attachAgent = true
+}
+```
+
+</details>
+
+<details><summary>Gradle without the plugin</summary>
+
+Declare the agent in a separate configuration. Then give its file to the test JVM with `-javaagent`. Gradle resolves the file only when the test task runs.
+
+Kotlin DSL:
+
+<!-- snippet: agent-without-plugin.kts -->
+```kotlin
+val approvalcrestAgent = configurations.create("approvalcrestAgent")
+dependencies {
+    approvalcrestAgent("com.github.karsaig:approvalcrest-agent:1.6.0")
+}
+tasks.test {
+    // A local copy: the configuration cache cannot store a lambda that reads a property of the build script.
+    val agent: FileCollection = approvalcrestAgent
+    jvmArgumentProviders.add(CommandLineArgumentProvider { listOf("-javaagent:${agent.singleFile}") })
+}
+```
+
+Groovy DSL:
+
+<!-- snippet: agent-without-plugin.gradle -->
+```groovy
+configurations {
+    approvalcrestAgent
+}
+dependencies {
+    approvalcrestAgent 'com.github.karsaig:approvalcrest-agent:1.6.0'
+}
+def approvalcrestAgent = configurations.approvalcrestAgent
+tasks.named('test') {
+    jvmArgumentProviders.add({ ["-javaagent:${approvalcrestAgent.singleFile}".toString()] } as CommandLineArgumentProvider)
+}
+```
+
+</details>
+
+You can use several `-javaagent` options. The JVM runs each `premain` in the given order. The `premain` of approvalcrest only stores the `Instrumentation` and transforms nothing, so it and an agent that instruments classes do not affect each other.
 
 ### Checking it took effect
 
@@ -357,7 +469,7 @@ The default safe mode opens the same modules automatically. Your approved files 
 ### Switching from safe to fallback
 
 1. Set `-DapprovalcrestReflection=fallback`.
-2. Regenerate affected approved files: `mvn test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true`.
+2. Regenerate affected approved files: `mvn test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true` or `./gradlew test -DapprovalcrestReflection=fallback -DfileMatcherUpdateInPlace=true`.
 3. Review the updated approved files.
 4. Commit them.
 
@@ -385,7 +497,7 @@ Yes. The detection of circular references works identically in all modes. The fo
 
 ### Can I mix modes in the same JVM?
 
-No. Approvalcrest reads the mode one time, when it loads the `ReflectUtil` class. The mode applies to all approvalcrest assertions in that JVM. To test several modes, use separate Surefire executions.
+No. Approvalcrest reads the mode one time, when it loads the `ReflectUtil` class. The mode applies to all approvalcrest assertions in that JVM. To test several modes, use separate Surefire executions or separate Gradle `Test` tasks.
 
 ### My POJO has no public getters — will fallback mode work?
 

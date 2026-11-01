@@ -45,6 +45,16 @@ gradlePlugin {
     }
 }
 
+// The doc-snippet tests request the plugin with a version, as a reader does, so they resolve it from this repository.
+publishing {
+    repositories {
+        maven {
+            name = "testRepo"
+            url = uri(layout.buildDirectory.dir("test-repo"))
+        }
+    }
+}
+
 val functionalTest = sourceSets.create("functionalTest")
 gradlePlugin.testSourceSets(functionalTest)
 

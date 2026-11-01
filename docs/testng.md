@@ -6,6 +6,8 @@ How to use approvalcrest with TestNG.
 
 ## Dependency
 
+<details><summary>Maven</summary>
+
 ```xml
 <dependency>
     <groupId>com.github.karsaig</groupId>
@@ -13,7 +15,47 @@ How to use approvalcrest with TestNG.
     <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
+<dependency>
+    <groupId>org.hamcrest</groupId>
+    <artifactId>hamcrest</artifactId>
+    <version>3.0</version>
+    <scope>test</scope>
+</dependency>
 ```
+
+</details>
+
+<details><summary>Gradle (Kotlin DSL)</summary>
+
+```kotlin
+dependencies {
+    testImplementation("com.github.karsaig:approvalcrest-testng:1.6.0")
+    testImplementation("org.hamcrest:hamcrest:3.0")
+}
+
+tasks.test {
+    useTestNG()
+}
+```
+
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+```groovy
+dependencies {
+    testImplementation 'com.github.karsaig:approvalcrest-testng:1.6.0'
+    testImplementation 'org.hamcrest:hamcrest:3.0'
+}
+
+tasks.named('test') {
+    useTestNG()
+}
+```
+
+</details>
+
+On Gradle, also apply the approvalcrest plugin (see [getting-started](getting-started.md#gradle)). Without it, `-D` properties do not reach the tests, and Gradle does not run the tests again when only an approved file changes.
 
 ## Imports
 

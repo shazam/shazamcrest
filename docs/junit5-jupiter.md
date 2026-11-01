@@ -6,6 +6,8 @@ How to use approvalcrest with JUnit 5 & 6 Jupiter (Java). The `approvalcrest-jun
 
 ## Dependency
 
+<details><summary>Maven</summary>
+
 ```xml
 <dependency>
     <groupId>com.github.karsaig</groupId>
@@ -13,7 +15,49 @@ How to use approvalcrest with JUnit 5 & 6 Jupiter (Java). The `approvalcrest-jun
     <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
+<dependency>
+    <groupId>org.hamcrest</groupId>
+    <artifactId>hamcrest</artifactId>
+    <version>3.0</version>
+    <scope>test</scope>
+</dependency>
 ```
+
+</details>
+
+<details><summary>Gradle (Kotlin DSL)</summary>
+
+```kotlin
+dependencies {
+    testImplementation("com.github.karsaig:approvalcrest-junit-jupiter:1.6.0")
+    testImplementation("org.hamcrest:hamcrest:3.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+```
+
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+```groovy
+dependencies {
+    testImplementation 'com.github.karsaig:approvalcrest-junit-jupiter:1.6.0'
+    testImplementation 'org.hamcrest:hamcrest:3.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+```
+
+</details>
+
+On Gradle, also apply the approvalcrest plugin (see [getting-started](getting-started.md#gradle)). Without it, `-D` properties do not reach the tests, and Gradle does not run the tests again when only an approved file changes.
 
 ## Imports
 

@@ -96,16 +96,20 @@ assertThat(actual, sameJsonAsApproved()
 By default, approvalcrest stores approved files next to the test class under `src/test/java`. Your tests can be in a different source directory, for example integration tests under `src/it/java`, or Kotlin or Groovy tests under `src/test/kotlin`. Then set the `fileMatcherSourceRoot` property (alias `fmSourceRoot`) to that directory:
 
 ```bash
-# Integration tests under src/it/java
-mvn verify -DfileMatcherSourceRoot=src/it/java
+# Integration tests in their own source directory
+mvn verify -DfileMatcherSourceRoot=src/it/java                              # Maven
+./gradlew integrationTest -DfileMatcherSourceRoot=src/integrationTest/java  # Gradle
 
 # Short alias
-mvn verify -DfmSourceRoot=src/it/java
+mvn verify -DfmSourceRoot=src/it/java                              # Maven
+./gradlew integrationTest -DfmSourceRoot=src/integrationTest/java  # Gradle
 ```
 
 The value is a path relative to the project root. It sets the base directory. To compute the path of an approved file, approvalcrest adds the package path of the test class to this directory. Thus `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. When you set a per-matcher override (`.withPath`, `.withPathName`, `.withRelativePathName`), it still has priority.
 
 The property applies to both ways to identify a test: stack-trace detection, and the injected `TestInfo` / `Description` / `Method`. Thus it cannot move the approved files of some tests and not of others.
+
+On Gradle, the approvalcrest plugin sets the property for a test suite other than `test`, such as `integrationTest`. It does this only when the task has a source set of the same name, and only one of `src/<name>/java` and `src/<name>/kotlin` exists. A value that you set wins. See [getting-started](getting-started.md#gradle).
 
 ### Defaults per framework
 
@@ -123,6 +127,8 @@ All frameworks use the same property. Only the value **when you do not set it** 
 ### Keeping approved files under test resources
 
 The approved files do not have to be next to the test sources. To keep them in a separate tree, set the root to a directory under `src/test/resources`. Approvalcrest still adds the package path and a directory for each test class, so the layout under the root stays the same.
+
+<details><summary>Maven</summary>
 
 Define the root as a property of your POM, and give it to the test JVM through Surefire. The `approvalcrest:dedup` and `approvalcrest:reinstate` goals read the same POM property, so they scan the same tree:
 
@@ -143,6 +149,38 @@ Define the root as a property of your POM, and give it to the test JVM through S
     </configuration>
 </plugin>
 ```
+
+</details>
+
+<details><summary>Gradle (Kotlin DSL)</summary>
+
+Set the root on the `test` task. The `approvalcrestDedup` and `approvalcrestReinstate` tasks of the approvalcrest plugin read it from the `test` task, so they scan the same tree:
+
+<!-- snippet: resources-root.kts -->
+```kotlin
+tasks.test {
+    systemProperty("fileMatcherSourceRoot", "src/test/resources/approvalcrest")
+}
+```
+
+Gradle copies `src/test/resources` to the test classpath. Thus a change to an approved file under the root runs the tests again.
+
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+Set the root on the `test` task. The `approvalcrestDedup` and `approvalcrestReinstate` tasks of the approvalcrest plugin read it from the `test` task, so they scan the same tree:
+
+<!-- snippet: resources-root.gradle -->
+```groovy
+tasks.named('test') {
+    systemProperty 'fileMatcherSourceRoot', 'src/test/resources/approvalcrest'
+}
+```
+
+Gradle copies `src/test/resources` to the test classpath. Thus a change to an approved file under the root runs the tests again.
+
+</details>
 
 Thus the approved files of `com.example.MyTest` go to `src/test/resources/approvalcrest/com/example/<classHash>/`. Set the root in the build file, not only on the command line, because each run must find the same files. When you change the root, move the existing approved files yourself. Approvalcrest does not move them.
 
@@ -186,7 +224,8 @@ fileNameWithPath = workingDirectory() / relativePathName / pathName / fileName
 When you run the tests again with `-DfileMatcherUpdateInPlace=true`, approvalcrest overwrites the approved files with the current actual output:
 
 ```bash
-mvn test -DfileMatcherUpdateInPlace=true
+mvn test -DfileMatcherUpdateInPlace=true        # Maven
+./gradlew test -DfileMatcherUpdateInPlace=true  # Gradle
 ```
 
 Use this **locally** after an intentional change, for example a new field or a change to the serialisation. Review the diffs. Then commit the updated approved files.
@@ -197,10 +236,11 @@ Use this **locally** after an intentional change, for example a new field or a c
 
 This section is for JSON only. `sameContentAsApproved` compares text and has no custom matchers.
 
-Approvalcrest evaluates custom matchers before the content comparison, and stops the assertion at the first failure. This also stops the rewrite. Then that file never regenerates, however many times the job runs again. Any later assertion in the same test method does not run either. Each later module also does not run, unless the build uses `--fail-at-end`. `-DfileMatcherSkipCustomMatchersOnUpdate=true` defers the evaluation for that run:
+Approvalcrest evaluates custom matchers before the content comparison, and stops the assertion at the first failure. This also stops the rewrite. Then that file never regenerates, however many times the job runs again. Any later assertion in the same test method does not run either. Each later module also does not run, unless the build uses `--fail-at-end` on Maven or `--continue` on Gradle. `-DfileMatcherSkipCustomMatchersOnUpdate=true` defers the evaluation for that run:
 
 ```bash
-mvn test -DfileMatcherUpdateInPlace=true -DfileMatcherSkipCustomMatchersOnUpdate=true
+mvn test -DfileMatcherUpdateInPlace=true -DfileMatcherSkipCustomMatchersOnUpdate=true        # Maven
+./gradlew test -DfileMatcherUpdateInPlace=true -DfileMatcherSkipCustomMatchersOnUpdate=true  # Gradle
 ```
 
 It does nothing unless you also set `fileMatcherUpdateInPlace`. Thus it has no effect on a verification run, whatever the value of the property is.
@@ -230,10 +270,14 @@ assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 **System property (applies to all tests in the run):**
 
 ```bash
-mvn test -DfileMatcherMachineReadable=true
-# or using the short aliases:
-mvn test -DfmAI=true
-mvn test -DfMMReadable=true
+mvn test -DfileMatcherMachineReadable=true        # Maven
+./gradlew test -DfileMatcherMachineReadable=true  # Gradle
+
+# or with the short aliases:
+mvn test -DfmAI=true               # Maven
+./gradlew test -DfmAI=true         # Gradle
+mvn test -DfMMReadable=true        # Maven
+./gradlew test -DfMMReadable=true  # Gradle
 ```
 
 ### Message format
@@ -332,7 +376,7 @@ An approved file can contain a _pointer reference_ instead of content. Approvalc
 - With `-DfmSharedEnabled=false` (default): approvalcrest detaches the pointer and replaces it with a standalone approved file. The canonical does not change.
 - With `-DfmSharedEnabled=true`: approvalcrest writes a new pointer if a canonical that matches exists. If not, it detaches the pointer as above.
 
-After the tests, run `mvn approvalcrest:dedup` to replace the detached files with pointers to shared canonicals again. The goal needs the plugin in your POM (see [Adding the dedup tool](shared-approvals.md#adding-the-dedup-tool)).
+After the tests, run `mvn approvalcrest:dedup` or `./gradlew approvalcrestDedup` to replace the detached files with pointers to shared canonicals again. Each needs the setup in [Adding the dedup tool](shared-approvals.md#adding-the-dedup-tool).
 
 See [shared-approvals](shared-approvals.md) for the full deduplication workflow.
 

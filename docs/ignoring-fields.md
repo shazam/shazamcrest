@@ -185,7 +185,8 @@ By default, the serialised JSON includes fields that have a null value. `.ignori
 **Turn off null serialisation for all tests.** This gives the old behaviour, where the JSON leaves out null fields:
 
 ```bash
-mvn test -DapprovalcrestSerializeNulls=false
+mvn test -DapprovalcrestSerializeNulls=false        # Maven
+./gradlew test -DapprovalcrestSerializeNulls=false  # Gradle
 ```
 
 **Turn off null serialisation for one matcher:**
@@ -203,7 +204,8 @@ When null serialisation is off and `field` is null, `.ignoring("field")` has no 
 Re-run your tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files that now include null fields:
 
 ```bash
-mvn test -DfileMatcherUpdateInPlace=true
+mvn test -DfileMatcherUpdateInPlace=true        # Maven
+./gradlew test -DfileMatcherUpdateInPlace=true  # Gradle
 ```
 
 ## Strict Mode (default on)
@@ -215,13 +217,15 @@ By default, `ignoring()` operates in **strict mode**: approvalcrest removes igno
 Re-run your tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files without the ignored fields:
 
 ```bash
-mvn test -DfileMatcherUpdateInPlace=true
+mvn test -DfileMatcherUpdateInPlace=true        # Maven
+./gradlew test -DfileMatcherUpdateInPlace=true  # Gradle
 ```
 
 **Turn off strict mode for all tests.** This gives the old two-sided behaviour. Approvalcrest then removes ignored fields from the actual side and from the approved side before the comparison:
 
 ```bash
-mvn test -DfileMatcherStrictFileMatching=false
+mvn test -DfileMatcherStrictFileMatching=false        # Maven
+./gradlew test -DfileMatcherStrictFileMatching=false  # Gradle
 ```
 
 **Turn off strict mode for one test** (with the last parameter of the `FileMatcherConfig` constructor):

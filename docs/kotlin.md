@@ -6,6 +6,8 @@ How to use approvalcrest with Kotlin and JUnit 5 & 6.
 
 ## Dependency
 
+<details><summary>Maven</summary>
+
 ```xml
 <dependency>
     <groupId>com.github.karsaig</groupId>
@@ -13,7 +15,49 @@ How to use approvalcrest with Kotlin and JUnit 5 & 6.
     <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
+<dependency>
+    <groupId>org.hamcrest</groupId>
+    <artifactId>hamcrest</artifactId>
+    <version>3.0</version>
+    <scope>test</scope>
+</dependency>
 ```
+
+</details>
+
+<details><summary>Gradle (Kotlin DSL)</summary>
+
+```kotlin
+dependencies {
+    testImplementation("com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.6.0")
+    testImplementation("org.hamcrest:hamcrest:3.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+```
+
+</details>
+
+<details><summary>Gradle (Groovy DSL)</summary>
+
+```groovy
+dependencies {
+    testImplementation 'com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.6.0'
+    testImplementation 'org.hamcrest:hamcrest:3.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+```
+
+</details>
+
+On Gradle, also apply the approvalcrest plugin (see [getting-started](getting-started.md#gradle)). Without it, `-D` properties do not reach the tests, and Gradle does not run the tests again when only an approved file changes.
 
 ## Imports
 
@@ -98,8 +142,11 @@ The Kotlin matchers use the JUnit Jupiter mechanism, so the same rule applies. S
 By default, the Kotlin matchers keep approved files in `src/test/kotlin`, next to the test class. By default, the Java matchers use `src/test/java`. If your Kotlin tests are in a different directory, set the shared `fileMatcherSourceRoot` property to that directory:
 
 ```bash
-mvn verify -DfileMatcherSourceRoot=src/it/kotlin
+mvn verify -DfileMatcherSourceRoot=src/it/kotlin                              # Maven
+./gradlew integrationTest -DfileMatcherSourceRoot=src/integrationTest/kotlin  # Gradle
 ```
+
+On Gradle, the approvalcrest plugin sets the property for a test suite other than `test` that has a source set of the same name and only a `kotlin` source directory, such as `src/integrationTest/kotlin`. A value that you set wins. See [getting-started](getting-started.md#gradle).
 
 Only the default value is different for the Kotlin matchers and the Java matchers. All the matchers use the same property. Thus, in a project with Java and Kotlin tests, the property moves the approved files of both. See [file-control](file-control.md#configuring-the-test-source-root).
 
