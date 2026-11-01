@@ -11,3 +11,7 @@ subprojects {
         }
     }
 }
+
+tasks.register("check") {
+    dependsOn(gradle.includedBuild("approvalcrest-gradle-plugin").task(":check"))
+}

@@ -140,10 +140,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - name: Set up JDK 25
+      - name: Set up JDK 17 and 25
         uses: actions/setup-java@v6
         with:
-          java-version: '25'
+          # The plugin tests run Gradle 8.14, which needs a JDK 17. The last version is the default.
+          java-version: |
+            17
+            25
           distribution: 'zulu'
           cache: maven
       - name: Install the artifacts that the Gradle build tests

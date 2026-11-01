@@ -19,3 +19,4 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+plugin-publish = { id = "com.gradle.plugin-publish", version = "2.2.1" }

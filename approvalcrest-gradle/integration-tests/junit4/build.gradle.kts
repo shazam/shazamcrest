@@ -1,5 +1,6 @@
 plugins {
     java
+    id("io.github.karsaig.approvalcrest")
 }
 
 val approvalcrestVersion = gradle.extra["approvalcrestVersion"] as String

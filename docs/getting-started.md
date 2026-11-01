@@ -59,6 +59,26 @@ For all frameworks, you can also add `com.github.karsaig:approvalcrest-agent:1.6
 </dependency>
 ```
 
+## Gradle
+
+Apply the approvalcrest plugin in each project that runs approvalcrest tests. The plugin is on the Gradle Plugin Portal, so Gradle finds it with no further setup:
+
+```kotlin
+plugins {
+    java
+    id("io.github.karsaig.approvalcrest") version "1.6.1"
+}
+```
+
+The plugin needs Gradle 8.14 or later. It does these things for each `Test` task:
+
+- It passes each `-D` property of the command line to the test JVM. Thus `./gradlew test -DfileMatcherUpdateInPlace=true` works as `mvn test -DfileMatcherUpdateInPlace=true` does. A value on the command line wins over a value that the build script sets. The plugin passes all `-D` properties except the `org.gradle.*` options of Gradle, also the ones that approvalcrest does not read, such as proxy settings. They become inputs of the task, as with Surefire.
+- It makes the approved files inputs of the task. Without this, Gradle does not run the tests again when only an approved file changes.
+- A run with `fileMatcherUpdateInPlace` or `fileMatcherPassOnCreate` is never up to date and never comes from the build cache. Such a run writes approved files, so a stored result does not apply.
+- For a test suite other than `test`, such as `integrationTest`, it sets `fileMatcherSourceRoot` to `src/integrationTest/java`, or to `src/integrationTest/kotlin` when only that exists. A value that you set wins.
+
+The plugin also adds the tasks `approvalcrestDedup` and `approvalcrestReinstate` (see [shared-approvals](shared-approvals.md)). With `approvalcrest { attachAgent = true }`, it attaches the agent (see [field-access-modes](field-access-modes.md#the-agent)).
+
 ## Your First `sameBeanAs` Assertion
 
 `sameBeanAs` serialises both objects to JSON and compares the results. If a field differs, the error message shows the difference.

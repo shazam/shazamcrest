@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    id("io.github.karsaig.approvalcrest")
 }
 
 val approvalcrestVersion = gradle.extra["approvalcrestVersion"] as String

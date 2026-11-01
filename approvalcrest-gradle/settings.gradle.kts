@@ -11,6 +11,7 @@ val approvalcrestVersion: String = providers.fileContents(layout.rootDirectory.f
 gradle.extra["approvalcrestVersion"] = approvalcrestVersion
 
 pluginManagement {
+    includeBuild("approvalcrest-gradle-plugin")
     repositories {
         gradlePluginPortal()
         mavenCentral()
