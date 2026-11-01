@@ -88,8 +88,9 @@
             <version>${project.version}</version>
         </dependency>
         <!-- These integration-test modules exist only under profiles keyed on java.version.to.run
-             (17, 21, 25 and 26). CI runs the coverage build at 26. The JDK 26 module is in the
-             jdk26-coverage profile below, so a local coverage run at 17, 21 or 25 needs no JDK 26. -->
+             (17, 21, 25 and 27). CI runs the coverage build at 27. The Unsafe-denied module is in
+             the jdk27-coverage profile below, so a local coverage run at 17, 21 or 25 needs no
+             JDK 27. -->
         <dependency>
             <groupId>com.github.karsaig.integration.tests</groupId>
             <artifactId>approvalcrest-junit-jupiter-integration-tests-junit6</artifactId>
@@ -171,12 +172,12 @@
 
     <profiles>
         <profile>
-            <!-- The JDK 26 module exists only at java.version.to.run=26, as in the root pom. -->
-            <id>jdk26-coverage</id>
+            <!-- The Unsafe-denied module exists only at java.version.to.run=27, as in the root pom. -->
+            <id>jdk27-coverage</id>
             <activation>
                 <property>
                     <name>java.version.to.run</name>
-                    <value>26</value>
+                    <value>27</value>
                 </property>
             </activation>
             <dependencies>

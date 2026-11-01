@@ -319,7 +319,7 @@ assertTrue(com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailab
 
 While Unsafe works, the output does not change, whether or not the agent is attached. Thus, if you add the `-javaagent` argument now, it costs nothing, and a JDK that denies Unsafe needs no more action later.
 
-It does not stop the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line on JDK 24 to 26. Safe mode still probes Unsafe at start-up to find out whether it works. The JVM warns about that probe.
+It does not stop the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line on JDK 24 to 27. Safe mode still probes Unsafe at start-up to find out whether it works. The JVM warns about that probe.
 
 ### What it does not change
 
@@ -332,13 +332,13 @@ Force mode still requires `--add-opens`. It calls `setAccessible` directly, and 
 | 8 | ✅ Field-based (no modules) | ✅ Field-based | ✅ Field-based (no locked modules) |
 | 9–15 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 | 16 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
-| 17 and later, Unsafe not denied (the default up to 26) | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
+| 17 and later, Unsafe not denied (the default up to 27) | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 | 24 and later, Unsafe denied, with the agent | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 | 24 and later, Unsafe denied, no agent | ⚠️ Getter-based for locked types | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 
-JDK 16 made strong encapsulation the default (`--illegal-access=deny`). On JDK 9–15, the default was `--illegal-access=permit`, which allowed reflective access with a warning. Safe mode works identically on JDK 8 to 26, while Unsafe is not denied.
+JDK 16 made strong encapsulation the default (`--illegal-access=deny`). On JDK 9–15, the default was `--illegal-access=permit`, which allowed reflective access with a warning. Safe mode works identically on JDK 8 to 27, while Unsafe is not denied.
 
-The change comes when the JDK denies the Unsafe memory-access methods. [JEP 471](https://openjdk.org/jeps/471) deprecated these methods for removal. [JEP 498](https://openjdk.org/jeps/498) made JDK 24 warn on the first use, and JDK 25 and 26 also only warn by default. This is the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line that is possibly already in your build logs. With `--sun-misc-unsafe-memory-access=deny`, the methods throw. JEP 471 plans to make this the default in a later release.
+The change comes when the JDK denies the Unsafe memory-access methods. [JEP 471](https://openjdk.org/jeps/471) deprecated these methods for removal. [JEP 498](https://openjdk.org/jeps/498) made JDK 24 warn on the first use, and JDK 25 to 27 also only warn by default. This is the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line that is possibly already in your build logs. With `--sun-misc-unsafe-memory-access=deny`, the methods throw. JEP 471 plans to make this the default in a later release.
 
 When the JDK denies the methods, safe mode can no longer open modules without help. **Attach the agent** (see [The agent](#the-agent) above). Then the field-based output does not change. Without the agent, locked-module types change to getter-based output.
 

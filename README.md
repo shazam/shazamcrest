@@ -50,14 +50,14 @@ In this mode, a failure message is a JSON object. It contains the expected conte
 
 | Dimension | Supported | Tested on |
 |---|---|---|
-| JDK | 8+ | 8, 11, 17, 21, 25, 26 (26 with and without the agent) |
+| JDK | 8+ | 8, 11, 17, 21, 25, 27 (27 with and without the agent) |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
 | TestNG | 6+ | 6.14.3, 7.10.2 |
 | Kotlin | 2.1+ | 2.2.21 |
 
 ## Installation
 
-Select the artifact for your test runner. All the artifacts run on JDK 26, which only warns about the `sun.misc.Unsafe` memory-access methods, so the output does not change. A JDK can also deny these methods: JDK 24 and later with `--sun-misc-unsafe-memory-access=deny`, and, as JEP 471 plans, a later JDK by default. Then, without the agent, approvalcrest serialises a type from a locked JDK module from its getters, not from its fields. If you do not attach `com.github.karsaig:approvalcrest-agent` with `-javaagent`, you must regenerate each approved file that contains such a type. The agent keeps the serialised output byte-identical to the output when Unsafe works. See [field access modes](docs/field-access-modes.md#the-agent).
+Select the artifact for your test runner. All the artifacts run on JDK 27. JDK 26 and 27 only warn about the `sun.misc.Unsafe` memory-access methods, so the output does not change. A JDK can also deny these methods: JDK 24 and later with `--sun-misc-unsafe-memory-access=deny`, and, as JEP 471 plans, a later JDK by default. Then, without the agent, approvalcrest serialises a type from a locked JDK module from its getters, not from its fields. If you do not attach `com.github.karsaig:approvalcrest-agent` with `-javaagent`, you must regenerate each approved file that contains such a type. The agent keeps the serialised output byte-identical to the output when Unsafe works. See [field access modes](docs/field-access-modes.md#the-agent).
 
 ### JUnit 4 & JUnit 5 Vintage
 

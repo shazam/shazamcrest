@@ -46,7 +46,7 @@
         <!-- Empty default so surefire's @{argLine} resolves cleanly when the coverage profile is inactive.
              The coverage profile's jacoco:prepare-agent overrides this with the agent argument. -->
         <argLine></argLine>
-        <!-- Empty default. The jdk26-agent profile sets it, so that the java.version.to.run=26 build
+        <!-- Empty default. The jdk27-agent profile sets it, so that the java.version.to.run=27 build
              attaches approvalcrest-agent. It is not argLine: executions that replace argLine must not
              get it. -->
         <approvalcrest.test.agent></approvalcrest.test.agent>
@@ -280,11 +280,11 @@
             </modules>
         </profile>
         <profile>
-            <id>junit6-26</id>
+            <id>junit6-27</id>
             <activation>
                 <property>
                     <name>java.version.to.run</name>
-                    <value>26</value>
+                    <value>27</value>
                 </property>
             </activation>
             <modules>
@@ -294,15 +294,15 @@
             </modules>
         </profile>
         <profile>
-            <!-- These tests run on a real JDK 26. The module pom denies the Unsafe memory-access
-                 methods with a flag, because JDK 26 only warns by default. Only java.version.to.run=26
-                 adds the module, so no other build needs JDK 26.
-                 Kept separate from junit6-26, whose modules are a different concern. -->
-            <id>jdk26</id>
+            <!-- These tests run on a real JDK 27. The module pom denies the Unsafe memory-access
+                 methods with a flag, because JDK 27 only warns by default. Only java.version.to.run=27
+                 adds the module, so no other build needs JDK 27.
+                 Kept separate from junit6-27, whose modules are a different concern. -->
+            <id>jdk27</id>
             <activation>
                 <property>
                     <name>java.version.to.run</name>
-                    <value>26</value>
+                    <value>27</value>
                 </property>
             </activation>
             <modules>
@@ -310,18 +310,18 @@
             </modules>
         </profile>
         <profile>
-            <!-- The java.version.to.run=26 build attaches approvalcrest-agent to the tests. Thus CI
-                 tests the agent route on a real JDK 26, and the other entries of the JDK 26 job test
-                 the JDK default. Only java.version.to.run=26 activates it, so no other build needs
-                 JDK 26.
+            <!-- The java.version.to.run=27 build attaches approvalcrest-agent to the tests. Thus CI
+                 tests the agent route on a real JDK 27, and the other entries of the JDK 27 job test
+                 the JDK default. Only java.version.to.run=27 activates it, so no other build needs
+                 JDK 27.
                  The agent jar must exist before the tests of a module start. A full sequential build,
                  as in CI, makes it first. A parallel -T build, mvn test, or -pl without -am can start
                  tests before the jar exists. -->
-            <id>jdk26-agent</id>
+            <id>jdk27-agent</id>
             <activation>
                 <property>
                     <name>java.version.to.run</name>
-                    <value>26</value>
+                    <value>27</value>
                 </property>
             </activation>
             <properties>
