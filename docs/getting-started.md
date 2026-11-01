@@ -13,7 +13,7 @@ Add approvalcrest to your project. Then write your first assertion.
 | Kotlin + JUnit 5 & 6 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.6.0` |
 | TestNG | `com.github.karsaig:approvalcrest-testng:1.6.0` |
 
-For all frameworks, you can also add `com.github.karsaig:approvalcrest-agent:1.6.0`. This Java agent keeps the output field-based on JDK 26. JDK 26 disables the `sun.misc.Unsafe` calls that approvalcrest uses to open locked modules. See [field-access-modes](field-access-modes.md#the-agent).
+For all frameworks, you can also add `com.github.karsaig:approvalcrest-agent:1.6.0`, and attach it with `-javaagent`. This Java agent keeps the output field-based when the JDK denies the `sun.misc.Unsafe` calls that approvalcrest uses to open locked modules. JDK 24 and later deny them with `--sun-misc-unsafe-memory-access=deny`, and JEP 471 plans to make this the default in a later JDK. See [field-access-modes](field-access-modes.md#the-agent).
 
 ### JUnit 4 / Vintage (Maven)
 

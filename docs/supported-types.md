@@ -100,7 +100,7 @@ Approvalcrest serialises a `Class<?>` as the fully qualified class name:
 
 ## `Throwable`
 
-Approvalcrest serialises a `Throwable` with the fields below. On JDK 26, it uses getter-based property names, unless you attach the [agent](field-access-modes.md#the-agent). See [field-access-modes](field-access-modes.md).
+Approvalcrest serialises a `Throwable` with the fields below. When the JDK denies the `sun.misc.Unsafe` memory-access methods, it uses getter-based property names, unless you attach the [agent](field-access-modes.md#the-agent). See [field-access-modes](field-access-modes.md).
 
 ```json
 {
