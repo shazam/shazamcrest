@@ -123,14 +123,14 @@ public class ReflectUtilTest {
 
     // --- memory-access probe ---
     //
-    // From JDK 26 sun.misc.Unsafe is disabled rather than removed: Class.forName, the theUnsafe
-    // field and every getMethod call still succeed, but invoking a memory-access method throws
-    // UnsupportedOperationException. Resolution is therefore no longer evidence that a field can
-    // be read, and treating it as such made safe mode claim locked-module types it could not
-    // serialize. These stubs stand in for that JDK, which cannot be reproduced from inside a JVM
-    // that was started with Unsafe working.
+    // When the JDK denies the memory-access methods, sun.misc.Unsafe is disabled rather than
+    // removed: Class.forName, the theUnsafe field and every getMethod call still succeed, but
+    // invoking a memory-access method throws UnsupportedOperationException. Resolution is
+    // therefore no longer evidence that a field can be read, and treating it as such made safe
+    // mode claim locked-module types it could not serialize. These stubs stand in for that JDK,
+    // which cannot be reproduced from inside a JVM that was started with Unsafe working.
 
-    /** Behaves as JDK 26+ does by default: resolves fine, throws on every call. */
+    /** Behaves as a JDK that denies Unsafe does: resolves fine, throws on every call. */
     public static class DisabledUnsafe {
         public long objectFieldOffset(Field field) {
             throw new UnsupportedOperationException("objectFieldOffset");
@@ -239,7 +239,7 @@ public class ReflectUtilTest {
     //
     // Both routes are invoked reflectively, so a stub with a matching method signature stands in
     // for a JVM arrangement that cannot be produced from inside this one: an attached agent, or a
-    // JDK 26 where Unsafe is dead. The stubs avoid naming java.lang.Module, which does not exist
+    // JDK that denies Unsafe. The stubs avoid naming java.lang.Module, which does not exist
     // in the release 8 API this module compiles against.
 
     /** Stands in for Instrumentation, recording what it was asked to open. */

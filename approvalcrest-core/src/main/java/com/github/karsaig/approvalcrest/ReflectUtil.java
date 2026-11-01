@@ -32,8 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * serialization in both of the ways Unsafe goes away:
  * </p>
  * <ul>
- *   <li><b>Disabled</b> — from JDK 26 this is the default (JEP 471/498). The class, its
- *       {@code theUnsafe} field and its {@code Method} objects all still resolve, but every
+ *   <li><b>Disabled</b> — with {@code --sun-misc-unsafe-memory-access=deny} on JDK 24 and later,
+ *       and, as JEP 471 plans, by default in a later release. The class, its {@code theUnsafe}
+ *       field and its {@code Method} objects all still resolve, but every
  *       memory-access call throws {@code UnsupportedOperationException}. Resolution alone is
  *       therefore not evidence that a field can be read, so a probe call is made at
  *       class-initialization time and Unsafe is treated as absent when that probe fails.</li>
@@ -168,8 +169,8 @@ public class ReflectUtil {
             }
         }
 
-        // sun.misc.Unsafe resolving is no longer evidence that it works. From JDK 26 the
-        // memory-access methods throw UnsupportedOperationException by default while the class,
+        // sun.misc.Unsafe resolving is no longer evidence that it works. When the JDK denies the
+        // memory-access methods, they throw UnsupportedOperationException while the class,
         // theUnsafe and the Method objects all still resolve, so prove the field-read path with a
         // probe call. Dropping the reference here is what makes every downstream branch - Tier 2
         // in getFieldValue, getFieldValueViaUnsafe, the module opening below and
@@ -223,8 +224,8 @@ public class ReflectUtil {
         MODULES_TO_OPEN_TO = modulesToOpenTo;
 
         // Route 1: java.lang.instrument. Available whenever the agent was attached, on any JDK 9+,
-        // whether or not Unsafe still works. This is the route that keeps safe mode field-based on
-        // JDK 26, so nothing about resolving it may depend on Unsafe.
+        // whether or not Unsafe still works. This is the route that keeps safe mode field-based
+        // when Unsafe is denied, so nothing about resolving it may depend on Unsafe.
         Object instrumentation = null;
         Method redefineModule = null;
         // Skipped in fallback mode, as the Unsafe route is. Fallback exists for suites that
@@ -352,7 +353,7 @@ public class ReflectUtil {
             long refOffset = (long) objectFieldOffset.invoke(unsafe, refField);
             return MemoryAccessProbe.REF_VALUE.equals(getObject.invoke(unsafe, probe, refOffset));
         } catch (Exception e) {
-            // Disabled (UnsupportedOperationException on JDK 26+), or otherwise unusable
+            // Denied (UnsupportedOperationException), or otherwise unusable
             return false;
         }
     }
@@ -493,9 +494,9 @@ public class ReflectUtil {
      * </p>
      * <ol>
      *   <li>{@code Instrumentation.redefineModule} — supported API, needs the agent attached, needs
-     *       no Unsafe. The only one that works on JDK 26 defaults.</li>
+     *       no Unsafe. The only one that works when Unsafe is denied.</li>
      *   <li>{@code Unsafe} plus a trusted {@code Lookup} calling {@code Module.implAddOpens} — the
-     *       original route, still the one in use on JDK 8 to 25 without the agent.</li>
+     *       original route, still the one in use without the agent while Unsafe works.</li>
      * </ol>
      * <p>
      * Both run inside one invocation on purpose. The attempted-packages cache records the key
@@ -585,8 +586,8 @@ public class ReflectUtil {
     /**
      * Opens a package via {@code Instrumentation.redefineModule}.
      * <p>
-     * Package-visible so the JDK 26 arrangement, which cannot be produced from inside a JVM that
-     * started with Unsafe working, can be exercised with a stub.
+     * Package-visible so the arrangement where Unsafe is denied, which cannot be produced from
+     * inside a JVM that started with Unsafe working, can be exercised with a stub.
      * </p>
      *
      * @return true if the call completed; the caller still has to confirm the package is open,
@@ -741,7 +742,7 @@ public class ReflectUtil {
 
     /**
      * @return true if the {@code -javaagent} route is in use, which is what keeps field-based
-     *         output working on JDK 26 where the Unsafe route no longer can.
+     *         output working when Unsafe is denied and the Unsafe route no longer can.
      */
     public static boolean isInstrumentationAvailable() {
         return INSTRUMENTATION != null && REDEFINE_MODULE != null;
@@ -749,8 +750,9 @@ public class ReflectUtil {
 
     /**
      * @return true if Unsafe can actually read fields on this JDK and we are not in fallback mode.
-     *         False from JDK 26 onwards unless {@code --sun-misc-unsafe-memory-access=allow} is
-     *         set, because the memory-access methods resolve there but throw when called.
+     *         False when the JDK denies the memory-access methods, for example with
+     *         {@code --sun-misc-unsafe-memory-access=deny}, because they resolve but throw when
+     *         called.
      */
     public static boolean isUnsafeAvailable() {
         return UNSAFE != null && !FALLBACK_MODE;

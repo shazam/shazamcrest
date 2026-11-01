@@ -80,14 +80,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - name: Set up JDK 25
+      - name: Set up JDK 27
         uses: actions/setup-java@v6
         with:
-          java-version: '25'
+          java-version: '27'
           distribution: 'zulu'
           cache: maven
       - name: Build with coverage
-        run: mvn -B verify -Pcoverage --file pom.xml -Djava.version.to.run=25
+        run: mvn -B verify -Pcoverage --file pom.xml -Djava.version.to.run=27
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
@@ -107,6 +107,26 @@ jobs:
         uses: actions/setup-java@v6
         with:
           java-version: '25'
+          distribution: 'zulu'
+          cache: maven
+      - name: Inspect environment
+        run: |
+          set | grep JAVA
+      - name: Build with Maven
+        run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
+  build-JDK_27:
+    name: Java ${{ matrix.java }} build on JDK 27
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 8, 11, 17, 21, 25, 27 ]
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK 27
+        uses: actions/setup-java@v6
+        with:
+          java-version: '27'
           distribution: 'zulu'
           cache: maven
       - name: Inspect environment

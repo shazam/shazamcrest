@@ -50,14 +50,14 @@ In this mode, a failure message is a JSON object. It contains the expected conte
 
 | Dimension | Supported | Tested on |
 |---|---|---|
-| JDK | 8+ | 8, 11, 17, 21, 25 (26 simulated: `--sun-misc-unsafe-memory-access=deny`) |
+| JDK | 8+ | 8, 11, 17, 21, 25, 27 (27 with and without the agent) |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
 | TestNG | 6+ | 6.14.3, 7.10.2 |
 | Kotlin | 2.1+ | 2.2.21 |
 
 ## Installation
 
-Select the artifact for your test runner. All the artifacts run on JDK 26. On JDK 26, approvalcrest serialises a type from a locked JDK module from its getters, not from its fields. If you do not add `com.github.karsaig:approvalcrest-agent`, you must regenerate each approved file that contains such a type. The agent keeps the serialised output byte-identical to earlier JDKs. See [field access modes](docs/field-access-modes.md#the-agent).
+Select the artifact for your test runner. All the artifacts run on JDK 27. JDK 26 and 27 only warn about the `sun.misc.Unsafe` memory-access methods, so the output does not change. A JDK can also deny these methods: JDK 24 and later with `--sun-misc-unsafe-memory-access=deny`, and, as JEP 471 plans, a later JDK by default. Then, without the agent, approvalcrest serialises a type from a locked JDK module from its getters, not from its fields. If you do not attach `com.github.karsaig:approvalcrest-agent` with `-javaagent`, you must regenerate each approved file that contains such a type. The agent keeps the serialised output byte-identical to the output when Unsafe works. See [field access modes](docs/field-access-modes.md#the-agent).
 
 ### JUnit 4 & JUnit 5 Vintage
 
@@ -121,7 +121,7 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [File control](docs/file-control.md) | withUniqueId, withFileName, withPath, in-place update, machine-readable diff |
 | [Shared approvals](docs/shared-approvals.md) | Pointer files, one shared copy of identical approved files, the `dedup` and `reinstate` goals |
 | [System properties](docs/system-properties.md) | Every property and its short alias |
-| [Field access modes](docs/field-access-modes.md) | Safe, force and fallback modes, access to JDK modules, and the agent that keeps field-based output on JDK 26+ |
+| [Field access modes](docs/field-access-modes.md) | Safe, force and fallback modes, access to JDK modules, and the agent that keeps field-based output when Unsafe is denied |
 | [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
 | [Best practices](docs/best-practices.md) | State management, CI workflow, rules for approved files |
 | [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |

@@ -10,9 +10,9 @@ From version 1.2.0, approvalcrest handles this automatically. By default, you do
 
 | Mode | Property value | How it accesses fields | Output format | `--add-opens` needed | JDK support |
 |---|---|---|---|---|---|
-| **Safe** | `safe` (default) | Opens modules from code (through the agent if it is attached, otherwise through Unsafe), then uses standard reflection | Field-based (identical to the output before modules) | No | 8, 9–25; on 26+ the agent keeps it field-based |
-| **Force** | `force` | `setAccessible(true)` directly | Field-based (identical to the output before modules) | Yes (on JDK 9+) | 8, 9–25+ (with --add-opens) |
-| **Fallback** | `fallback` | Public getter methods (`getX()` / `isX()`) | Getter-based (different property names) | No | 8, 9–25+ |
+| **Safe** | `safe` (default) | Opens modules from code (through the agent if it is attached, otherwise through Unsafe), then uses standard reflection | Field-based (identical to the output before modules) | No | 8 and later; when Unsafe is denied, only the agent keeps it field-based |
+| **Force** | `force` | `setAccessible(true)` directly | Field-based (identical to the output before modules) | Yes (on JDK 9+) | 8 and later (with --add-opens) |
+| **Fallback** | `fallback` | Public getter methods (`getX()` / `isX()`) | Getter-based (different property names) | No | 8 and later |
 
 ## Safe Mode (Default)
 
@@ -24,7 +24,7 @@ When approvalcrest finds a type from a locked module (for example `java.time.Loc
 
 1. **Modules opened from code** — at start-up, approvalcrest opens locked packages with the route that is available. When you attach the [agent](#the-agent), approvalcrest uses `Instrumentation.redefineModule`. Otherwise, approvalcrest uses `sun.misc.Unsafe` to get a trusted `MethodHandles.Lookup`, and then `Module.implAddOpens()`. Each route is the runtime equivalent of `--add-opens`. Approvalcrest selects the route automatically.
 2. **Standard reflection** — after approvalcrest opens the module package, `field.setAccessible(true)` works as usual. The built-in serialisation of Gson gives the same field-based JSON as before.
-3. **Degradation** — if no route can open a module, approvalcrest uses getter-based serialisation (the same as fallback mode). With the agent attached, this does not occur, because `Instrumentation` needs no Unsafe. Without the agent, this covers both stages of the plan of the JDK. From **JDK 26**, the memory-access methods throw `UnsupportedOperationException` by default, although `sun.misc.Unsafe` still exists. The JDK plans to remove the class completely in a later release.
+3. **Degradation** — if no route can open a module, approvalcrest uses getter-based serialisation (the same as fallback mode). With the agent attached, this does not occur, because `Instrumentation` needs no Unsafe. Without the agent, this covers both stages of the plan of the JDK. First, the memory-access methods throw `UnsupportedOperationException` when the JDK denies them, although `sun.misc.Unsafe` still exists. JDK 24 and later deny them with `--sun-misc-unsafe-memory-access=deny`, and JEP 471 plans to make this the default in a later release. Second, the JDK plans to remove the class completely in a later release.
 
 ### When to use
 
@@ -145,7 +145,7 @@ Fallback mode does not use Unsafe at all. It serialises locked-module types with
 
 ### When to use
 
-- **Preparation for JDK 26** — when Unsafe no longer works, safe mode automatically gives this getter-based output. For most projects, that is **JDK 26** without the [agent](#the-agent). Use fallback mode now to prepare your approved files for that. If you attach the agent instead, the output stays field-based and the files do not change.
+- **Preparation for a JDK that denies Unsafe** — when Unsafe no longer works, safe mode automatically gives this getter-based output. This occurs when the JDK denies the Unsafe memory-access methods and the [agent](#the-agent) is not attached. Use fallback mode now to prepare your approved files for that. If you attach the agent instead, the output stays field-based and the files do not change.
 - **Strict compliance** — your organisation does not allow any use of `sun.misc.Unsafe`, or workarounds that go around the module system.
 - **Verification** — make sure that your test suite works without internal JDK APIs.
 
@@ -244,7 +244,7 @@ test {
 
 ## The agent
 
-Add one JVM argument. Then safe mode continues to give field-based output on JDK 26. You do not need `--add-opens` or other flags:
+Add one JVM argument. Then safe mode continues to give field-based output when the JDK denies the Unsafe memory-access methods. You do not need `--add-opens` or other flags:
 
 ```
 -javaagent:/path/to/approvalcrest-agent-1.6.0.jar
@@ -252,7 +252,7 @@ Add one JVM argument. Then safe mode continues to give field-based output on JDK
 
 The agent does one thing: it gives approvalcrest a `java.lang.instrument.Instrumentation`. This is the supported way to open a module package. When you attach the agent, there are two other results. The JVM adds the agent jar to the end of the system classpath. Also, all other code on that classpath can read the `Instrumentation` from `ApprovalcrestAgent.getInstrumentation()`.
 
-The jar declares only `Premain-Class`, and not `Can-Redefine-Classes` or `Can-Retransform-Classes`. Thus the `Instrumentation` that it gives cannot redefine or retransform classes. Because the jar declares only `Premain-Class`, you also cannot attach the agent to a JVM that already runs. The agent replaces the `sun.misc.Unsafe` route that JDK 26 disables. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at start-up continues to work.
+The jar declares only `Premain-Class`, and not `Can-Redefine-Classes` or `Can-Retransform-Classes`. Thus the `Instrumentation` that it gives cannot redefine or retransform classes. Because the jar declares only `Premain-Class`, you also cannot attach the agent to a JVM that already runs. The agent replaces the `sun.misc.Unsafe` route, which a JDK can deny. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at start-up continues to work.
 
 ### Maven
 
@@ -305,7 +305,7 @@ Without the dependency, there is nothing on `testRuntimeClasspath` to find. Then
 
 ### Checking it took effect
 
-It is easy to add the dependency without the `-javaagent:` argument. On JDK 26, approvalcrest then changes to getter-based output. It gives no warning and no error. If this is important to you, assert it in a test:
+It is easy to add the dependency without the `-javaagent:` argument. When the JDK denies the Unsafe memory-access methods, approvalcrest then changes to getter-based output. It gives no warning and no error. If this is important to you, assert it in a test:
 
 ```java
 // JDK 9+ only. On Java 8 there are no modules to open, so this is false even with the agent
@@ -315,15 +315,15 @@ assertTrue(com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailab
 
 `isModuleOpeningAvailable()` answers a wider question: whether *either* route works. Read it as "was a module opened", not as "what format will the output be". It is false on JDK 8, where the output is field-based anyway, because nothing is locked.
 
-### Adding it before JDK 26
+### Adding it before Unsafe is denied
 
-On JDK 8 to 25, the output does not change, whether or not the agent is attached. Thus, if you add the `-javaagent` argument now, it costs nothing, and JDK 26 needs no more action later.
+While Unsafe works, the output does not change, whether or not the agent is attached. Thus, if you add the `-javaagent` argument now, it costs nothing, and a JDK that denies Unsafe needs no more action later.
 
-It does not stop the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line on JDK 24 and 25. Safe mode still probes Unsafe at start-up to find out whether it works. The JVM warns about that probe.
+It does not stop the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line on JDK 24 to 27. Safe mode still probes Unsafe at start-up to find out whether it works. The JVM warns about that probe.
 
 ### What it does not change
 
-Force mode still requires `--add-opens`. It calls `setAccessible` directly, and never asks approvalcrest to open anything. Thus the agent has no effect on it. With the agent attached, safe mode already gives the same field-based output as force mode. Thus there is no reason to prefer force mode on JDK 26.
+Force mode still requires `--add-opens`. It calls `setAccessible` directly, and never asks approvalcrest to open anything. Thus the agent has no effect on it. With the agent attached, safe mode already gives the same field-based output as force mode. Thus there is no reason to prefer force mode when Unsafe is denied.
 
 ## JDK Compatibility Matrix
 
@@ -332,15 +332,15 @@ Force mode still requires `--add-opens`. It calls `setAccessible` directly, and 
 | 8 | ✅ Field-based (no modules) | ✅ Field-based | ✅ Field-based (no locked modules) |
 | 9–15 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 | 16 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
-| 17–25 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
-| 26+, with the agent | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
-| 26+, no agent | ⚠️ Getter-based for locked types | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
+| 17 and later, Unsafe not denied (the default up to 27) | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
+| 24 and later, Unsafe denied, with the agent | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
+| 24 and later, Unsafe denied, no agent | ⚠️ Getter-based for locked types | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 
-JDK 16 made strong encapsulation the default (`--illegal-access=deny`). On JDK 9–15, the default was `--illegal-access=permit`, which allowed reflective access with a warning. Safe mode works identically on JDK 8 to 25.
+JDK 16 made strong encapsulation the default (`--illegal-access=deny`). On JDK 9–15, the default was `--illegal-access=permit`, which allowed reflective access with a warning. Safe mode works identically on JDK 8 to 27, while Unsafe is not denied.
 
-JDK 26 is where the change occurs. [JEP 471](https://openjdk.org/jeps/471) deprecated the `sun.misc.Unsafe` memory-access methods for removal. [JEP 498](https://openjdk.org/jeps/498) made JDK 24 warn on the first use. This is the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line that is possibly already in your build logs. From JDK 26, the methods throw by default.
+The change comes when the JDK denies the Unsafe memory-access methods. [JEP 471](https://openjdk.org/jeps/471) deprecated these methods for removal. [JEP 498](https://openjdk.org/jeps/498) made JDK 24 warn on the first use, and JDK 25 to 27 also only warn by default. This is the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line that is possibly already in your build logs. With `--sun-misc-unsafe-memory-access=deny`, the methods throw. JEP 471 plans to make this the default in a later release.
 
-From JDK 26, safe mode can no longer open modules without help. **Attach the agent** (see [The agent](#the-agent) above). Then the field-based output does not change. Without the agent, locked-module types change to getter-based output.
+When the JDK denies the methods, safe mode can no longer open modules without help. **Attach the agent** (see [The agent](#the-agent) above). Then the field-based output does not change. Without the agent, locked-module types change to getter-based output.
 
 ## Migration Guide
 
@@ -369,13 +369,13 @@ Only the approved files for types in locked JDK modules change. Your own POJO ty
 
 No. Safe mode gives the same field-based JSON as force mode (with `--add-opens`). Your approved files match without changes.
 
-### What happens on JDK 26, when Unsafe stops working?
+### What happens when Unsafe stops working?
 
 Attach the [agent](#the-agent). Then nothing changes. Approvalcrest still opens modules, the output stays field-based, and your approved files continue to match.
 
 Without the agent, safe mode changes to getter-based serialisation for locked-module types, exactly as fallback mode does. Your tests do not crash. But you must regenerate the approved files for locked-module types, because the output format changes from field-based to getter-based.
 
-JDK 26 disables `sun.misc.Unsafe`, but does not remove it. The class still loads and its methods still resolve, but a call to one of them throws `UnsupportedOperationException`. Thus approvalcrest makes a probe call at start-up, and treats a failed probe as "no Unsafe". It does not assume that Unsafe works because the class is present. The same degradation occurs when a later release removes the class.
+When the JDK denies the memory-access methods, it disables `sun.misc.Unsafe`, but does not remove it. The class still loads and its methods still resolve, but a call to one of them throws `UnsupportedOperationException`. Thus approvalcrest makes a probe call at start-up, and treats a failed probe as "no Unsafe". It does not assume that Unsafe works because the class is present. The same degradation occurs when a later release removes the class.
 
 There are two alternatives to the agent, and both keep the field-based output. One is `--sun-misc-unsafe-memory-access=allow` (available from JDK 24). It only delays the change until the JDK removes Unsafe completely. The other is force mode with `--add-opens`.
 

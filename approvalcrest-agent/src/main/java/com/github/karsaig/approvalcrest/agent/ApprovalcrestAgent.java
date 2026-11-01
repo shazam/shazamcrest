@@ -15,9 +15,11 @@ import java.lang.instrument.Instrumentation;
  * </pre>
  *
  * <p>
- * From JDK 26 the {@code sun.misc.Unsafe} memory-access methods throw by default, which is what
- * safe mode previously used to open modules. {@code Instrumentation.redefineModule} is the
- * supported replacement, and an agent is the only way to obtain an {@code Instrumentation}.
+ * When the JDK denies the {@code sun.misc.Unsafe} memory-access methods, which safe mode uses to
+ * open modules, they throw. JDK 24 and later deny them with
+ * {@code --sun-misc-unsafe-memory-access=deny}, and JEP 471 plans to make that the default.
+ * {@code Instrumentation.redefineModule} is the supported replacement, and an agent is the only
+ * way to obtain an {@code Instrumentation}.
  * Attaching at startup is unaffected by JEP 451, which restricts dynamic attach only.
  * </p>
  *

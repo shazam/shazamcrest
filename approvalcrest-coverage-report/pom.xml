@@ -87,10 +87,10 @@
             <artifactId>approvalcrest-junit-jupiter-kotlin-integration-tests</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- These integration-test modules only exist under profiles keyed on java.version.to.run. The
-             coverage build always runs at java.version.to.run=25, so they are present in the reactor.
-             The jdk26-simulation module exists only at exactly 25, so a local coverage run at 17
-             or 21 will not resolve it. -->
+        <!-- These integration-test modules exist only under profiles keyed on java.version.to.run
+             (17, 21, 25 and 27). CI runs the coverage build at 27. The Unsafe-denied module is in
+             the jdk27-coverage profile below, so a local coverage run at 17, 21 or 25 needs no
+             JDK 27. -->
         <dependency>
             <groupId>com.github.karsaig.integration.tests</groupId>
             <artifactId>approvalcrest-junit-jupiter-integration-tests-junit6</artifactId>
@@ -104,11 +104,6 @@
         <dependency>
             <groupId>com.github.karsaig.integration.tests</groupId>
             <artifactId>approvalcrest-jdk17-integration-tests</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karsaig.integration.tests</groupId>
-            <artifactId>approvalcrest-jdk26-simulation-integration-tests</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -174,4 +169,24 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <!-- The Unsafe-denied module exists only at java.version.to.run=27, as in the root pom. -->
+            <id>jdk27-coverage</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>27</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.github.karsaig.integration.tests</groupId>
+                    <artifactId>approvalcrest-unsafe-denied-integration-tests</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

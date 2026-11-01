@@ -14,7 +14,7 @@ If you set them to **different values**, approvalcrest throws `IllegalStateExcep
 
 | Property | Alias | Default | Description | Docs |
 |---|---|---|---|---|
-| `approvalcrestReflection` | `aCReflection` | `safe` | Field access mode. `safe` opens modules automatically (on JDK 26+ only with the approvalcrest agent, otherwise getter-based for locked types). `force` needs --add-opens. `fallback` is getter-based. | [field-access-modes](field-access-modes.md) |
+| `approvalcrestReflection` | `aCReflection` | `safe` | Field access mode. `safe` opens modules automatically (when Unsafe is denied, only with the approvalcrest agent attached; without the agent, locked types are getter-based). `force` needs --add-opens. `fallback` is getter-based. | [field-access-modes](field-access-modes.md) |
 | `fileMatcherUpdateInPlace` | `fMUInPlace` | `false` | When the output differs, rewrite the approved file in place from the actual output. Do not fail the test. Approvalcrest also accepts the legacy name `jsonMatcherUpdateInPlace`. | [same-json-as-approved](same-json-as-approved.md) |
 | `fileMatcherSkipCustomMatchersOnUpdate` | `fMSCMOUpdate` | `false` | Do not evaluate custom matchers (`.with`, `.withMatcher`, `.alsoCheck`, `.alsoCheckMatching`) while `fileMatcherUpdateInPlace` rewrites approved files. Then a custom matcher that fails does not stop the regeneration of the rest of the run. This property has no effect unless an in-place update runs. | [file-control](file-control.md) |
 | `fileMatcherPassOnCreate` | `fMPOnCreate` | `false` | Pass the test, and do not fail it, when there is no approved file yet. | [same-json-as-approved](same-json-as-approved.md) |
