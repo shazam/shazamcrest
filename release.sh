@@ -12,7 +12,9 @@ Arguments:
   --resume           Resume mode: skips all steps up to and including
                      the Maven deploy (steps 1-4) and runs only the
                      post-publish steps (5-6). Use when the script was
-                     interrupted after a successful deploy. Cannot be
+                     interrupted after a successful deploy: from then on
+                     the release commit and tag are kept. Steps 5 and 6
+                     are skipped when they are already done. Cannot be
                      combined with --dry-run.
   --jdk <version>    JDK version to use for testing (default: 8)
   --verbose | -v     Echo every command as it runs (set -x)
@@ -78,6 +80,7 @@ set -euo pipefail
 # State tracking for cleanup
 _commit_made=false
 _tag_made=false
+_published=false
 _push_done=false
 
 cleanup() {
@@ -85,6 +88,12 @@ cleanup() {
     find . -name "*.versionsBackup" -delete 2>/dev/null || true
     # If push already succeeded the release is done — leave local state as-is
     if [[ "$_push_done" == "true" ]]; then
+        return
+    fi
+    # Central cannot withdraw a published release, so the release commit and tag must stay for --resume.
+    if [[ "$_published" == "true" ]]; then
+        echo "ERROR: the release is published, but the script stopped before it finished." >&2
+        echo "       The release commit and tag v${version} are kept. To finish: ./release.sh ${version} --resume" >&2
         return
     fi
     if [[ "$_tag_made" == "true" ]]; then
@@ -163,7 +172,13 @@ else
         mvn clean -f for-release-pom.xml
         mvn -f for-release-pom.xml deploy -P sign-release
     fi
-    git push --follow-tags
+    _published=true
+
+    if [[ "$resume" == "true" ]] && git ls-remote --tags origin "refs/tags/v${version}" | grep -q "v${version}"; then
+        echo "Tag v${version} is already on origin, skipping the push."
+    else
+        git push --follow-tags
+    fi
     _push_done=true
 
     # Bump to next development version
@@ -171,6 +186,16 @@ else
         next_dev="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))-SNAPSHOT"
     else
         next_dev="after-${version}-SNAPSHOT"
+    fi
+
+    # A resumed run may find the bump already committed; then it only has to push it. The committed pom.xml
+    # decides: a run that stopped between versions:set and the commit has to do the bump again.
+    committed_version=$(git show HEAD:pom.xml | sed -n 's:.*<version>\(.*\)</version>.*:\1:p' | head -1)
+    if [[ "$committed_version" == "${next_dev}" ]]; then
+        echo "Version is already ${next_dev}, skipping the bump."
+        git push
+        printf '\033[92m========================================\n  Release %s completed successfully!\n========================================\033[0m\n' "${version}"
+        exit 0
     fi
 
     mvn versions:set -DnewVersion="${next_dev}"
