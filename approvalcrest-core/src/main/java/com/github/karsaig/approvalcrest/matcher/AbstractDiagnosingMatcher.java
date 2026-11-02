@@ -85,28 +85,28 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
     }
 
     private static String buildAddOpensMessage(Throwable inaccessible) {
-        String flag = extractAddOpensFlag(inaccessible.getMessage());
-        String placeholder = "--add-opens <module>/<package>=ALL-UNNAMED";
-        String example = flag != null ? flag : placeholder;
+        String target = extractAddOpensTarget(inaccessible.getMessage());
+        String example = target != null ? target : "<module>/<package>=ALL-UNNAMED";
         return "approvalcrest could not access a field via reflection.\n"
                 + "This happens on Java 9+ when the required '--add-opens' JVM argument is missing.\n"
-                + (flag != null ? "\nAdd the following JVM argument:\n  " + flag + "\n" : "")
+                + (target != null ? "\nAdd the following JVM argument:\n  --add-opens " + target + "\n" : "")
                 + "\nFor Maven (maven-surefire-plugin), add to pom.xml:\n"
                 + "  <configuration>\n"
-                + "    <argLine>" + example + "</argLine>\n"
+                + "    <argLine>--add-opens " + example + "</argLine>\n"
                 + "  </configuration>\n"
                 + "\nFor Gradle, add to your test block:\n"
-                + "  jvmArgs '" + example + "'\n"
+                // Gradle gives each jvmArgs element to the JVM as one argument, and the JVM rejects "--add-opens x".
+                + "  jvmArgs(\"--add-opens\", \"" + example + "\")\n"
                 + "\nFor IDEs (IntelliJ / Eclipse), add to 'VM options' in the run/test configuration.\n"
                 + "\nOriginal error: " + inaccessible.getMessage();
     }
 
-    private static String extractAddOpensFlag(String message) {
+    private static String extractAddOpensTarget(String message) {
         if (message == null) {
             return null;
         }
         java.util.regex.Matcher m = ADD_OPENS_PATTERN.matcher(message);
-        return m.find() ? "--add-opens " + m.group(1) + "/" + m.group(2) + "=ALL-UNNAMED" : null;
+        return m.find() ? m.group(1) + "/" + m.group(2) + "=ALL-UNNAMED" : null;
     }
 
     protected boolean assertJsonEquals(String expectedJson, String actualJson, Description mismatchDescription, Function<Throwable, String> messageExtractor) {
