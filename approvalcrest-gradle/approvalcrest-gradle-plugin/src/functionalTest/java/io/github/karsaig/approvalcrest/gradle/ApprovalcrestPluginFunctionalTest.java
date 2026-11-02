@@ -29,7 +29,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ApprovalcrestPluginFunctionalTest {
 
     private static final String APPROVALCREST_VERSION = System.getProperty("approvalcrest.version");
-    private static final String JDK17_HOME = System.getProperty("approvalcrest.jdk17Home");
+    private static final String GRADLE8_JAVA_HOME = System.getProperty("approvalcrest.gradle8JavaHome");
+    private static final int GRADLE8_JAVA_VERSION = Integer.getInteger("approvalcrest.gradle8JavaVersion");
+    private static final String OLD_JVM_DEPRECATION = "Executing Gradle on JVM versions 16 and lower has been deprecated.";
 
     private static final String LIST_TEST = "package fixture;\n\n"
             + "import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;\n"
@@ -59,7 +61,7 @@ class ApprovalcrestPluginFunctionalTest {
                 + "rootProject.name = \"fixture\"\n"
                 + "include(\"app\")\n");
         if (gradleVersion.startsWith("8.")) {
-            write("gradle.properties", "org.gradle.java.home=" + JDK17_HOME.replace('\\', '/') + "\n");
+            write("gradle.properties", "org.gradle.java.home=" + GRADLE8_JAVA_HOME.replace('\\', '/') + "\n");
         }
         write("app/build.gradle.kts", "plugins {\n"
                 + "    java\n"
@@ -78,17 +80,32 @@ class ApprovalcrestPluginFunctionalTest {
     }
 
     private BuildResult run(String... arguments) {
-        return runner(arguments).build();
+        return withoutOtherDeprecations(runner(arguments).build());
     }
 
     private BuildResult runAndFail(String... arguments) {
-        return runner(arguments).buildAndFail();
+        return withoutOtherDeprecations(runner(arguments).buildAndFail());
+    }
+
+    /** Gradle 8.14 deprecates running on JDK 16 and older, so those builds allow that one deprecation and no other. */
+    private boolean onOldJvm() {
+        return gradleVersion.startsWith("8.") && GRADLE8_JAVA_VERSION < 17;
+    }
+
+    private BuildResult withoutOtherDeprecations(BuildResult result) {
+        if (onOldJvm()) {
+            List<String> others = Arrays.stream(result.getOutput().split("\\R"))
+                    .filter(line -> line.contains("has been deprecated") && !line.contains(OLD_JVM_DEPRECATION))
+                    .collect(Collectors.toList());
+            assertEquals(new ArrayList<String>(), others, result.getOutput());
+        }
+        return result;
     }
 
     private GradleRunner runner(String... arguments) {
         List<String> all = new ArrayList<>(Arrays.asList(arguments));
         all.add("--configuration-cache");
-        all.add("--warning-mode=fail");
+        all.add(onOldJvm() ? "--warning-mode=all" : "--warning-mode=fail");
         all.add("--stacktrace");
         return GradleRunner.create()
                 .withProjectDir(projectDir.toFile())
@@ -322,13 +339,20 @@ class ApprovalcrestPluginFunctionalTest {
         single("app/src/test/java/fixture", "-not-approved.json");
     }
 
+    // Java 8 has no modules, so approvalcrest never uses the agent there; only the JVM argument shows it.
     private static final String AGENT_TEST = "package fixture;\n\n"
             + "import static org.junit.jupiter.api.Assertions.assertEquals;\n\n"
+            + "import java.lang.management.ManagementFactory;\n\n"
             + "import org.junit.jupiter.api.Test;\n\n"
             + "class AgentTest {\n"
             + "    @Test\n"
             + "    void instrumentation() {\n"
-            + "        assertEquals(Boolean.getBoolean(\"expectAgent\"), com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailable());\n"
+            + "        boolean expected = Boolean.getBoolean(\"expectAgent\");\n"
+            + "        assertEquals(expected, ManagementFactory.getRuntimeMXBean().getInputArguments().stream()\n"
+            + "                .anyMatch(a -> a.startsWith(\"-javaagent:\") && a.contains(\"approvalcrest-agent\")));\n"
+            + "        if (!System.getProperty(\"java.version\").startsWith(\"1.\")) {\n"
+            + "            assertEquals(expected, com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailable());\n"
+            + "        }\n"
             + "    }\n"
             + "}\n";
 

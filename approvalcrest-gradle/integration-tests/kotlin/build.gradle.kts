@@ -16,6 +16,11 @@ sourceSets.test {
     resources.setSrcDirs(emptyList<File>())
 }
 
+// Kotlin keeps one target, as in the Maven build. The Java task must match it, or Kotlin stops the build.
+tasks.withType<JavaCompile>().configureEach {
+    options.release = 11
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11

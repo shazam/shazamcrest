@@ -13,6 +13,12 @@ sourceSets.test {
     resources.setSrcDirs(emptyList<File>())
 }
 
+// TestNG 7.10 declares Java 11, so Gradle refuses it at release 8. Maven does not check, and the tests run on
+// the build JDK in both builds, so only the class-file version of the tests changes.
+java {
+    disableAutoTargetJvm()
+}
+
 dependencies {
     testImplementation("com.github.karsaig:approvalcrest-testng:$approvalcrestVersion")
     testImplementation("com.github.karsaig:testing-common:$approvalcrestVersion")

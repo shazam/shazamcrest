@@ -67,17 +67,21 @@ dependencies {
     "functionalTestRuntimeOnly"(libs.junit.platform.launcher)
 }
 
-// Gradle 8.14 does not run on JDK 25, so its fixture builds use a JDK 17 daemon.
-val jdk17Home = javaToolchains.launcherFor {
-    languageVersion = JavaLanguageVersion.of(17)
-}.map { it.metadata.installationPath.asFile.absolutePath }
+// Gradle 8.14 runs on JDK 8 to 24, so its fixture builds get their own JDK: 17, or the version that
+// -Papprovalcrest.gradle8Java gives. CI sets it to cover each JDK that Gradle 8.14 runs on.
+val gradle8Java = javaToolchains.launcherFor {
+    languageVersion = providers.gradleProperty("approvalcrest.gradle8Java").orElse("17").map(JavaLanguageVersion::of)
+}
 
 val functionalTestTask = tasks.register<Test>("functionalTest") {
     testClassesDirs = functionalTest.output.classesDirs
     classpath = functionalTest.runtimeClasspath
     useJUnitPlatform()
     systemProperty("approvalcrest.version", project.version.toString())
-    jvmArgumentProviders.add(Jdk17HomeArgument(jdk17Home))
+    jvmArgumentProviders.add(Gradle8JavaArguments(
+        gradle8Java.map { it.metadata.installationPath.asFile.absolutePath },
+        gradle8Java.map { it.metadata.languageVersion.asInt() },
+    ))
     // Each case runs Gradle builds; the default timeout of the test JVM is enough, but the output helps on CI.
     testLogging {
         events("passed", "failed", "skipped")
@@ -88,6 +92,9 @@ tasks.check {
     dependsOn(functionalTestTask)
 }
 
-class Jdk17HomeArgument(@get:Input val home: Provider<String>) : CommandLineArgumentProvider {
-    override fun asArguments() = listOf("-Dapprovalcrest.jdk17Home=${home.get()}")
+class Gradle8JavaArguments(@get:Input val home: Provider<String>, @get:Input val version: Provider<Int>) : CommandLineArgumentProvider {
+    override fun asArguments() = listOf(
+        "-Dapprovalcrest.gradle8JavaHome=${home.get()}",
+        "-Dapprovalcrest.gradle8JavaVersion=${version.get()}",
+    )
 }

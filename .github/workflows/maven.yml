@@ -135,22 +135,45 @@ jobs:
       - name: Build with Maven
         run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
   gradle:
-    name: Gradle build on JDK 25
+    name: Gradle build on JDK ${{ matrix.java }}, Gradle 8.14 on JDK ${{ matrix.gradle8-java }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Gradle 9.8 runs on JDK 17 to 27, and Gradle 8.14 on JDK 8 to 24, so each job pairs one of each.
+        # As in the Maven jobs, the integration tests also run at each lower release level.
+        include:
+          - java: 17
+            gradle8-java: 8
+            lower-releases: 8 11
+          - java: 21
+            gradle8-java: 11
+            lower-releases: 8 11 17
+          - java: 25
+            gradle8-java: 17
+            lower-releases: 8 11 17 21
+          - java: 27
+            gradle8-java: 21
+            lower-releases: 8 11 17 21 25
 
     steps:
       - uses: actions/checkout@v7
-      - name: Set up JDK 17 and 25
+      - name: Set up JDK ${{ matrix.gradle8-java }} and ${{ matrix.java }}
         uses: actions/setup-java@v6
         with:
-          # The plugin tests run Gradle 8.14, which needs a JDK 17. The last version is the default.
+          # The plugin tests run Gradle 8.14 on the first version. The last version is the default.
           java-version: |
-            17
-            25
+            ${{ matrix.gradle8-java }}
+            ${{ matrix.java }}
           distribution: 'zulu'
           cache: maven
       - name: Install the artifacts that the Gradle build tests
         run: mvn -B install -DskipTests --file pom.xml
       - name: Build with Gradle
         working-directory: approvalcrest-gradle
-        run: ./gradlew check --configuration-cache --warning-mode=fail
+        run: ./gradlew check --configuration-cache --warning-mode=fail -Pjava.version.to.run=${{ matrix.java }} -Papprovalcrest.gradle8Java=${{ matrix.gradle8-java }}
+      - name: Run the integration tests at the lower release levels
+        working-directory: approvalcrest-gradle
+        run: |
+          for release in ${{ matrix.lower-releases }}; do
+            ./gradlew integrationTest --configuration-cache --warning-mode=fail -Pjava.version.to.run=$release
+          done
