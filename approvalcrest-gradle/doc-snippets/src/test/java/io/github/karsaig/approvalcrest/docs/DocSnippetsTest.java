@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.BuildTask;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ class DocSnippetsTest {
     private static final Path REPO_ROOT = Paths.get(System.getProperty("approvalcrest.repoRoot"));
     private static final String PLUGIN_REPO = System.getProperty("approvalcrest.pluginRepo").replace('\\', '/');
     private static final Map<String, String> SNIPPETS = extractSnippets();
+    private static final String JUPITER = "org.junit.jupiter:junit-jupiter:5.14.4";
+    private static final String JUNIT4 = "junit:junit:4.13.2";
+    private static final String TESTNG = "org.testng:testng:7.10.2";
 
     private static final String LIST_TEST = "package fixture;\n\n"
             + "import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;\n"
@@ -65,6 +69,64 @@ class DocSnippetsTest {
             + "        assertTrue(com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailable());\n"
             + "    }\n"
             + "}\n";
+
+    private static final String JUNIT4_TEST = "package fixture;\n\n"
+            + "import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;\n"
+            + "import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;\n"
+            + "import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApproved;\n\n"
+            + "import java.util.Arrays;\n\n"
+            + "import org.junit.Test;\n\n"
+            + "public class FixtureTest {\n"
+            + "    @Test\n"
+            + "    public void approvedList() {\n"
+            + "        assertThat(Arrays.asList(\"c\", \"a\", \"b\"), sameJsonAsApproved());\n"
+            + "    }\n\n"
+            + "    // Needs org.hamcrest.Matchers, which the hamcrest-core 1.3 of JUnit 4 does not have.\n"
+            + "    @Test\n"
+            + "    public void sameString() {\n"
+            + "        assertThat(\"a\", sameBeanAs(\"a\"));\n"
+            + "    }\n"
+            + "}\n";
+
+    private static final String TESTNG_TEST = "package fixture;\n\n"
+            + "import static com.github.karsaig.approvalcrest.testng.MatcherAssert.assertThat;\n"
+            + "import static com.github.karsaig.approvalcrest.testng.matcher.Matchers.sameJsonAsApproved;\n\n"
+            + "import java.util.Arrays;\n\n"
+            + "import org.testng.annotations.Test;\n\n"
+            + "public class FixtureTest {\n"
+            + "    @Test\n"
+            + "    public void approvedList() {\n"
+            + "        assertThat(Arrays.asList(\"c\", \"a\", \"b\"), sameJsonAsApproved());\n"
+            + "    }\n"
+            + "}\n";
+
+    private static final String KOTLIN_TEST = "package fixture\n\n"
+            + "import com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat\n"
+            + "import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers.sameJsonAsApproved\n"
+            + "import org.junit.jupiter.api.Test\n\n"
+            + "class FixtureTest {\n"
+            + "    @Test\n"
+            + "    fun approvedList() {\n"
+            + "        assertThat(listOf(\"c\", \"a\", \"b\"), sameJsonAsApproved<List<String>>())\n"
+            + "    }\n"
+            + "}\n";
+
+    /** In force mode, a {@code ZoneId} needs the {@code java.time} opens of the snippet; most JDK types have their own adapter. */
+    private static String modeTest(String mode) {
+        return "package fixture;\n\n"
+                + "import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;\n"
+                + "import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;\n"
+                + "import static org.junit.jupiter.api.Assertions.assertEquals;\n\n"
+                + "import java.time.ZoneId;\n\n"
+                + "import org.junit.jupiter.api.Test;\n\n"
+                + "class ModeTest {\n"
+                + "    @Test\n"
+                + "    void mode() {\n"
+                + "        assertEquals(\"" + mode + "\", com.github.karsaig.approvalcrest.ReflectUtil.getMode());\n"
+                + "        assertThat(ZoneId.of(\"Europe/London\"), sameBeanAs(ZoneId.of(\"Europe/London\")));\n"
+                + "    }\n"
+                + "}\n";
+    }
 
     @TempDir
     Path projectDir;
@@ -112,7 +174,8 @@ class DocSnippetsTest {
                 .replaceAll("(id[ (][\"']io\\.github\\.karsaig\\.approvalcrest[\"']\\)? version [\"'])[^\"']+", "$1" + VERSION);
     }
 
-    private void fixture(String dsl, String... buildParts) throws IOException {
+    /** A reader's build: the plugins, the test framework that the reader already has, then the pasted snippets. */
+    private void fixture(String dsl, String framework, String plugins, String... snippets) throws IOException {
         boolean kts = "kts".equals(dsl);
         String settings = kts
                 ? "pluginManagement { repositories { maven { url = uri(\"" + PLUGIN_REPO + "\") }; gradlePluginPortal() } }\n"
@@ -122,11 +185,11 @@ class DocSnippetsTest {
                 + "dependencyResolutionManagement { repositories { mavenLocal { content { includeGroup('com.github.karsaig') } }; mavenCentral() } }\n"
                 + "rootProject.name = 'fixture'\n";
         write(kts ? "settings.gradle.kts" : "settings.gradle", settings);
-        // The snippets expect the reader's own test framework; the fixture adds JUnit Jupiter as a project would have it.
-        String junit = kts
-                ? "dependencies { testImplementation(\"org.junit.jupiter:junit-jupiter:5.14.4\") }\n"
-                : "dependencies { testImplementation 'org.junit.jupiter:junit-jupiter:5.14.4' }\n";
-        write(kts ? "build.gradle.kts" : "build.gradle", String.join("\n", buildParts) + "\n" + junit);
+        // The snippets expect the reader's own test framework, so the fixture adds only that jar.
+        String frameworkDependency = kts
+                ? "dependencies { testImplementation(\"" + framework + "\") }\n"
+                : "dependencies { testImplementation '" + framework + "' }\n";
+        write(kts ? "build.gradle.kts" : "build.gradle", plugins + "\n" + frameworkDependency + "\n" + String.join("\n", snippets));
     }
 
     private static String javaPlugin(String dsl) {
@@ -149,7 +212,9 @@ class DocSnippetsTest {
     }
 
     private static void assertOutcome(TaskOutcome expected, BuildResult result) {
-        assertEquals(expected, result.task(":test").getOutcome(), result.getOutput());
+        BuildTask test = result.task(":test");
+        assertNotNull(test, result.getOutput());
+        assertEquals(expected, test.getOutcome(), result.getOutput());
     }
 
     private void write(String relative, String content) throws IOException {
@@ -158,8 +223,8 @@ class DocSnippetsTest {
         Files.write(file, content.getBytes(UTF_8));
     }
 
-    private Path single(String suffix) throws IOException {
-        try (Stream<Path> walk = Files.walk(projectDir.resolve("src/test/java"))) {
+    private Path single(String root, String suffix) throws IOException {
+        try (Stream<Path> walk = Files.walk(projectDir.resolve(root))) {
             List<Path> found = walk.filter(p -> p.getFileName().toString().endsWith(suffix)).collect(Collectors.toList());
             assertEquals(1, found.size(), String.valueOf(found));
             return found.get(0);
@@ -169,6 +234,14 @@ class DocSnippetsTest {
     private Path approve(Path notApproved) throws IOException {
         Path approved = notApproved.resolveSibling(notApproved.getFileName().toString().replace("-not-approved", "-approved"));
         Files.move(notApproved, approved);
+        return approved;
+    }
+
+    /** The first run fails and writes a not-approved file under the root. After its approval, the test passes. */
+    private Path firstApproval(String root) throws IOException {
+        assertOutcome(FAILED, runAndFail("test"));
+        Path approved = approve(single(root, "-not-approved.json"));
+        assertOutcome(SUCCESS, run("test"));
         return approved;
     }
 
@@ -184,11 +257,11 @@ class DocSnippetsTest {
     @ParameterizedTest
     @ValueSource(strings = {"kts", "gradle"})
     void withThePlugin(String dsl) throws IOException {
-        fixture(dsl, snippet("plugin." + dsl), snippet("dependency-jupiter." + dsl));
+        fixture(dsl, JUPITER, snippet("plugin." + dsl), snippet("dependency-jupiter." + dsl));
         write("src/test/java/fixture/FixtureTest.java", LIST_TEST);
 
         assertOutcome(FAILED, runAndFail("test"));
-        Path approved = approve(single("-not-approved.json"));
+        Path approved = approve(single("src/test/java", "-not-approved.json"));
         String correct = new String(Files.readAllBytes(approved), UTF_8);
         assertOutcome(SUCCESS, run("test"));
         assertOutcome(UP_TO_DATE, run("test"));
@@ -202,11 +275,11 @@ class DocSnippetsTest {
     @ParameterizedTest
     @ValueSource(strings = {"kts", "gradle"})
     void withoutThePlugin(String dsl) throws IOException {
-        fixture(dsl, javaPlugin(dsl), snippet("dependency-jupiter." + dsl), snippet("test-task-without-plugin." + dsl));
+        fixture(dsl, JUPITER, javaPlugin(dsl), snippet("dependency-jupiter." + dsl), snippet("test-task-without-plugin." + dsl));
         write("src/test/java/fixture/FixtureTest.java", LIST_TEST);
 
         assertOutcome(FAILED, runAndFail("test"));
-        Path approved = approve(single("-not-approved.json"));
+        Path approved = approve(single("src/test/java", "-not-approved.json"));
         String correct = new String(Files.readAllBytes(approved), UTF_8);
         String stale = correct.replace("\"c\"", "\"z\"");
         assertOutcome(SUCCESS, run("test"));
@@ -225,9 +298,9 @@ class DocSnippetsTest {
     @CsvSource({"kts, plugin", "gradle, plugin", "kts, without", "gradle, without"})
     void agent(String dsl, String variant) throws IOException {
         if ("plugin".equals(variant)) {
-            fixture(dsl, snippet("plugin." + dsl), snippet("dependency-jupiter." + dsl), snippet("agent-plugin." + dsl));
+            fixture(dsl, JUPITER, snippet("plugin." + dsl), snippet("dependency-jupiter." + dsl), snippet("agent-plugin." + dsl));
         } else {
-            fixture(dsl, javaPlugin(dsl), snippet("dependency-jupiter." + dsl), snippet("agent-without-plugin." + dsl));
+            fixture(dsl, JUPITER, javaPlugin(dsl), snippet("dependency-jupiter." + dsl), snippet("agent-without-plugin." + dsl));
         }
         write("src/test/java/fixture/AgentTest.java", AGENT_TEST);
 
@@ -235,23 +308,60 @@ class DocSnippetsTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"kts, force-mode", "gradle, force-mode", "kts, fallback-mode", "gradle, fallback-mode",
-            "kts, resources-root", "gradle, resources-root", "kts, dependency-junit4", "gradle, dependency-junit4",
-            "kts, dependency-testng", "gradle, dependency-testng"})
-    void configures(String dsl, String id) throws IOException {
-        fixture(dsl, javaPlugin(dsl), snippet(id + "." + dsl));
+    @ValueSource(strings = {"kts", "gradle"})
+    void junit4Dependency(String dsl) throws IOException {
+        fixture(dsl, JUNIT4, snippet("plugin." + dsl), snippet("dependency-junit4." + dsl));
+        write("src/test/java/fixture/FixtureTest.java", JUNIT4_TEST);
 
-        run("help");
+        firstApproval("src/test/java");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"kts", "gradle"})
-    void kotlinDependencyConfigures(String dsl) throws IOException {
+    void testngDependency(String dsl) throws IOException {
+        fixture(dsl, TESTNG, snippet("plugin." + dsl), snippet("dependency-testng." + dsl));
+        write("src/test/java/fixture/FixtureTest.java", TESTNG_TEST);
+
+        firstApproval("src/test/java");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"kts", "gradle"})
+    void kotlinDependency(String dsl) throws IOException {
+        // The reader's Kotlin build sets its own targets: no stable Kotlin release targets JDK 27 yet.
         String kotlinPlugin = "kts".equals(dsl)
                 ? "plugins {\n    kotlin(\"jvm\") version \"2.3.21\"\n}\n"
-                : "plugins {\n    id 'org.jetbrains.kotlin.jvm' version '2.3.21'\n}\n";
-        fixture(dsl, kotlinPlugin, snippet("dependency-kotlin." + dsl));
+                + "java { targetCompatibility = JavaVersion.VERSION_11 }\n"
+                + "kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11 } }\n"
+                : "plugins {\n    id 'org.jetbrains.kotlin.jvm' version '2.3.21'\n}\n"
+                + "java { targetCompatibility = JavaVersion.VERSION_11 }\n"
+                + "kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11 } }\n";
+        fixture(dsl, JUPITER, kotlinPlugin, snippet("dependency-kotlin." + dsl));
+        write("src/test/kotlin/fixture/FixtureTest.kt", KOTLIN_TEST);
 
-        run("help");
+        firstApproval("src/test/kotlin");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"kts, force", "gradle, force", "kts, fallback", "gradle, fallback"})
+    void reflectionMode(String dsl, String mode) throws IOException {
+        fixture(dsl, JUPITER, javaPlugin(dsl), snippet("dependency-jupiter." + dsl), snippet(mode + "-mode." + dsl));
+        write("src/test/java/fixture/ModeTest.java", modeTest(mode));
+
+        assertOutcome(SUCCESS, run("test"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"kts", "gradle"})
+    void resourcesRoot(String dsl) throws IOException {
+        fixture(dsl, JUPITER, javaPlugin(dsl), snippet("dependency-jupiter." + dsl), snippet("resources-root." + dsl));
+        write("src/test/java/fixture/FixtureTest.java", LIST_TEST);
+
+        Path approved = firstApproval("src/test/resources/approvalcrest");
+        assertOutcome(UP_TO_DATE, run("test"));
+
+        String correct = new String(Files.readAllBytes(approved), UTF_8);
+        Files.write(approved, correct.replace("\"c\"", "\"z\"").getBytes(UTF_8));
+        assertOutcome(FAILED, runAndFail("test"));
     }
 }
