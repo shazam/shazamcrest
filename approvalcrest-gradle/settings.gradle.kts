@@ -35,6 +35,7 @@ include(
     "integration-tests:junit4",
     "integration-tests:jupiter",
     "integration-tests:testng",
+    "integration-tests:vintage",
     "integration-tests:kotlin",
     "doc-snippets",
 )
