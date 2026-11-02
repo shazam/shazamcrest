@@ -17,15 +17,15 @@ Approvalcrest
 
 ## What is Approvalcrest
 
-Approvalcrest is a Java test library for [golden master / characterisation testing](https://en.wikipedia.org/wiki/Characterization_test). It has three matchers:
+Approvalcrest is a library of Hamcrest matchers for Java and Kotlin tests. It compares whole objects and whole text, not single fields. It works with JUnit 4, 5 and 6 and TestNG, on Maven and Gradle. It does two jobs:
 
-- **`sameBeanAs(expected)`** — compares two Java objects in memory, field by field, through the full object graph. The matcher serialises both objects to JSON and compares the two results. It does not use the `equals()` method of the objects, and this is intentional. An `equals()` method is often not sufficient for a test. It can leave out fields, it can contain a defect, or it can return `true` for two objects that differ in an important way.
+- **Deep comparison:** `sameBeanAs(expected)` compares two Java objects in memory, field by field, through the full object graph. The matcher serialises both objects to JSON and compares the two results. It does not use the `equals()` method of the objects, and this is intentional. An `equals()` method is often not sufficient for a test. It can leave out fields, it can contain a defect, or it can return `true` for two objects that differ in an important way.
 
-- **`sameJsonAsApproved()`** — serialises the actual object to JSON and compares the result with an *approved file*. You examine the approved file one time and commit it. After that, an unexpected change to any field fails the test.
+- **Approval testing**, also called snapshot, [golden master or characterisation testing](https://en.wikipedia.org/wiki/Characterization_test): `sameJsonAsApproved()` serialises the actual object to JSON and compares the result with an *approved file*. You commit the approved file next to the test. `sameContentAsApproved()` does the same for text content, not for objects. Examples are templates, API responses, rendered HTML and log output.
 
-- **`sameContentAsApproved()`** — uses the same approval workflow as `sameJsonAsApproved()`, but for text content, not for objects. Examples are templates, API responses, rendered HTML and log output.
+The first run of an approval test fails and writes a `-not-approved` file. You review the file and rename it to `-approved`. Later runs compare the output with it. After an intended change, run the tests with `-DfileMatcherUpdateInPlace=true`, and review the change in version control.
 
-A usual assertion uses a *blocklist* for changes: a change fails the test only in a field that the assertion names. A change in any other field passes. Characterisation testing is default-deny: after you approve a file, a change in any field fails the test. [`.ignoring()`](docs/ignoring-fields.md) gives the *allowlist*: it names each field that can change. This is similar to a default-deny firewall. The firewall denies a packet without an allow rule, and a change without an `.ignoring()` exception fails the test.
+A usual assertion checks only the fields that it names. A change in any other field passes, and so does a field that someone adds later. Approvalcrest is default-deny, like a firewall that drops each packet without an allow rule. `sameBeanAs` and the approved files cover every field, so each change fails the test until you allow it. You allow a change in one of three ways: approve the new file, update the expected object of `sameBeanAs`, or name the field in [`.ignoring()`](docs/ignoring-fields.md). An approval or an update allows that one change; `.ignoring()` allows every change in the field.
 
 This helps when an AI agent changes the code: an approved file finds unintended side effects that per-field assertions do not find. You can use the library at each level of test. Unit, integration, API, UI and system tests all use the same API.
 
