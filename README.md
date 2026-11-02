@@ -25,7 +25,7 @@ Approvalcrest is a Java test library for [golden master / characterisation testi
 
 - **`sameContentAsApproved()`** — uses the same approval workflow as `sameJsonAsApproved()`, but for text content, not for objects. Examples are templates, API responses, rendered HTML and log output.
 
-A usual assertion uses an *allowlist*: you name each field that the test checks. Characterisation testing does the opposite, and uses a *blocklist* for changes. After you approve a file, an unexpected change in any field fails the test. This is similar to default-deny in security: a change cannot pass without notice.
+A usual assertion uses a *blocklist* for changes: a change fails the test only in a field that the assertion names. A change in any other field passes. Characterisation testing is default-deny: after you approve a file, a change in any field fails the test. [`.ignoring()`](docs/ignoring-fields.md) gives the *allowlist*: it names each field that can change. This is similar to a default-deny firewall. The firewall denies a packet without an allow rule, and a change without an `.ignoring()` exception fails the test.
 
 This helps when an AI agent changes the code: an approved file finds unintended side effects that per-field assertions do not find. You can use the library at each level of test. Unit, integration, API, UI and system tests all use the same API.
 
