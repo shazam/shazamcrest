@@ -39,3 +39,8 @@ include(
     "integration-tests:kotlin",
     "doc-snippets",
 )
+
+// JUnit 6 needs Java 17, so its projects join at release 17 and later, as the junit6 profiles do in Maven.
+if (providers.gradleProperty("java.version.to.run").orElse("11").get().toInt() >= 17) {
+    include("integration-tests:jupiter-junit6", "integration-tests:vintage-junit6")
+}
